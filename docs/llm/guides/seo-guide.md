@@ -24,7 +24,7 @@
 
 ## robots.txt
 
-Location: `apps/web-main/public/robots.txt`
+Location: `apps/web-girok/public/robots.txt`
 
 ```
 User-agent: *
@@ -39,7 +39,7 @@ Disallow: /api/
 
 ## sitemap.xml
 
-Location: `apps/web-main/public/sitemap.xml`
+Location: `apps/web-girok/public/sitemap.xml`
 
 Only homepage (priority 1.0). Resumes excluded.
 
@@ -47,7 +47,7 @@ Only homepage (priority 1.0). Resumes excluded.
 
 ### SEO Component
 
-Location: `apps/web-main/src/components/SEO.tsx`
+Location: `apps/web-girok/src/components/SEO.tsx`
 
 ```tsx
 <SEO
@@ -64,7 +64,7 @@ Features: Dynamic title/description, Open Graph, Twitter Card, canonical URL, ro
 
 ## Structured Data
 
-Location: `apps/web-main/src/utils/structuredData.ts`
+Location: `apps/web-girok/src/utils/structuredData.ts`
 
 | Schema       | Use             |
 | ------------ | --------------- |

@@ -78,7 +78,7 @@ Each service uses the database best suited to its data access patterns.
 
 | URL                 | Service      |
 | ------------------- | ------------ |
-| my-dev.girok.dev    | web-main     |
+| my-dev.girok.dev    | web-girok    |
 | admin-dev.girok.dev | web-admin    |
 | auth-dev.girok.dev  | auth-bff     |
 | grpc-dev.girok.dev  | gRPC Gateway |
@@ -170,7 +170,7 @@ async handle(data: UserCreatedEvent) {}
 
 ```
 apps/
-├── web-main/          # React 19.2
+├── web-girok/          # React 19.2
 └── web-admin/
 services/
 ├── identity-service/  # Port 3000

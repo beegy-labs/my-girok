@@ -246,7 +246,7 @@ className = 'p-4 gap-4 mb-4'; // 16px
 
 | Path                                             | Purpose                       |
 | ------------------------------------------------ | ----------------------------- |
-| `apps/web-main/src/components/resume/`           | Form, Preview, PDF components |
+| `apps/web-girok/src/components/resume/`          | Form, Preview, PDF components |
 | `services/personal-service/src/resume/`          | API, Service, DTOs            |
 | `services/personal-service/prisma/schema.prisma` | Database schema               |
 | `.ai/resume.md`                                  | LLM reference documentation   |

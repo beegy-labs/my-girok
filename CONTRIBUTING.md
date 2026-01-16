@@ -30,17 +30,20 @@ This project follows a Code of Conduct. By participating, you are expected to up
 ### Initial Setup
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/your-username/my-girok.git
    cd my-girok
    ```
 
 2. **Install Dependencies**
+
    ```bash
    pnpm install
    ```
 
 3. **Set Up Environment Variables**
+
    ```bash
    # Copy example environment files
    cp services/auth-service/.env.example services/auth-service/.env
@@ -49,6 +52,7 @@ This project follows a Code of Conduct. By participating, you are expected to up
    ```
 
 4. **Database Setup**
+
    ```bash
    # Using Docker Compose
    docker-compose up -d postgres redis
@@ -57,6 +61,7 @@ This project follows a Code of Conduct. By participating, you are expected to up
    ```
 
 5. **Run Database Migrations**
+
    ```bash
    cd services/auth-service
    pnpm prisma db push
@@ -64,13 +69,14 @@ This project follows a Code of Conduct. By participating, you are expected to up
    ```
 
 6. **Start Development Server**
+
    ```bash
    # Auth Service
    cd services/auth-service
    pnpm dev
 
    # Web Test App
-   cd apps/web-main
+   cd apps/web-girok
    pnpm dev
    ```
 
@@ -151,11 +157,13 @@ main (production)
 - **Deleted after**: Merge completes
 
 **Examples**:
+
 - `feature/google-oauth-integration`
 - `feature/user-profile-api`
 - `feature/admin-dashboard`
 
 **Workflow**:
+
 ```bash
 # Create feature branch
 git checkout develop
@@ -183,6 +191,7 @@ git branch -d feature/my-new-feature
 - **Only bug fixes allowed**: No new features
 
 **Workflow**:
+
 ```bash
 # Create release branch (by maintainers only)
 git checkout develop
@@ -218,6 +227,7 @@ git branch -d release/v1.0.0
 - **Immediately deployed**: To production after testing
 
 **Workflow**:
+
 ```bash
 # Create hotfix (by maintainers only)
 git checkout main
@@ -244,11 +254,11 @@ git branch -d hotfix/critical-security-fix
 
 ### Environment Mapping
 
-| Branch       | Environment | Database        | Purpose                    |
-|--------------|-------------|-----------------|----------------------------|
-| `develop`    | Development | dev_girok_user  | Active development         |
-| `release/*`  | Staging     | girok_user      | QA testing before release  |
-| `main`       | Production  | girok_user      | Live production code       |
+| Branch      | Environment | Database       | Purpose                   |
+| ----------- | ----------- | -------------- | ------------------------- |
+| `develop`   | Development | dev_girok_user | Active development        |
+| `release/*` | Staging     | girok_user     | QA testing before release |
+| `main`      | Production  | girok_user     | Live production code      |
 
 ## Coding Standards
 
@@ -289,9 +299,9 @@ export class AuthService {
 
 // ❌ Bad
 const AuthService = {
-  register: function(email, password) {
+  register: function (email, password) {
     // No types, no dependency injection
-  }
+  },
 };
 ```
 
@@ -406,21 +416,25 @@ pnpm test:watch
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] Unit tests added/updated
 - [ ] Integration tests added/updated
 - [ ] E2E tests added/updated
 - [ ] Manual testing completed
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-review completed
 - [ ] Comments added for complex code

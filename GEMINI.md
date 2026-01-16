@@ -79,7 +79,7 @@ Read: `.ai/rules.md` + `.ai/services/personal-service.md`
 ### Frontend Development
 
 **Working on web app?**
-Read: `.ai/rules.md` + `.ai/apps/web-main.md`
+Read: `.ai/rules.md` + `.ai/apps/web-girok.md`
 
 **Working on design tokens/styling?**
 Read: `.ai/ssot.md` + `.ai/packages/design-tokens.md`

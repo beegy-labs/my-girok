@@ -32,7 +32,7 @@ Language detection follows a priority cascade:
 ## File Organization
 
 ```
-apps/web-main/src/
+apps/web-girok/src/
   utils/localeConfig.ts, regionDetection.ts
   components/LanguageSwitcher.tsx
   i18n/config.ts, locales/{en,ko,ja,hi}.json

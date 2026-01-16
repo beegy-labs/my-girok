@@ -20,7 +20,7 @@
 광고 표시 모드는 HomePage 컴포넌트에서 제어됩니다:
 
 ```tsx
-// apps/web-main/src/pages/HomePage.tsx
+// apps/web-girok/src/pages/HomePage.tsx
 const isAdEnabled = true;
 
 // Future implementation will use environment variable:

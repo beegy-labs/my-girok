@@ -36,7 +36,7 @@
 | identity-service | 구현 완료 | NestJS, REST + gRPC  |
 | legal-service    | 구현 완료 | NestJS, REST + gRPC  |
 | personal-service | 구현 완료 | NestJS, REST         |
-| web-main         | 구현 완료 | React 19.2, Vite 7.2 |
+| web-girok        | 구현 완료 | React 19.2, Vite 7.2 |
 
 ## NATS JetStream 설정
 

@@ -102,7 +102,7 @@ This package requires the following dependencies:
 
 | Application | Usage                                            |
 | ----------- | ------------------------------------------------ |
-| web-main    | User authentication for the main web application |
+| web-girok   | User authentication for the main web application |
 | web-admin   | Admin authentication with permission management  |
 
 ---

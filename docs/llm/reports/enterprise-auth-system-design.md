@@ -826,7 +826,7 @@ Tasks:
     - MFA setup UI
     - Session management UI
 
-  4.2 web-main:
+  4.2 web-girok:
     - API client update (auth-bff)
     - Login/register flow
     - MFA setup flow

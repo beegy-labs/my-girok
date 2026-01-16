@@ -35,7 +35,7 @@ return <h1>{t('home.title')}</h1>;
 ## Key Files
 
 ```
-apps/web-main/src/
+apps/web-girok/src/
 ├── utils/localeConfig.ts      # SSOT config
 ├── components/LanguageSwitcher.tsx
 └── i18n/locales/{en,ko,ja,hi}.json

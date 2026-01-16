@@ -20,7 +20,7 @@ Language/Country separation for UI and legal compliance
 ## Files
 
 ```
-apps/web-main/src/
+apps/web-girok/src/
   utils/localeConfig.ts, regionDetection.ts
   components/LanguageSwitcher.tsx
   i18n/config.ts, locales/{en,ko,ja,hi}.json

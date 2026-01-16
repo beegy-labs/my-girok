@@ -21,10 +21,10 @@ This document tracks test coverage status across all services and applications.
 
 | App       | Framework | Tests | Coverage | Status |
 | --------- | --------- | ----- | -------- | ------ |
-| web-main  | Vitest    | 75+   | -        | ✅     |
+| web-girok | Vitest    | 75+   | -        | ✅     |
 | web-admin | Vitest    | 18    | -        | ✅     |
 
-### web-main Test Breakdown
+### web-girok Test Breakdown
 
 | Component           | Tests |
 | ------------------- | ----- |
@@ -44,13 +44,13 @@ This document tracks test coverage status across all services and applications.
 
 ## E2E Tests
 
-| Flow      | Tests  | Location                             |
-| --------- | ------ | ------------------------------------ |
-| Login     | 20+    | `apps/web-main/e2e/login.spec.ts`    |
-| MFA       | 20+    | `apps/web-main/e2e/mfa.spec.ts`      |
-| OAuth     | 20+    | `apps/web-main/e2e/oauth.spec.ts`    |
-| Sessions  | 20+    | `apps/web-main/e2e/sessions.spec.ts` |
-| **Total** | **87** | -                                    |
+| Flow      | Tests  | Location                              |
+| --------- | ------ | ------------------------------------- |
+| Login     | 20+    | `apps/web-girok/e2e/login.spec.ts`    |
+| MFA       | 20+    | `apps/web-girok/e2e/mfa.spec.ts`      |
+| OAuth     | 20+    | `apps/web-girok/e2e/oauth.spec.ts`    |
+| Sessions  | 20+    | `apps/web-girok/e2e/sessions.spec.ts` |
+| **Total** | **87** | -                                     |
 
 ## Security Tests
 
@@ -98,7 +98,7 @@ cd services/auth-bff && pnpm test test/integration
 cd services/auth-bff && pnpm test test/security
 
 # Run E2E tests
-cd apps/web-main && pnpm test:e2e
+cd apps/web-girok && pnpm test:e2e
 ```
 
 ## Pending Tests

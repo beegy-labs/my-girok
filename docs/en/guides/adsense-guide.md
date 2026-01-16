@@ -20,7 +20,7 @@ The homepage supports two banner modes: Google AdSense for monetization and a se
 The ad display mode is controlled in the HomePage component:
 
 ```tsx
-// apps/web-main/src/pages/HomePage.tsx
+// apps/web-girok/src/pages/HomePage.tsx
 const isAdEnabled = true;
 
 // Future implementation will use environment variable:

@@ -41,7 +41,7 @@ docker compose up -d
 # Development
 pnpm dev
 cd services/auth-service && pnpm dev
-cd apps/web-main && pnpm dev
+cd apps/web-girok && pnpm dev
 ```
 
 ### Database
@@ -82,7 +82,7 @@ helm install my-girok-auth services/auth-service/helm -f values.yaml
 ```
 my-girok/
   docs/{.ai/, llm/, en/, kr/}
-  apps/web-main/           # React 19.2 + Vite 7.2
+  apps/web-girok/           # React 19.2 + Vite 7.2
   services/auth-service/   # NestJS 11 + Prisma 6
   packages/types/          # Shared types
 ```

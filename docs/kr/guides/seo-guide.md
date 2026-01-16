@@ -26,7 +26,7 @@
 
 ## robots.txt 설정
 
-위치: `apps/web-main/public/robots.txt`
+위치: `apps/web-girok/public/robots.txt`
 
 ```
 User-agent: *
@@ -41,7 +41,7 @@ Disallow: /api/
 
 ## sitemap.xml 설정
 
-위치: `apps/web-main/public/sitemap.xml`
+위치: `apps/web-girok/public/sitemap.xml`
 
 홈페이지만 포함, 우선순위 1.0. 모든 이력서 관련 페이지는 제외됩니다.
 
@@ -49,7 +49,7 @@ Disallow: /api/
 
 ### SEO 컴포넌트
 
-위치: `apps/web-main/src/components/SEO.tsx`
+위치: `apps/web-girok/src/components/SEO.tsx`
 
 ```tsx
 <SEO
@@ -73,7 +73,7 @@ Disallow: /api/
 
 ## 구조화 데이터
 
-위치: `apps/web-main/src/utils/structuredData.ts`
+위치: `apps/web-girok/src/utils/structuredData.ts`
 
 | Schema Type        | Use Case                                               |
 | ------------------ | ------------------------------------------------------ |

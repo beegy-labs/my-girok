@@ -38,9 +38,9 @@ import PretendardRegular from '@my-girok/design-tokens/fonts/pretendard/Pretenda
 
 ## JS Libraries
 
-| Resource   | Location                                |
-| ---------- | --------------------------------------- |
-| pdfjs-dist | apps/web-main/public/pdf.worker.min.mjs |
+| Resource   | Location                                 |
+| ---------- | ---------------------------------------- |
+| pdfjs-dist | apps/web-girok/public/pdf.worker.min.mjs |
 
 ## Allowed External
 

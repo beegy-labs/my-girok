@@ -46,7 +46,7 @@ Full BFF: Session cookies, tokens never to browser.
 
 ```
 my-girok/
-├── apps/web-main/
+├── apps/web-girok/
 ├── services/{auth,personal}-service/
 └── packages/{types,nest-common}/
 ```

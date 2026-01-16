@@ -43,9 +43,9 @@ import PretendardBold from '@my-girok/design-tokens/fonts/pretendard/Pretendard-
 
 ## 자체 호스팅 자바스크립트 라이브러리
 
-| 리소스            | 위치                                    |
-| ----------------- | --------------------------------------- |
-| pdfjs-dist worker | apps/web-main/public/pdf.worker.min.mjs |
+| 리소스            | 위치                                     |
+| ----------------- | ---------------------------------------- |
+| pdfjs-dist worker | apps/web-girok/public/pdf.worker.min.mjs |
 
 ## 허용된 외부 서비스
 
