@@ -58,7 +58,11 @@ export class AppleStrategy extends PassportStrategy(Strategy, 'apple') {
 
   /**
    * Initialize strategy with database credentials
-   * Called during strategy initialization and can be refreshed
+   *
+   * Lifecycle: Called once during strategy instantiation at application startup.
+   * Database credential changes require service restart to take effect.
+   *
+   * Future enhancement: Implement hot-reloading via cache TTL or Pub/Sub mechanism.
    */
   private async initializeFromDatabase(): Promise<void> {
     try {
