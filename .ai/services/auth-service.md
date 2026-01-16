@@ -12,6 +12,7 @@
 | Session Management   | -                 |
 | Legal Documents      | -                 |
 | Consent Tracking     | -                 |
+| **OAuth Config**     | **NEW**           |
 | **Admin Profile**    | **Phase 2 (NEW)** |
 | **Admin Enterprise** | **Phase 2 (NEW)** |
 | **NHI Management**   | **Phase 2 (NEW)** |
@@ -38,6 +39,15 @@
 
 ### API Endpoints
 
+**OAuth Configuration:**
+
+- `GET /oauth-config` - List all providers (MASTER)
+- `GET /oauth-config/enabled` - Get enabled providers (PUBLIC)
+- `PATCH /oauth-config/:provider` - Update credentials (MASTER)
+- `PATCH /oauth-config/:provider/toggle` - Enable/disable (MASTER)
+
+**Admin Profile:**
+
 - `GET /admin/profile/me` - Get own profile
 - `GET /admin/profile/:id` - Get admin profile
 - `PATCH /admin/profile/:id/scim` - Update SCIM Core
@@ -45,6 +55,9 @@
 - `PATCH /admin/profile/:id/job` - Update job & organization
 - `PATCH /admin/profile/:id/joiner` - Update joiner info
 - `PATCH /admin/profile/:id/leaver` - Update leaver info
+
+**Enterprise:**
+
 - `POST /admin/enterprise/nhi` - Create NHI
 - `POST /admin/enterprise/:id/nhi/rotate` - Rotate NHI credentials
 - `POST /admin/enterprise/:id/verify` - Verify identity

@@ -106,7 +106,7 @@ test.describe('OAuth Flow', () => {
   });
 
   test.describe('OAuth Callback - Error', () => {
-    test('should display error message for failed OAuth', async ({ oauthCallbackPage, page }) => {
+    test('should display error message for failed OAuth', async ({ oauthCallbackPage }) => {
       await oauthCallbackPage.gotoWithError('google', 'access_denied');
 
       // Should show error state

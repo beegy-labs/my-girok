@@ -4,7 +4,7 @@
  * Tests for the API mutation hook with error handling and retry logic.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { AxiosError, AxiosHeaders } from 'axios';
 import { useApiMutation } from './useApiMutation';
@@ -50,7 +50,7 @@ describe('useApiMutation', () => {
       const { result } = renderHook(() => useApiMutation({ mutationFn }));
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(result.current.data).toEqual(mockData);
@@ -71,7 +71,7 @@ describe('useApiMutation', () => {
       const { result } = renderHook(() => useApiMutation({ mutationFn }));
 
       act(() => {
-        result.current.mutate();
+        result.current.mutate(undefined);
       });
 
       expect(result.current.isLoading).toBe(true);
@@ -90,7 +90,7 @@ describe('useApiMutation', () => {
       const { result } = renderHook(() => useApiMutation({ mutationFn }));
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(result.current.isError).toBe(true);
@@ -123,7 +123,7 @@ describe('useApiMutation', () => {
 
       let returnedData: unknown;
       await act(async () => {
-        returnedData = await result.current.mutateAsync();
+        returnedData = await result.current.mutateAsync(undefined);
       });
 
       expect(returnedData).toEqual(mockData);
@@ -136,7 +136,7 @@ describe('useApiMutation', () => {
       const { result } = renderHook(() => useApiMutation({ mutationFn }));
 
       await act(async () => {
-        await expect(result.current.mutateAsync()).rejects.toThrow();
+        await expect(result.current.mutateAsync(undefined)).rejects.toThrow();
       });
     });
   });
@@ -236,7 +236,7 @@ describe('useApiMutation', () => {
       );
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       await waitFor(() => {
@@ -258,7 +258,7 @@ describe('useApiMutation', () => {
       );
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(mutationFn).toHaveBeenCalledTimes(1);
@@ -274,7 +274,7 @@ describe('useApiMutation', () => {
       const { result } = renderHook(() => useApiMutation({ mutationFn }));
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(result.current.data).not.toBeNull();
