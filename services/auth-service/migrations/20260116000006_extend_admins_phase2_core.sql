@@ -41,12 +41,12 @@ ALTER TABLE admins ADD COLUMN IF NOT EXISTS lifecycle_status account_lifecycle_s
 ------------------------------------------------------------
 -- Job & Organization
 ------------------------------------------------------------
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS job_grade_id TEXT REFERENCES job_grades(id);
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS job_grade_id TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS job_title TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS job_title_en TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS job_code TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS job_family job_family;
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS organization_unit_id TEXT REFERENCES organization_units(id);
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS organization_unit_id TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS cost_center TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS manager_admin_id TEXT REFERENCES admins(id);
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS dotted_line_manager_id TEXT REFERENCES admins(id);
@@ -55,7 +55,7 @@ ALTER TABLE admins ADD COLUMN IF NOT EXISTS direct_reports_count INT DEFAULT 0;
 ------------------------------------------------------------
 -- Partner
 ------------------------------------------------------------
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS partner_company_id TEXT REFERENCES partner_companies(id);
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS partner_company_id TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS partner_employee_id TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS partner_contract_end_date DATE;
 
@@ -103,10 +103,10 @@ ALTER TABLE admins ADD COLUMN IF NOT EXISTS nhi_config JSONB DEFAULT '{}';
 ------------------------------------------------------------
 -- Location (Physical)
 ------------------------------------------------------------
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS legal_entity_id TEXT REFERENCES legal_entities(id);
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS primary_office_id TEXT REFERENCES offices(id);
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS building_id TEXT REFERENCES buildings(id);
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS floor_id TEXT REFERENCES floors(id);
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS legal_entity_id TEXT;
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS primary_office_id TEXT;
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS building_id TEXT;
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS floor_id TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS desk_code TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS remote_work_type remote_work_type DEFAULT 'OFFICE';
 
