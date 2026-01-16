@@ -9,7 +9,6 @@ import { of } from 'rxjs';
 
 describe('OAuthController', () => {
   let controller: OAuthController;
-  let httpService: HttpService;
 
   const defaultConfig: Record<string, string> = {
     'services.authService.url': 'http://localhost:3001',
@@ -72,7 +71,6 @@ describe('OAuthController', () => {
     }).compile();
 
     controller = module.get<OAuthController>(OAuthController);
-    httpService = module.get<HttpService>(HttpService);
   });
 
   afterEach(() => {
