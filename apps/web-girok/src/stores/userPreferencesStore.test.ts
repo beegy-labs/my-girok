@@ -7,7 +7,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act } from '@testing-library/react';
 import { useUserPreferencesStore } from './userPreferencesStore';
-import type { Theme, SectionOrderItem, UserPreferences } from '../api/userPreferences';
+import {
+  Theme,
+  SectionType,
+  type SectionOrderItem,
+  type UserPreferences,
+} from '../api/userPreferences';
 
 // Mock the API module
 vi.mock('../api/userPreferences', () => ({
@@ -35,8 +40,8 @@ describe('userPreferencesStore', () => {
   const mockPreferences: UserPreferences = {
     id: 'test-id',
     userId: 'user-1',
-    theme: 'light' as Theme,
-    sectionOrder: [{ type: 'skills', order: 1 }] as SectionOrderItem[],
+    theme: Theme.LIGHT,
+    sectionOrder: [{ type: SectionType.SKILLS, order: 1, visible: true }],
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',
   };
@@ -60,37 +65,37 @@ describe('userPreferencesStore', () => {
 
   describe('setTheme with rollback', () => {
     it('should update theme optimistically on success', async () => {
-      mockGetCookieJSON.mockReturnValue('light');
+      mockGetCookieJSON.mockReturnValue(Theme.LIGHT);
       mockUpdateUserPreferencesAPI.mockResolvedValue(undefined);
 
       const store = useUserPreferencesStore.getState();
 
       await act(async () => {
-        await store.setTheme('dark' as Theme);
+        await store.setTheme(Theme.DARK);
       });
 
       const state = useUserPreferencesStore.getState();
-      expect(state.preferences?.theme).toBe('dark');
-      expect(mockSetCookieJSON).toHaveBeenCalledWith('user-theme', 'dark', { expires: 365 });
-      expect(mockUpdateUserPreferencesAPI).toHaveBeenCalledWith({ theme: 'dark' });
+      expect(state.preferences?.theme).toBe(Theme.DARK);
+      expect(mockSetCookieJSON).toHaveBeenCalledWith('user-theme', Theme.DARK, { expires: 365 });
+      expect(mockUpdateUserPreferencesAPI).toHaveBeenCalledWith({ theme: Theme.DARK });
     });
 
     it('should rollback theme on API failure', async () => {
-      mockGetCookieJSON.mockReturnValue('light');
+      mockGetCookieJSON.mockReturnValue(Theme.LIGHT);
       mockUpdateUserPreferencesAPI.mockRejectedValue(new Error('API Error'));
 
       const store = useUserPreferencesStore.getState();
 
       await expect(
         act(async () => {
-          await store.setTheme('dark' as Theme);
+          await store.setTheme(Theme.DARK);
         }),
       ).rejects.toThrow('API Error');
 
       const state = useUserPreferencesStore.getState();
 
       // State should be rolled back
-      expect(state.preferences?.theme).toBe('light');
+      expect(state.preferences?.theme).toBe(Theme.LIGHT);
       expect(state.error).toBe('API Error');
 
       // Cookie should be restored
@@ -105,7 +110,7 @@ describe('userPreferencesStore', () => {
 
       await expect(
         act(async () => {
-          await store.setTheme('dark' as Theme);
+          await store.setTheme(Theme.DARK);
         }),
       ).rejects.toThrow();
 
@@ -116,10 +121,10 @@ describe('userPreferencesStore', () => {
   describe('setSectionOrder with rollback', () => {
     it('should update section order optimistically on success', async () => {
       const newOrder: SectionOrderItem[] = [
-        { type: 'experience', order: 1 },
-        { type: 'skills', order: 2 },
+        { type: SectionType.EXPERIENCE, order: 1, visible: true },
+        { type: SectionType.SKILLS, order: 2, visible: true },
       ];
-      mockGetCookieJSON.mockReturnValue([{ type: 'skills', order: 1 }]);
+      mockGetCookieJSON.mockReturnValue([{ type: SectionType.SKILLS, order: 1, visible: true }]);
       mockUpdateUserPreferencesAPI.mockResolvedValue(undefined);
 
       const store = useUserPreferencesStore.getState();
@@ -136,10 +141,12 @@ describe('userPreferencesStore', () => {
     });
 
     it('should rollback section order on API failure', async () => {
-      const originalOrder: SectionOrderItem[] = [{ type: 'skills', order: 1 }];
+      const originalOrder: SectionOrderItem[] = [
+        { type: SectionType.SKILLS, order: 1, visible: true },
+      ];
       const newOrder: SectionOrderItem[] = [
-        { type: 'experience', order: 1 },
-        { type: 'skills', order: 2 },
+        { type: SectionType.EXPERIENCE, order: 1, visible: true },
+        { type: SectionType.SKILLS, order: 2, visible: true },
       ];
 
       mockGetCookieJSON.mockReturnValue(originalOrder);
@@ -173,7 +180,7 @@ describe('userPreferencesStore', () => {
 
       await expect(
         act(async () => {
-          await store.setSectionOrder([{ type: 'skills', order: 1 }]);
+          await store.setSectionOrder([{ type: SectionType.SKILLS, order: 1, visible: true }]);
         }),
       ).rejects.toThrow();
 
@@ -183,7 +190,9 @@ describe('userPreferencesStore', () => {
 
   describe('updatePreferences with rollback', () => {
     it('should update both theme and section order optimistically', async () => {
-      const newOrder: SectionOrderItem[] = [{ type: 'experience', order: 1 }];
+      const newOrder: SectionOrderItem[] = [
+        { type: SectionType.EXPERIENCE, order: 1, visible: true },
+      ];
       mockGetCookieJSON.mockReturnValue(null);
       mockUpdateUserPreferencesAPI.mockResolvedValue(undefined);
 
@@ -191,19 +200,21 @@ describe('userPreferencesStore', () => {
 
       await act(async () => {
         await store.updatePreferences({
-          theme: 'dark' as Theme,
+          theme: Theme.DARK,
           sectionOrder: newOrder,
         });
       });
 
       const state = useUserPreferencesStore.getState();
-      expect(state.preferences?.theme).toBe('dark');
+      expect(state.preferences?.theme).toBe(Theme.DARK);
       expect(state.preferences?.sectionOrder).toEqual(newOrder);
     });
 
     it('should rollback both theme and section order on API failure', async () => {
-      const originalTheme = 'light' as Theme;
-      const originalOrder: SectionOrderItem[] = [{ type: 'skills', order: 1 }];
+      const originalTheme = Theme.LIGHT;
+      const originalOrder: SectionOrderItem[] = [
+        { type: SectionType.SKILLS, order: 1, visible: true },
+      ];
 
       // Mock to return previous values
       mockGetCookieJSON
@@ -217,8 +228,8 @@ describe('userPreferencesStore', () => {
       await expect(
         act(async () => {
           await store.updatePreferences({
-            theme: 'dark' as Theme,
-            sectionOrder: [{ type: 'experience', order: 1 }],
+            theme: Theme.DARK,
+            sectionOrder: [{ type: SectionType.EXPERIENCE, order: 1, visible: true }],
           });
         }),
       ).rejects.toThrow('API Error');
@@ -231,7 +242,7 @@ describe('userPreferencesStore', () => {
       expect(state.error).toBe('API Error');
     });
 
-    it('should handle null sectionOrder (deletion)', async () => {
+    it('should handle undefined sectionOrder (deletion)', async () => {
       mockGetCookieJSON.mockReturnValue(null);
       mockUpdateUserPreferencesAPI.mockResolvedValue(undefined);
 
@@ -239,7 +250,7 @@ describe('userPreferencesStore', () => {
 
       await act(async () => {
         await store.updatePreferences({
-          sectionOrder: null,
+          sectionOrder: undefined,
         });
       });
 
@@ -248,19 +259,19 @@ describe('userPreferencesStore', () => {
 
     it('should only rollback changed fields on failure', async () => {
       // Only updating theme, not section order
-      mockGetCookieJSON.mockReturnValue('light');
+      mockGetCookieJSON.mockReturnValue(Theme.LIGHT);
       mockUpdateUserPreferencesAPI.mockRejectedValue(new Error('API Error'));
 
       const store = useUserPreferencesStore.getState();
 
       await expect(
         act(async () => {
-          await store.updatePreferences({ theme: 'dark' as Theme });
+          await store.updatePreferences({ theme: Theme.DARK });
         }),
       ).rejects.toThrow();
 
       // Only theme cookie should be restored, not section order
-      expect(mockSetCookieJSON).toHaveBeenCalledWith('user-theme', 'light', { expires: 365 });
+      expect(mockSetCookieJSON).toHaveBeenCalledWith('user-theme', Theme.LIGHT, { expires: 365 });
       // deleteCookie for section-order should NOT be called
       const sectionOrderDeleteCalls = mockDeleteCookie.mock.calls.filter(
         (call) => call[0] === 'user-section-order',

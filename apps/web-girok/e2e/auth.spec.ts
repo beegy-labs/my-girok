@@ -19,10 +19,7 @@ const testUser = {
 };
 
 test.describe('Full Authentication Flow', () => {
-  test.skip('should complete full registration and authentication flow', async ({
-    loginPage,
-    page,
-  }) => {
+  test.skip('should complete full registration and authentication flow', async ({ page }) => {
     // 1. Navigate to home page
     await page.goto('/');
     await expect(page.locator('h1')).toContainText('My-Girok');
@@ -118,7 +115,7 @@ test.describe('Full Authentication Flow', () => {
     await expect(page).toHaveURL(/\/(register|consent)/);
   });
 
-  test.skip('should maintain session after page reload', async ({ loginPage, page }) => {
+  test.skip('should maintain session after page reload', async ({ page }) => {
     // 1. Register a new user
     const email = createTestUserEmail();
 

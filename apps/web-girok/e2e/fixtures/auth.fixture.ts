@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { test as base, expect } from '@playwright/test';
 import { LoginPage, MfaPage, SessionsPage, OAuthCallbackPage } from '../page-objects';
 
@@ -5,6 +6,10 @@ import { LoginPage, MfaPage, SessionsPage, OAuthCallbackPage } from '../page-obj
  * Test fixtures for authentication E2E tests
  *
  * Provides pre-configured page objects and test utilities.
+ *
+ * Note: react-hooks/rules-of-hooks is disabled for this file because Playwright's
+ * fixture pattern uses a 'use' parameter that triggers false positives in React's
+ * hooks linter. These are not React hooks.
  */
 
 // Test user credentials for E2E tests

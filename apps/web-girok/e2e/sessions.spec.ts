@@ -29,11 +29,7 @@ test.describe('Session Management', () => {
   });
 
   test.describe('Current Session Display', () => {
-    test.skip('should display current session information', async ({
-      sessionsPage,
-      loginPage,
-      page,
-    }) => {
+    test.skip('should display current session information', async ({ sessionsPage, page }) => {
       // Login first
       await performLogin(page);
 
@@ -223,7 +219,7 @@ test.describe('Token Refresh', () => {
     await expect(page).toHaveURL('/settings');
   });
 
-  test.skip('should handle token refresh failure gracefully', async ({ page }) => {
+  test.skip('should handle token refresh failure gracefully', async () => {
     // This test would require mocking the token refresh endpoint to fail
     // If token refresh fails, user should be redirected to login
     // with their intended destination preserved

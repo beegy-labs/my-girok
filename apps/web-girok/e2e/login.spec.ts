@@ -1,10 +1,4 @@
-import {
-  test,
-  expect,
-  TEST_USER,
-  INVALID_USER,
-  createTestUserEmail,
-} from './fixtures/auth.fixture';
+import { test, expect, TEST_USER, INVALID_USER } from './fixtures/auth.fixture';
 
 /**
  * E2E Tests: Login Flow

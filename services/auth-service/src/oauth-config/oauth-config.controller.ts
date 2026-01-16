@@ -1,21 +1,13 @@
-import {
-  Controller,
-  Get,
-  Patch,
-  Param,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-} from '@nestjs/swagger';
+import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard, CurrentUser } from '@my-girok/nest-common';
 import { OAuthConfigService } from './oauth-config.service';
-import { ToggleProviderDto } from './dto/toggle-provider.dto';
+import {
+  ToggleProviderDto,
+  UpdateCredentialsDto,
+  OAuthProviderResponseDto,
+  EnabledProvidersResponseDto,
+} from './dto';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { AuthProvider, Role } from '@my-girok/types';
@@ -29,20 +21,23 @@ export class OAuthConfigController {
 
   /**
    * GET /v1/oauth-config
-   * Get all OAuth provider configurations
+   * Get all OAuth provider configurations with masked secrets
    * Access: MASTER only
    */
   @Get()
   @Roles(Role.MASTER)
-  @ApiOperation({ summary: 'Get all OAuth provider configurations' })
+  @ApiOperation({
+    summary: 'Get all OAuth provider configurations (secrets masked)',
+  })
   @ApiResponse({
     status: 200,
     description: 'List of all OAuth provider configurations',
+    type: [OAuthProviderResponseDto],
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - MASTER role required' })
-  async getAllProviders() {
-    return this.oauthConfigService.getAllProviders();
+  async getAllProviders(): Promise<OAuthProviderResponseDto[]> {
+    return this.oauthConfigService.getAllProvidersWithMasking();
   }
 
   /**
@@ -95,11 +90,7 @@ export class OAuthConfigController {
     @Body() dto: ToggleProviderDto,
     @CurrentUser() user: any,
   ) {
-    return this.oauthConfigService.toggleProvider(
-      provider,
-      dto.enabled,
-      user.id,
-    );
+    return this.oauthConfigService.toggleProvider(provider, dto.enabled, user.id);
   }
 
   /**
@@ -133,5 +124,59 @@ export class OAuthConfigController {
       provider,
       enabled,
     };
+  }
+
+  /**
+   * GET /v1/oauth-config/enabled
+   * Get list of enabled OAuth providers (public endpoint)
+   * Access: Public - No authentication required
+   */
+  @Get('enabled')
+  @ApiOperation({
+    summary: 'Get enabled OAuth providers (Public)',
+    description:
+      'Returns list of enabled OAuth providers for dynamic UI rendering. No credentials included.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of enabled OAuth providers',
+    type: EnabledProvidersResponseDto,
+  })
+  async getEnabledProviders(): Promise<EnabledProvidersResponseDto> {
+    return this.oauthConfigService.getEnabledProviders();
+  }
+
+  /**
+   * PATCH /v1/oauth-config/:provider
+   * Update OAuth provider credentials
+   * Access: MASTER only
+   */
+  @Patch(':provider')
+  @Roles(Role.MASTER)
+  @ApiOperation({
+    summary: 'Update OAuth provider credentials',
+    description:
+      'Update clientId, clientSecret, and/or callbackUrl. Client secret will be encrypted.',
+  })
+  @ApiParam({
+    name: 'provider',
+    enum: AuthProvider,
+    description: 'OAuth provider type',
+    example: 'GOOGLE',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Credentials updated successfully',
+    type: OAuthProviderResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid callback URL' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - MASTER role required' })
+  async updateCredentials(
+    @Param('provider') provider: AuthProvider,
+    @Body() dto: UpdateCredentialsDto,
+    @CurrentUser() user: any,
+  ): Promise<OAuthProviderResponseDto> {
+    return this.oauthConfigService.updateProviderCredentials(provider, dto, user.id);
   }
 }

@@ -1,175 +1,344 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { OAuthConfigController } from './oauth-config.controller';
 import { OAuthConfigService } from './oauth-config.service';
 import { AuthProvider, Role } from '@my-girok/types';
+import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 
 describe('OAuthConfigController', () => {
   let controller: OAuthConfigController;
-  let service: OAuthConfigService;
 
   const mockOAuthConfigService = {
-    getAllProviders: vi.fn(),
+    getAllProvidersWithMasking: vi.fn(),
     getProviderConfig: vi.fn(),
     toggleProvider: vi.fn(),
     isProviderEnabled: vi.fn(),
-  };
-
-  const mockAdminUser = {
-    id: 'admin-123',
-    email: 'admin@beegy.net',
-    role: Role.MASTER,
+    getEnabledProviders: vi.fn(),
+    updateProviderCredentials: vi.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [OAuthConfigController],
-      providers: [
-        {
-          provide: OAuthConfigService,
-          useValue: mockOAuthConfigService,
-        },
-      ],
+      providers: [{ provide: OAuthConfigService, useValue: mockOAuthConfigService }],
     }).compile();
 
     controller = module.get<OAuthConfigController>(OAuthConfigController);
-    service = module.get<OAuthConfigService>(OAuthConfigService);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('GET /oauth-config', () => {
-    it('should return all OAuth provider configurations', async () => {
-      // Arrange
-      const mockConfigs = [
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
+
+  describe('getAllProviders', () => {
+    it('should return all providers with masked secrets', async () => {
+      const mockProviders = [
         {
           id: '1',
           provider: AuthProvider.GOOGLE,
           enabled: true,
           displayName: 'Google',
-          description: 'Login with Google',
+          clientId: 'google-client-id',
+          clientSecretMasked: '************1234',
+          updatedAt: new Date(),
         },
         {
           id: '2',
           provider: AuthProvider.KAKAO,
           enabled: false,
           displayName: 'Kakao',
-          description: 'Login with Kakao',
+          clientId: 'kakao-client-id',
+          clientSecretMasked: '************5678',
+          updatedAt: new Date(),
         },
       ];
 
-      mockOAuthConfigService.getAllProviders.mockResolvedValue(mockConfigs);
+      mockOAuthConfigService.getAllProvidersWithMasking.mockResolvedValue(mockProviders);
 
-      // Act
       const result = await controller.getAllProviders();
 
-      // Assert
-      expect(result).toEqual(mockConfigs);
-      expect(service.getAllProviders).toHaveBeenCalled();
+      expect(result).toEqual(mockProviders);
+      expect(mockOAuthConfigService.getAllProvidersWithMasking).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return empty array if no providers configured', async () => {
+      mockOAuthConfigService.getAllProvidersWithMasking.mockResolvedValue([]);
+
+      const result = await controller.getAllProviders();
+
+      expect(result).toEqual([]);
     });
   });
 
-  describe('GET /oauth-config/:provider', () => {
+  describe('getProviderConfig', () => {
     it('should return specific provider configuration', async () => {
-      // Arrange
       const provider = AuthProvider.GOOGLE;
       const mockConfig = {
         id: '1',
         provider: AuthProvider.GOOGLE,
         enabled: true,
         displayName: 'Google',
-        description: 'Login with Google',
+        clientId: 'google-client-id',
       };
 
       mockOAuthConfigService.getProviderConfig.mockResolvedValue(mockConfig);
 
-      // Act
       const result = await controller.getProviderConfig(provider);
 
-      // Assert
       expect(result).toEqual(mockConfig);
-      expect(service.getProviderConfig).toHaveBeenCalledWith(provider);
+      expect(mockOAuthConfigService.getProviderConfig).toHaveBeenCalledWith(provider);
+    });
+
+    it('should throw NotFoundException if provider config does not exist', async () => {
+      const provider = AuthProvider.NAVER;
+      mockOAuthConfigService.getProviderConfig.mockRejectedValue(
+        new NotFoundException(`OAuth provider configuration for ${provider} not found`),
+      );
+
+      await expect(controller.getProviderConfig(provider)).rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('PATCH /oauth-config/:provider/toggle', () => {
-    it('should enable a provider', async () => {
-      // Arrange
+  describe('toggleProvider', () => {
+    it('should enable a disabled provider', async () => {
       const provider = AuthProvider.KAKAO;
       const dto = { enabled: true };
-      const mockUpdatedConfig = {
+      const user = { id: 'admin-123', role: Role.MASTER };
+      const updatedConfig = {
         id: '2',
         provider: AuthProvider.KAKAO,
         enabled: true,
         displayName: 'Kakao',
-        updatedBy: mockAdminUser.id,
+        updatedBy: user.id,
       };
 
-      mockOAuthConfigService.toggleProvider.mockResolvedValue(mockUpdatedConfig);
+      mockOAuthConfigService.toggleProvider.mockResolvedValue(updatedConfig);
 
-      // Act
-      const result = await controller.toggleProvider(provider, dto, mockAdminUser);
+      const result = await controller.toggleProvider(provider, dto, user);
 
-      // Assert
-      expect(result).toEqual(mockUpdatedConfig);
-      expect(service.toggleProvider).toHaveBeenCalledWith(provider, true, mockAdminUser.id);
+      expect(result).toEqual(updatedConfig);
+      expect(mockOAuthConfigService.toggleProvider).toHaveBeenCalledWith(
+        provider,
+        dto.enabled,
+        user.id,
+      );
     });
 
-    it('should disable a provider', async () => {
-      // Arrange
+    it('should disable an enabled provider', async () => {
       const provider = AuthProvider.GOOGLE;
       const dto = { enabled: false };
-      const mockUpdatedConfig = {
+      const user = { id: 'admin-456', role: Role.MASTER };
+      const updatedConfig = {
         id: '1',
         provider: AuthProvider.GOOGLE,
         enabled: false,
         displayName: 'Google',
-        updatedBy: mockAdminUser.id,
+        updatedBy: user.id,
       };
 
-      mockOAuthConfigService.toggleProvider.mockResolvedValue(mockUpdatedConfig);
+      mockOAuthConfigService.toggleProvider.mockResolvedValue(updatedConfig);
 
-      // Act
-      const result = await controller.toggleProvider(provider, dto, mockAdminUser);
+      const result = await controller.toggleProvider(provider, dto, user);
 
-      // Assert
-      expect(result).toEqual(mockUpdatedConfig);
-      expect(service.toggleProvider).toHaveBeenCalledWith(provider, false, mockAdminUser.id);
+      expect(result).toEqual(updatedConfig);
+    });
+
+    it('should throw ForbiddenException when trying to disable LOCAL provider', async () => {
+      const provider = AuthProvider.LOCAL;
+      const dto = { enabled: false };
+      const user = { id: 'admin-789', role: Role.MASTER };
+
+      mockOAuthConfigService.toggleProvider.mockRejectedValue(
+        new ForbiddenException('Cannot disable LOCAL provider'),
+      );
+
+      await expect(controller.toggleProvider(provider, dto, user)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
-  describe('GET /oauth-config/:provider/status', () => {
-    it('should return provider enabled status', async () => {
-      // Arrange
-      const provider = AuthProvider.NAVER;
+  describe('getProviderStatus', () => {
+    it('should return enabled status for enabled provider', async () => {
+      const provider = AuthProvider.GOOGLE;
       mockOAuthConfigService.isProviderEnabled.mockResolvedValue(true);
 
-      // Act
       const result = await controller.getProviderStatus(provider);
 
-      // Assert
-      expect(result).toEqual({
-        provider: AuthProvider.NAVER,
-        enabled: true,
-      });
-      expect(service.isProviderEnabled).toHaveBeenCalledWith(provider);
+      expect(result).toEqual({ provider, enabled: true });
+      expect(mockOAuthConfigService.isProviderEnabled).toHaveBeenCalledWith(provider);
     });
 
-    it('should return false for disabled provider', async () => {
-      // Arrange
+    it('should return disabled status for disabled provider', async () => {
       const provider = AuthProvider.KAKAO;
       mockOAuthConfigService.isProviderEnabled.mockResolvedValue(false);
 
-      // Act
       const result = await controller.getProviderStatus(provider);
 
-      // Assert
-      expect(result).toEqual({
+      expect(result).toEqual({ provider, enabled: false });
+    });
+
+    it('should return true for LOCAL provider', async () => {
+      const provider = AuthProvider.LOCAL;
+      mockOAuthConfigService.isProviderEnabled.mockResolvedValue(true);
+
+      const result = await controller.getProviderStatus(provider);
+
+      expect(result).toEqual({ provider, enabled: true });
+    });
+  });
+
+  describe('getEnabledProviders', () => {
+    it('should return list of enabled providers without LOCAL', async () => {
+      const mockResponse = {
+        providers: [
+          { provider: AuthProvider.GOOGLE, displayName: 'Google' },
+          { provider: AuthProvider.KAKAO, displayName: 'Kakao' },
+        ],
+      };
+
+      mockOAuthConfigService.getEnabledProviders.mockResolvedValue(mockResponse);
+
+      const result = await controller.getEnabledProviders();
+
+      expect(result).toEqual(mockResponse);
+      expect(result.providers).toHaveLength(2);
+      expect(result.providers.find((p) => p.provider === AuthProvider.LOCAL)).toBeUndefined();
+    });
+
+    it('should return empty list if no providers enabled', async () => {
+      const mockResponse = { providers: [] };
+      mockOAuthConfigService.getEnabledProviders.mockResolvedValue(mockResponse);
+
+      const result = await controller.getEnabledProviders();
+
+      expect(result).toEqual(mockResponse);
+      expect(result.providers).toHaveLength(0);
+    });
+  });
+
+  describe('updateCredentials', () => {
+    it('should update provider credentials and return masked response', async () => {
+      const provider = AuthProvider.GOOGLE;
+      const dto = {
+        clientId: 'new-google-client-id',
+        clientSecret: 'new-google-secret',
+        callbackUrl: 'https://auth-bff.girok.dev/oauth/google/callback',
+      };
+      const user = { id: 'admin-123', role: Role.MASTER };
+      const mockResponse = {
+        id: '1',
+        provider: AuthProvider.GOOGLE,
+        enabled: true,
+        displayName: 'Google',
+        clientId: dto.clientId,
+        clientSecretMasked: '************cret',
+        callbackUrl: dto.callbackUrl,
+        updatedBy: user.id,
+        updatedAt: new Date(),
+      };
+
+      mockOAuthConfigService.updateProviderCredentials.mockResolvedValue(mockResponse);
+
+      const result = await controller.updateCredentials(provider, dto, user);
+
+      expect(result).toEqual(mockResponse);
+      expect(mockOAuthConfigService.updateProviderCredentials).toHaveBeenCalledWith(
+        provider,
+        dto,
+        user.id,
+      );
+      expect(result.clientSecretMasked).toContain('*');
+    });
+
+    it('should update only clientId', async () => {
+      const provider = AuthProvider.KAKAO;
+      const dto = { clientId: 'new-kakao-client-id' };
+      const user = { id: 'admin-456', role: Role.MASTER };
+      const mockResponse = {
+        id: '2',
         provider: AuthProvider.KAKAO,
-        enabled: false,
-      });
+        enabled: true,
+        displayName: 'Kakao',
+        clientId: dto.clientId,
+        updatedBy: user.id,
+        updatedAt: new Date(),
+      };
+
+      mockOAuthConfigService.updateProviderCredentials.mockResolvedValue(mockResponse);
+
+      const result = await controller.updateCredentials(provider, dto, user);
+
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should update only clientSecret', async () => {
+      const provider = AuthProvider.NAVER;
+      const dto = { clientSecret: 'new-naver-secret' };
+      const user = { id: 'admin-789', role: Role.MASTER };
+      const mockResponse = {
+        id: '3',
+        provider: AuthProvider.NAVER,
+        enabled: true,
+        displayName: 'Naver',
+        clientSecretMasked: '************cret',
+        updatedBy: user.id,
+        updatedAt: new Date(),
+      };
+
+      mockOAuthConfigService.updateProviderCredentials.mockResolvedValue(mockResponse);
+
+      const result = await controller.updateCredentials(provider, dto, user);
+
+      expect(result).toEqual(mockResponse);
+      expect(result.clientSecretMasked).toContain('*');
+    });
+
+    it('should throw BadRequestException for invalid callback URL', async () => {
+      const provider = AuthProvider.GOOGLE;
+      const dto = { callbackUrl: 'https://evil.com/callback' };
+      const user = { id: 'admin-123', role: Role.MASTER };
+
+      mockOAuthConfigService.updateProviderCredentials.mockRejectedValue(
+        new BadRequestException('Invalid callback URL domain'),
+      );
+
+      await expect(controller.updateCredentials(provider, dto, user)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should accept valid girok.dev callback URLs', async () => {
+      const provider = AuthProvider.GOOGLE;
+      const validUrls = [
+        'http://localhost:4005/oauth/google/callback',
+        'https://girok.dev/oauth/google/callback',
+        'https://auth.girok.dev/oauth/google/callback',
+        'https://auth-bff.girok.dev/oauth/google/callback',
+      ];
+      const user = { id: 'admin-123', role: Role.MASTER };
+
+      for (const url of validUrls) {
+        const dto = { callbackUrl: url };
+        const mockResponse = {
+          id: '1',
+          provider: AuthProvider.GOOGLE,
+          enabled: true,
+          callbackUrl: url,
+          updatedBy: user.id,
+          updatedAt: new Date(),
+        };
+
+        mockOAuthConfigService.updateProviderCredentials.mockResolvedValue(mockResponse);
+
+        const result = await controller.updateCredentials(provider, dto, user);
+
+        expect(result.callbackUrl).toBe(url);
+      }
     });
   });
 });
