@@ -5,6 +5,7 @@
 -- (likely via Prisma Migrate or manual SQL), but were not recorded in goose_db_version.
 
 -- Insert missing migration records (only if they don't exist)
+-- +goose StatementBegin
 DO $$
 DECLARE
   v_version_id BIGINT;
@@ -26,6 +27,7 @@ BEGIN
     END IF;
   END LOOP;
 END $$;
+-- +goose StatementEnd
 
 -- +goose Down
 -- Remove the sync records
