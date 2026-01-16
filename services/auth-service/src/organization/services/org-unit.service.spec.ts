@@ -7,7 +7,6 @@ import { OrgUnitType } from '../dto/org-unit.dto';
 
 describe('OrgUnitService', () => {
   let service: OrgUnitService;
-  let prisma: PrismaService;
 
   const mockPrismaService = {
     organizationUnit: {
@@ -44,7 +43,6 @@ describe('OrgUnitService', () => {
     }).compile();
 
     service = module.get<OrgUnitService>(OrgUnitService);
-    prisma = module.get<PrismaService>(PrismaService);
 
     vi.clearAllMocks();
   });
@@ -270,15 +268,6 @@ describe('OrgUnitService', () => {
         name: 'Unit A',
         org_type: 'DEPARTMENT',
         parent_id: null,
-        is_active: true,
-      };
-
-      const orgUnitB = {
-        id: 'unit-b',
-        code: 'B',
-        name: 'Unit B',
-        org_type: 'TEAM',
-        parent_id: 'unit-a',
         is_active: true,
       };
 

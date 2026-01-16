@@ -6,7 +6,6 @@ import { NotFoundException, ConflictException } from '@nestjs/common';
 
 describe('LegalEntityService', () => {
   let service: LegalEntityService;
-  let prisma: PrismaService;
 
   const mockPrismaService = {
     legalEntity: {
@@ -44,7 +43,6 @@ describe('LegalEntityService', () => {
     }).compile();
 
     service = module.get<LegalEntityService>(LegalEntityService);
-    prisma = module.get<PrismaService>(PrismaService);
 
     vi.clearAllMocks();
   });

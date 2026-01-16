@@ -7,7 +7,6 @@ import { JobFamily } from '../dto/job-grade.dto';
 
 describe('JobGradeService', () => {
   let service: JobGradeService;
-  let prisma: PrismaService;
 
   const mockPrismaService = {
     jobGrade: {
@@ -44,7 +43,6 @@ describe('JobGradeService', () => {
     }).compile();
 
     service = module.get<JobGradeService>(JobGradeService);
-    prisma = module.get<PrismaService>(PrismaService);
 
     // Clear all mocks before each test
     vi.clearAllMocks();
