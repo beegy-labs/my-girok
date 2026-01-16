@@ -1,148 +1,20 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useAuthStore } from '../stores/authStore';
-import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
 import { generateWebsiteSchema } from '../utils/structuredData';
-import { useTheme } from '../hooks/useTheme';
-import {
-  Button,
-  MenuCard,
-  MenuRow,
-  ViewToggle,
-  SectionBadge,
-  TopWidget,
-  type ViewMode,
-} from '@my-girok/ui-components';
+import { SectionBadge, TopWidget, type ViewMode } from '@my-girok/ui-components';
 import Footer from '../components/Footer';
+import { Calendar, Wallet, Plus } from 'lucide-react';
+
 import {
-  Book,
-  Calendar,
-  FileText,
-  Wallet,
-  Settings,
-  Library,
-  Users,
-  BarChart3,
-  Bell,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  Layers,
-  GripVertical,
-  Sun,
-  Moon,
-} from 'lucide-react';
-
-// Promo slides - shown when no ads available
-const PROMOS = [
-  {
-    tagKey: 'promo.premium.tag',
-    titleKey: 'promo.premium.title',
-    descKey: 'promo.premium.desc',
-    ctaKey: 'promo.premium.cta',
-  },
-  {
-    tagKey: 'promo.theme.tag',
-    titleKey: 'promo.theme.title',
-    descKey: 'promo.theme.desc',
-    ctaKey: 'promo.theme.cta',
-  },
-  {
-    tagKey: 'promo.mobile.tag',
-    titleKey: 'promo.mobile.title',
-    descKey: 'promo.mobile.desc',
-    ctaKey: 'promo.mobile.cta',
-  },
-];
-
-interface MenuItem {
-  id: string;
-  nameKey: string;
-  descriptionKey: string;
-  icon: React.ElementType;
-  route: string;
-  status: 'active' | 'coming-soon';
-}
-
-// 9 Menu Functions - Editorial Archive Style (V0.0.1 AAA Workstation)
-const MENU_ITEMS: MenuItem[] = [
-  {
-    id: 'journal',
-    nameKey: 'home.journal.title',
-    descriptionKey: 'home.journal.description',
-    icon: Book,
-    route: '/journal',
-    status: 'coming-soon',
-  },
-  {
-    id: 'schedule',
-    nameKey: 'home.schedule.title',
-    descriptionKey: 'home.schedule.description',
-    icon: Calendar,
-    route: '/schedule',
-    status: 'coming-soon',
-  },
-  {
-    id: 'career',
-    nameKey: 'home.career.title',
-    descriptionKey: 'home.career.description',
-    icon: FileText,
-    route: '/resume/my',
-    status: 'active',
-  },
-  {
-    id: 'finance',
-    nameKey: 'home.finance.title',
-    descriptionKey: 'home.finance.description',
-    icon: Wallet,
-    route: '/finance',
-    status: 'coming-soon',
-  },
-  {
-    id: 'settings',
-    nameKey: 'home.settings.title',
-    descriptionKey: 'home.settings.description',
-    icon: Settings,
-    route: '/settings',
-    status: 'active',
-  },
-  {
-    id: 'library',
-    nameKey: 'home.library.title',
-    descriptionKey: 'home.library.description',
-    icon: Library,
-    route: '/library',
-    status: 'coming-soon',
-  },
-  {
-    id: 'network',
-    nameKey: 'home.network.title',
-    descriptionKey: 'home.network.description',
-    icon: Users,
-    route: '/network',
-    status: 'coming-soon',
-  },
-  {
-    id: 'stats',
-    nameKey: 'home.stats.title',
-    descriptionKey: 'home.stats.description',
-    icon: BarChart3,
-    route: '/stats',
-    status: 'coming-soon',
-  },
-  {
-    id: 'notifications',
-    nameKey: 'home.notifications.title',
-    descriptionKey: 'home.notifications.description',
-    icon: Bell,
-    route: '/notifications',
-    status: 'coming-soon',
-  },
-];
-
-// Widget-enabled menu IDs (can be pinned to top)
-const WIDGET_ENABLED_IDS = ['schedule', 'finance'] as const;
+  AdBanner,
+  HeroSection,
+  MenuIndexSection,
+  PromoCarousel,
+  WorkstationSection,
+  MENU_ITEMS,
+} from '../components/home';
 
 /**
  * HomePage - V0.0.1 AAA Workstation Design
@@ -151,14 +23,11 @@ const WIDGET_ENABLED_IDS = ['schedule', 'finance'] as const;
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { effectiveTheme, toggleTheme } = useTheme();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [pinnedWidgetId, setPinnedWidgetId] = useState<string | null>(null);
-  const [currentPromo, setCurrentPromo] = useState(0);
 
-  // TODO: Replace with actual ad availability check (e.g., from AdSense callback or feature flag)
-  const isAdEnabled = true; // Set to true when AdSense is configured
+  // TODO: Replace with actual ad availability check
+  const isAdEnabled = true;
 
   // Memoized pinned widget data
   const pinnedWidget = useMemo(
@@ -166,37 +35,9 @@ export default function HomePage() {
     [pinnedWidgetId],
   );
 
-  // Curried handlers (2025 React best practice - no inline functions in map)
-  const handleMenuClick = useCallback(
-    (menu: MenuItem) => () => {
-      if (menu.status === 'active') {
-        navigate(menu.route);
-      }
-    },
-    [navigate],
-  );
-
-  // Pin/unpin widget handler (curried)
-  const handlePinWidget = useCallback(
-    (menuId: string) => () => {
-      setPinnedWidgetId((prev) => (prev === menuId ? null : menuId));
-    },
-    [],
-  );
-
-  // Check if a menu can be pinned as widget
-  const canPinAsWidget = useCallback(
-    (menuId: string) => WIDGET_ENABLED_IDS.includes(menuId as (typeof WIDGET_ENABLED_IDS)[number]),
-    [],
-  );
-
-  // Promo carousel handlers
-  const handlePrevPromo = useCallback(() => {
-    setCurrentPromo((prev) => (prev - 1 + PROMOS.length) % PROMOS.length);
-  }, []);
-
-  const handleNextPromo = useCallback(() => {
-    setCurrentPromo((prev) => (prev + 1) % PROMOS.length);
+  // Pin/unpin widget handler
+  const handlePinWidget = useCallback((menuId: string) => {
+    setPinnedWidgetId((prev) => (prev === menuId ? null : menuId));
   }, []);
 
   return (
@@ -243,220 +84,11 @@ export default function HomePage() {
                   : t('aria.featuredPromotions', { defaultValue: 'Featured Promotions' })
               }
             >
-              {isAdEnabled ? (
-                /* ========== Google AdSense Banner (Full Width Responsive) ========== */
-                <>
-                  {/* Ad Label - Required by AdSense policy */}
-                  <div className="flex justify-end mb-1">
-                    <span className="text-[10px] text-theme-text-muted uppercase tracking-wide">
-                      {t('ad.sponsored', { defaultValue: 'Sponsored' })}
-                    </span>
-                  </div>
-
-                  {/* Ad Container - Full width responsive (AdSense recommended) */}
-                  <div
-                    className="ad-container relative w-full overflow-hidden rounded-soft border-2 border-theme-border-default bg-theme-bg-card"
-                    data-ad-slot="homepage-banner"
-                    data-ad-format="auto"
-                    data-full-width-responsive="true"
-                  >
-                    {/* Responsive banner - min-height prevents CLS, allows larger ads */}
-                    <div className="w-full min-h-[100px] sm:min-h-[120px] lg:min-h-[160px] flex items-center justify-center">
-                      {/* Placeholder for development - will be replaced by AdSense */}
-                      <div className="ad-placeholder w-full min-h-[100px] sm:min-h-[120px] lg:min-h-[160px] border-2 border-dashed border-theme-border-subtle rounded-soft flex flex-col items-center justify-center bg-theme-bg-secondary/50 gap-2">
-                        <span className="text-sm font-mono text-theme-text-muted">
-                          {t('ad.placeholder', { defaultValue: 'Advertisement' })}
-                        </span>
-                        <span className="text-[10px] font-mono text-theme-text-muted/60">
-                          Full Width Responsive
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                /* ========== Self Promo Carousel ========== */
-                <div className="relative group w-full min-h-[200px] sm:min-h-[240px] lg:min-h-[300px] rounded-soft border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden transition-all hover:border-theme-primary focus-within:ring-[4px] focus-within:ring-theme-focus-ring">
-                  {/* Content wrapper */}
-                  <div className="h-full p-4 sm:p-8 lg:p-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 lg:gap-10">
-                    {/* Text content */}
-                    <div className="flex-1 flex flex-col justify-center" key={currentPromo}>
-                      <span className="text-[10px] sm:text-[11px] lg:text-[12px] font-black uppercase tracking-brand text-theme-primary mb-2 sm:mb-3 lg:mb-4 block font-mono-brand">
-                        {t(PROMOS[currentPromo].tagKey, { defaultValue: 'Premium' })}
-                      </span>
-                      <h2 className="text-xl sm:text-3xl lg:text-5xl text-theme-text-primary mb-2 sm:mb-4 lg:mb-6 leading-tight font-serif-title">
-                        {t(PROMOS[currentPromo].titleKey, { defaultValue: 'Gold Edition.' })}
-                      </h2>
-                      <p className="hidden sm:block text-sm lg:text-lg font-bold text-theme-text-secondary mb-4 sm:mb-6 lg:mb-10 leading-relaxed max-w-xl">
-                        {t(PROMOS[currentPromo].descKey, {
-                          defaultValue: 'Unlimited storage and enhanced security.',
-                        })}
-                      </p>
-                      <button
-                        type="button"
-                        className="text-[10px] sm:text-[11px] lg:text-[12px] font-black uppercase tracking-brand-sm text-theme-primary border-b-2 border-theme-primary pb-1 sm:pb-2 hover:opacity-80 transition-all w-fit min-h-[36px] sm:min-h-[44px]"
-                        aria-label={t('aria.viewPromoDetails', {
-                          defaultValue: 'View promo details',
-                        })}
-                      >
-                        {t(PROMOS[currentPromo].ctaKey, { defaultValue: 'Learn More' })}
-                      </button>
-                    </div>
-
-                    {/* Navigation buttons */}
-                    <div className="flex gap-2 sm:gap-3 lg:gap-4 self-end sm:self-center">
-                      <button
-                        onClick={handlePrevPromo}
-                        className="p-2 sm:p-3 lg:p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[40px] sm:min-w-[48px] lg:min-w-[56px] min-h-[40px] sm:min-h-[48px] lg:min-h-[56px] flex items-center justify-center"
-                        aria-label={t('aria.previousPromo', { defaultValue: 'Previous Promo' })}
-                      >
-                        <ChevronLeft
-                          className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
-                          aria-hidden="true"
-                        />
-                      </button>
-                      <button
-                        onClick={handleNextPromo}
-                        className="p-2 sm:p-3 lg:p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[40px] sm:min-w-[48px] lg:min-w-[56px] min-h-[40px] sm:min-h-[48px] lg:min-h-[56px] flex items-center justify-center"
-                        aria-label={t('aria.nextPromo', { defaultValue: 'Next Promo' })}
-                      >
-                        <ChevronRight
-                          className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Slide indicators - mobile only */}
-                  <div className="flex sm:hidden justify-center gap-2 pb-4">
-                    {PROMOS.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentPromo(index)}
-                        className={`w-2 h-2 rounded-full transition-all ${
-                          currentPromo === index
-                            ? 'bg-theme-primary w-4'
-                            : 'bg-theme-border-default'
-                        }`}
-                        aria-label={`Go to slide ${index + 1}`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+              {isAdEnabled ? <AdBanner /> : <PromoCarousel />}
             </section>
 
-            {/* Workstation Section - V0.0.1 Style */}
-            <section
-              className="mb-20"
-              aria-label={t('aria.workstationControls', { defaultValue: 'Workstation Controls' })}
-            >
-              <div className="p-10 md:p-14 rounded-soft bg-theme-bg-secondary border-2 border-theme-border-default shadow-theme-sm">
-                {/* Workstation Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12 border-b-2 border-theme-border-default pb-10">
-                  <div className="flex items-center gap-6">
-                    <div
-                      className="p-5 bg-theme-bg-card rounded-input border-2 border-theme-border-default text-theme-primary shadow-theme-sm"
-                      aria-hidden="true"
-                    >
-                      <Layers size={28} />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-theme-text-primary">
-                        {t('home.workstation', { defaultValue: 'Workstation' })}
-                      </h2>
-                      <p className="text-[12px] font-bold text-theme-text-secondary uppercase tracking-brand-sm mt-2 font-mono-brand">
-                        {t('home.activeWorkspace', { defaultValue: 'Active Workspace' })}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    rounded="editorial"
-                    icon={<Plus size={18} strokeWidth={1.5} />}
-                    aria-label={t('home.addWidget', { defaultValue: 'Add new widget' })}
-                  >
-                    {t('home.add', { defaultValue: 'Add' })}
-                  </Button>
-                </div>
-
-                {/* Widget Grid - V0.0.1 Style */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                  {/* Today Widget - Active */}
-                  <article className="bg-theme-bg-card rounded-soft border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-[4px] focus-within:ring-theme-focus-ring">
-                    <div className="flex justify-between items-center mb-8">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className="p-3 bg-theme-bg-secondary rounded-input text-theme-primary border border-theme-border-subtle"
-                          aria-hidden="true"
-                        >
-                          <Calendar size={20} />
-                        </div>
-                        <h3 className="text-[14px] font-black text-theme-text-primary uppercase tracking-brand-sm font-mono-brand">
-                          {t('home.today', { defaultValue: 'Today' })}
-                        </h3>
-                      </div>
-                      <GripVertical
-                        size={22}
-                        className="text-theme-border-default group-hover:text-theme-primary cursor-move transition-colors"
-                        aria-hidden="true"
-                      />
-                    </div>
-
-                    <div className="space-y-4 flex-1">
-                      <div className="flex items-start gap-5 p-5 rounded-input bg-theme-bg-secondary border-2 border-transparent group/item hover:bg-theme-bg-card hover:border-theme-border-default transition-all">
-                        <div className="mt-1.5 w-2 h-2 rounded-full bg-theme-primary" />
-                        <div>
-                          <p className="text-[16px] font-bold text-theme-text-primary leading-tight">
-                            {t('home.sampleEvent', { defaultValue: 'Planning Meeting' })}
-                          </p>
-                          <p className="text-[12px] font-bold text-theme-text-secondary mt-2">
-                            10:00 - 11:30
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="mt-10 text-[12px] font-black uppercase tracking-brand-lg text-theme-text-secondary hover:text-theme-primary transition-colors flex items-center gap-3 group/btn min-h-[44px]"
-                    >
-                      {t('home.viewAll', { defaultValue: 'View All' })}{' '}
-                      <ChevronRight
-                        size={18}
-                        className="group-hover/btn:translate-x-1 transition-transform"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </article>
-
-                  {/* Empty Widget Slots */}
-                  {[2, 3].map((slot) => (
-                    <div
-                      key={slot}
-                      className="widget-slot h-[300px] md:h-full min-h-[300px] rounded-soft border-2 border-dashed border-theme-border-default bg-theme-bg-card/40 flex flex-col items-center justify-center group hover:border-theme-primary transition-all cursor-pointer relative overflow-hidden focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
-                      tabIndex={0}
-                      role="button"
-                      aria-label={t('aria.addWidgetToSlot', {
-                        defaultValue: `Add widget to slot ${slot}`,
-                      })}
-                    >
-                      <Plus
-                        size={32}
-                        className="text-theme-border-default group-hover:text-theme-primary group-hover:scale-110 transition-all"
-                        strokeWidth={1.5}
-                        aria-hidden="true"
-                      />
-                      <span className="mt-5 text-[11px] font-black uppercase text-theme-text-secondary tracking-brand font-mono-brand">
-                        {t('home.emptySlot', { defaultValue: 'Empty' })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
+            {/* Workstation Section */}
+            <WorkstationSection />
 
             {/* Pinned Top Widget Section */}
             {pinnedWidget && (
@@ -524,87 +156,15 @@ export default function HomePage() {
               </section>
             )}
 
-            {/* Index Section - V0.0.1 Style */}
-            <section className="mb-24" aria-label={t('aria.mainMenu')}>
-              {/* Section Header with View Toggle - V0.0.1 Style */}
-              <div className="flex items-center justify-between mb-14 border-b-4 border-theme-text-primary pb-10 px-6">
-                <h2 className="text-4xl text-theme-text-primary tracking-tight font-serif-title">
-                  {t('home.index', { defaultValue: 'Index' })}
-                </h2>
-                <ViewToggle value={viewMode} onChange={setViewMode} />
-              </div>
+            {/* Index Section */}
+            <MenuIndexSection
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              pinnedWidgetId={pinnedWidgetId}
+              onPinWidget={handlePinWidget}
+            />
 
-              {/* Grid View */}
-              {viewMode === 'grid' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-14">
-                  {MENU_ITEMS.map((menu, index) => {
-                    const IconComponent = menu.icon;
-                    const isDisabled = menu.status === 'coming-soon';
-                    const canPin = canPinAsWidget(menu.id);
-
-                    return (
-                      <MenuCard
-                        key={menu.id}
-                        index={index + 1}
-                        icon={<IconComponent />}
-                        title={t(menu.nameKey)}
-                        description={isDisabled ? t('home.comingSoon') : t(menu.descriptionKey)}
-                        onClick={isDisabled ? undefined : handleMenuClick(menu)}
-                        isPinned={pinnedWidgetId === menu.id}
-                        onPin={canPin ? handlePinWidget(menu.id) : undefined}
-                        pinTooltip={
-                          pinnedWidgetId === menu.id
-                            ? t('widget.unpinFromTop')
-                            : t('widget.pinToTop')
-                        }
-                        className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
-                        aria-label={
-                          isDisabled
-                            ? `${t(menu.nameKey)} - ${t('home.comingSoon')}`
-                            : t(menu.nameKey)
-                        }
-                      />
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* List View */}
-              {viewMode === 'list' && (
-                <div className="space-y-4">
-                  {MENU_ITEMS.map((menu, index) => {
-                    const IconComponent = menu.icon;
-                    const isDisabled = menu.status === 'coming-soon';
-                    const canPin = canPinAsWidget(menu.id);
-
-                    return (
-                      <MenuRow
-                        key={menu.id}
-                        index={index + 1}
-                        icon={<IconComponent />}
-                        title={
-                          isDisabled
-                            ? `${t(menu.nameKey)} (${t('home.comingSoon')})`
-                            : t(menu.nameKey)
-                        }
-                        description={isDisabled ? undefined : t(menu.descriptionKey)}
-                        onClick={isDisabled ? undefined : handleMenuClick(menu)}
-                        isPinned={pinnedWidgetId === menu.id}
-                        onPin={canPin ? handlePinWidget(menu.id) : undefined}
-                        className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
-                        aria-label={
-                          isDisabled
-                            ? `${t(menu.nameKey)} - ${t('home.comingSoon')}`
-                            : t(menu.nameKey)
-                        }
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-
-            {/* Archive Support Banner - V0.0.1 Style */}
+            {/* Archive Support Banner */}
             <section className="mt-12 sm:mt-16">
               <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-soft p-8 sm:p-10 text-center font-medium">
                 <SectionBadge className="mb-4">{t('badge.archiveSupport')}</SectionBadge>
@@ -618,43 +178,7 @@ export default function HomePage() {
           </div>
         ) : (
           /* Landing Page - V0.0.1 Hero Style */
-          <div className="flex-1 flex flex-col items-center justify-center px-4 py-56 relative">
-            {/* Theme Toggle - Top Right */}
-            <div className="absolute top-6 right-6">
-              <button
-                onClick={toggleTheme}
-                aria-label={
-                  effectiveTheme === 'dark' ? t('aria.switchToLight') : t('aria.switchToDark')
-                }
-                className="p-3 rounded-full hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
-              >
-                {effectiveTheme === 'dark' ? (
-                  <Sun size={20} aria-hidden="true" />
-                ) : (
-                  <Moon size={20} aria-hidden="true" />
-                )}
-              </button>
-            </div>
-
-            <div className="text-center">
-              {/* Giant Brand Title - V0.0.1 Style */}
-              <h1 className="text-7xl sm:text-8xl md:text-[10rem] text-theme-text-primary mb-20 tracking-editorial italic font-serif-title">
-                girok<span className="text-theme-primary">.</span>
-              </h1>
-
-              {/* Enter Button - V0.0.1 Style */}
-              <Link to="/login">
-                <Button
-                  variant="primary"
-                  size="xl"
-                  rounded="full"
-                  className="px-16 sm:px-20 shadow-theme-xl hover:scale-105"
-                >
-                  {t('auth.enter', { defaultValue: 'Enter' })}
-                </Button>
-              </Link>
-            </div>
-          </div>
+          <HeroSection />
         )}
       </main>
 
