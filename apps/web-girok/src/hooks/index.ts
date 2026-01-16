@@ -1,7 +1,15 @@
 // Theme hook
 export { useTheme } from './useTheme';
 
-// Resume viewer hook (2025 best practices)
+// Data fetching hooks (2026 best practices)
+export { useFetch } from './useFetch';
+export {
+  useApiMutation,
+  type UseApiMutationOptions,
+  type UseApiMutationResult,
+} from './useApiMutation';
+
+// Resume viewer hook
 export {
   useResumeViewer,
   createErrorMapper,
