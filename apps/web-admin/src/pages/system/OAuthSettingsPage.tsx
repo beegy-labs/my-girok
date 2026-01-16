@@ -1,12 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Key, RefreshCw, AlertTriangle } from 'lucide-react';
 import { OAuthProviderCard } from './components/OAuthProviderCard';
 import { Button } from '../../components/atoms/Button';
 import { Spinner } from '../../components/atoms/Spinner';
-import { oauthApi, type OAuthProviderConfig, type UpdateCredentialsRequest } from '../../api/oauth';
+import type { UpdateCredentialsRequest } from '../../api/oauth';
 import { AuthProvider } from '@my-girok/types';
-import { useToast } from '../../hooks/useToast';
+import {
+  useOAuthProviders,
+  useToggleOAuthProvider,
+  useUpdateOAuthCredentials,
+  useRefreshOAuthProviders,
+} from '../../hooks/useOAuthProviders';
 
 /**
  * OAuth Settings Page
@@ -16,84 +20,24 @@ import { useToast } from '../../hooks/useToast';
  * - Enable/disable providers
  * - Update OAuth credentials (client ID, secret, callback URL)
  * - Secrets are encrypted and masked
+ *
+ * Uses TanStack Query for data fetching and caching
  */
 export default function OAuthSettingsPage() {
-  const [providers, setProviders] = useState<OAuthProviderConfig[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { showToast } = useToast();
-
-  // Load providers
-  const loadProviders = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await oauthApi.getAllProviders();
-      setProviders(data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load OAuth providers';
-      setError(errorMessage);
-      showToast({
-        type: 'error',
-        title: 'Error',
-        message: errorMessage,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [showToast]);
-
-  useEffect(() => {
-    loadProviders();
-  }, [loadProviders]);
+  const { data: providers, isLoading, isError, error } = useOAuthProviders();
+  const toggleProvider = useToggleOAuthProvider();
+  const updateCredentials = useUpdateOAuthCredentials();
+  const refreshProviders = useRefreshOAuthProviders();
 
   // Handle toggle provider
-  const handleToggle = useCallback(
-    async (provider: AuthProvider, enabled: boolean) => {
-      try {
-        const updated = await oauthApi.toggleProvider(provider, enabled);
-        setProviders((prev) => prev.map((p) => (p.provider === provider ? updated : p)));
-        showToast({
-          type: 'success',
-          title: 'Provider updated',
-          message: `${provider} has been ${enabled ? 'enabled' : 'disabled'}`,
-        });
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to toggle provider';
-        showToast({
-          type: 'error',
-          title: 'Error',
-          message: errorMessage,
-        });
-        throw err;
-      }
-    },
-    [showToast],
-  );
+  const handleToggle = async (provider: AuthProvider, enabled: boolean) => {
+    await toggleProvider.mutateAsync({ provider, enabled });
+  };
 
   // Handle update credentials
-  const handleUpdate = useCallback(
-    async (provider: AuthProvider, credentials: UpdateCredentialsRequest) => {
-      try {
-        const updated = await oauthApi.updateCredentials(provider, credentials);
-        setProviders((prev) => prev.map((p) => (p.provider === provider ? updated : p)));
-        showToast({
-          type: 'success',
-          title: 'Credentials updated',
-          message: `${provider} credentials have been updated successfully`,
-        });
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to update credentials';
-        showToast({
-          type: 'error',
-          title: 'Error',
-          message: errorMessage,
-        });
-        throw err;
-      }
-    },
-    [showToast],
-  );
+  const handleUpdate = async (provider: AuthProvider, credentials: UpdateCredentialsRequest) => {
+    await updateCredentials.mutateAsync({ provider, credentials });
+  };
 
   return (
     <>
@@ -116,7 +60,7 @@ export default function OAuthSettingsPage() {
             </div>
           </div>
 
-          <Button variant="secondary" size="sm" onClick={loadProviders} disabled={loading}>
+          <Button variant="secondary" size="sm" onClick={refreshProviders} disabled={isLoading}>
             <RefreshCw size={16} />
             Refresh
           </Button>
@@ -136,22 +80,24 @@ export default function OAuthSettingsPage() {
         </div>
 
         {/* Loading State */}
-        {loading && (
+        {isLoading && (
           <div className="flex items-center justify-center py-12">
             <Spinner size="lg" />
           </div>
         )}
 
         {/* Error State */}
-        {error && !loading && (
+        {isError && (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <AlertTriangle className="mx-auto text-theme-status-error-text mb-4" size={48} />
               <h3 className="text-lg font-semibold text-theme-text-primary mb-2">
                 Failed to Load Providers
               </h3>
-              <p className="text-theme-text-tertiary mb-4">{error}</p>
-              <Button variant="primary" size="sm" onClick={loadProviders}>
+              <p className="text-theme-text-tertiary mb-4">
+                {error instanceof Error ? error.message : 'An error occurred'}
+              </p>
+              <Button variant="primary" size="sm" onClick={refreshProviders}>
                 <RefreshCw size={16} />
                 Try Again
               </Button>
@@ -160,7 +106,7 @@ export default function OAuthSettingsPage() {
         )}
 
         {/* Provider Cards Grid */}
-        {!loading && !error && (
+        {!isLoading && !isError && providers && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {providers.map((provider) => (
               <OAuthProviderCard
@@ -174,7 +120,7 @@ export default function OAuthSettingsPage() {
         )}
 
         {/* Help Section */}
-        {!loading && !error && (
+        {!isLoading && !isError && (
           <div className="mt-8 p-6 bg-theme-bg-secondary border border-theme-border-default rounded-lg">
             <h3 className="text-lg font-semibold text-theme-text-primary mb-4">
               OAuth Provider Setup Guide

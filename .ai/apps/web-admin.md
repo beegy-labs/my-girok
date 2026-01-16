@@ -1,6 +1,6 @@
 # web-admin
 
-> Admin console for Girok H-RBAC multi-tenant system | **Last Updated**: 2026-01-14
+> Admin console for Girok H-RBAC multi-tenant system | **Last Updated**: 2026-01-17
 
 ## Quick Reference
 
@@ -14,16 +14,17 @@
 
 ## Key Routes
 
-| Path                         | Component             | Permission   |
-| ---------------------------- | --------------------- | ------------ |
-| `/`                          | DashboardPage         | -            |
-| `/compliance/documents`      | DocumentsPage         | legal:read   |
-| `/compliance/consents`       | ConsentsPage          | legal:read   |
-| `/organization/partners`     | TenantsPage           | tenant:read  |
-| `/system/settings`           | SettingsPage          | -            |
-| `/system/audit-logs`         | AuditLogsPage         | audit:read   |
-| `/system/session-recordings` | SessionRecordingsPage | session:read |
-| `/system/session-analytics`  | SessionAnalyticsPage  | session:read |
+| Path                         | Component             | Permission    |
+| ---------------------------- | --------------------- | ------------- |
+| `/`                          | DashboardPage         | -             |
+| `/compliance/documents`      | DocumentsPage         | legal:read    |
+| `/compliance/consents`       | ConsentsPage          | legal:read    |
+| `/organization/partners`     | TenantsPage           | tenant:read   |
+| `/system/oauth`              | OAuthSettingsPage     | settings:read |
+| `/system/settings`           | SettingsPage          | -             |
+| `/system/audit-logs`         | AuditLogsPage         | audit:read    |
+| `/system/session-recordings` | SessionRecordingsPage | session:read  |
+| `/system/session-analytics`  | SessionAnalyticsPage  | session:read  |
 
 ## Architecture
 
@@ -60,6 +61,7 @@ pnpm --filter @my-girok/web-admin build  # Build
 ```
 
 **SSOT**: `docs/llm/apps/web-admin.md`
+**OAuth Settings**: `docs/llm/apps/web-admin-oauth.md`
 **Error Handling**: `docs/llm/guides/frontend-error-handling.md`
 **Toast System**: `docs/llm/guides/toast-notifications.md`
 **Monaco Editor**: `docs/llm/guides/monaco-editor.md`

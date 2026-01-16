@@ -28,7 +28,8 @@
   "peerDependencies": {
     "@my-girok/design-tokens": "workspace:*",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "sonner": "^1.7.2"
   },
   "devDependencies": {
     "@types/react": "catalog:",

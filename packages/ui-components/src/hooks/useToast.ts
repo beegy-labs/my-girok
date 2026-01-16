@@ -10,6 +10,18 @@ interface ToastOptions {
 /**
  * useToast hook
  * Wrapper around Sonner toast library for consistent toast notifications
+ *
+ * @example
+ * ```tsx
+ * const { showToast } = useToast();
+ *
+ * showToast({
+ *   type: 'success',
+ *   title: 'Success',
+ *   message: 'Operation completed successfully',
+ *   duration: 4000,
+ * });
+ * ```
  */
 export function useToast() {
   const showToast = ({ type, title, message, duration = 4000 }: ToastOptions) => {
