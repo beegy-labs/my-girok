@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --port 3002",
     "build": "tsc && vite build",
+    "build:analyze": "ANALYZE=true tsc && ANALYZE=true vite build",
     "preview": "vite preview",
     "lint": "eslint . --report-unused-disable-directives",
     "type-check": "tsc --noEmit",
@@ -62,6 +63,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "jsdom": "^27.3.0",
+    "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
