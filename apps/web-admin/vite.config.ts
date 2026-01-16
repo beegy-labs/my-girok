@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { visualizer } from 'rollup-plugin-visualizer';
+
+const isAnalyze = process.env.ANALYZE === 'true';
 
 // Generate build version with timestamp
 function generateBuildVersion(): string {
@@ -11,7 +14,19 @@ function generateBuildVersion(): string {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    // Bundle analyzer - run with ANALYZE=true pnpm build
+    isAnalyze &&
+      visualizer({
+        filename: 'dist/stats.html',
+        open: true,
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap', // 'sunburst', 'network', 'treemap'
+      }),
+  ].filter(Boolean),
   define: {
     __BUILD_VERSION__: JSON.stringify(generateBuildVersion()),
   },
