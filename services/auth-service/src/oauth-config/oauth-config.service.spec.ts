@@ -244,7 +244,7 @@ describe('OAuthConfigService', () => {
         updatedAt: new Date(),
       });
 
-      const result = await service.updateProviderCredentials(provider, dto, adminUserId);
+      await service.updateProviderCredentials(provider, dto, adminUserId);
 
       expect(mockCryptoService.encrypt).toHaveBeenCalledWith(dto.clientSecret);
       expect(mockPrismaService.oAuthProviderConfig.create).toHaveBeenCalled();

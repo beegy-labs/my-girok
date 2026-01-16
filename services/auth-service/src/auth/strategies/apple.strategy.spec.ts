@@ -14,9 +14,6 @@ vi.mock('fs', () => ({
 
 describe('AppleStrategy', () => {
   let strategy: AppleStrategy;
-  let authService: AuthService;
-  let oauthConfigService: OAuthConfigService;
-  let configService: ConfigService;
 
   const mockAuthService = {
     findOrCreateOAuthUser: vi.fn(),
@@ -57,9 +54,6 @@ describe('AppleStrategy', () => {
     }).compile();
 
     strategy = module.get<AppleStrategy>(AppleStrategy);
-    authService = module.get<AuthService>(AuthService);
-    oauthConfigService = module.get<OAuthConfigService>(OAuthConfigService);
-    configService = module.get<ConfigService>(ConfigService);
   });
 
   afterEach(() => {

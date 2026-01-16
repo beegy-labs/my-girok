@@ -7,7 +7,6 @@ import { NotFoundException, ForbiddenException, BadRequestException } from '@nes
 
 describe('OAuthConfigController', () => {
   let controller: OAuthConfigController;
-  let service: OAuthConfigService;
 
   const mockOAuthConfigService = {
     getAllProvidersWithMasking: vi.fn(),
@@ -25,7 +24,6 @@ describe('OAuthConfigController', () => {
     }).compile();
 
     controller = module.get<OAuthConfigController>(OAuthConfigController);
-    service = module.get<OAuthConfigService>(OAuthConfigService);
   });
 
   afterEach(() => {
