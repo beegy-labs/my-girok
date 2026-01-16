@@ -87,6 +87,12 @@ export default () => ({
     db: parseInt(process.env.VALKEY_DB || '3', 10), // DB 3 for auth-bff sessions
   },
 
+  services: {
+    authService: {
+      url: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
+    },
+  },
+
   grpc: {
     identity: {
       host: process.env.IDENTITY_GRPC_HOST || 'localhost',

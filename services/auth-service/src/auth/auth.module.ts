@@ -4,10 +4,12 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { OAuthConfigModule } from '../oauth-config/oauth-config.module';
 import {
   JwtStrategy,
   LocalStrategy,
   UnifiedJwtStrategy,
+  AppleStrategy,
   // Temporarily disabled until OAuth credentials are configured
   // GoogleStrategy,
   // KakaoStrategy,
@@ -16,6 +18,7 @@ import {
 
 @Module({
   imports: [
+    OAuthConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -34,6 +37,7 @@ import {
     JwtStrategy,
     LocalStrategy,
     UnifiedJwtStrategy,
+    AppleStrategy,
     // Temporarily disabled until OAuth credentials are configured
     // GoogleStrategy,
     // KakaoStrategy,

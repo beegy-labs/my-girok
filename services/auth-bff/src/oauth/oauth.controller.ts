@@ -1,20 +1,71 @@
-import { Controller, Get, Param, Req, Res, Query, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Req,
+  Res,
+  Query,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
 import { Public } from '../common/decorators';
 import { OAUTH_PROVIDERS, OAuthProvider, AuthProvider } from '../config/constants';
+import { firstValueFrom } from 'rxjs';
 
 @ApiTags('oauth')
 @Controller('oauth')
 export class OAuthController {
-  constructor(private readonly configService: ConfigService) {}
+  private readonly logger = new Logger(OAuthController.name);
+  private readonly authServiceUrl: string;
+
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
+  ) {
+    this.authServiceUrl = this.configService.get<string>('services.authService.url')!;
+  }
+
+  @Get('enabled')
+  @Public()
+  @ApiOperation({
+    summary: 'Get enabled OAuth providers',
+    description: 'Returns list of enabled OAuth providers for dynamic UI rendering',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of enabled OAuth providers',
+    schema: {
+      example: {
+        providers: [
+          { provider: 'GOOGLE', displayName: 'Google', description: 'Login with Google' },
+          { provider: 'KAKAO', displayName: 'Kakao', description: 'Login with Kakao' },
+        ],
+      },
+    },
+  })
+  async getEnabledProviders(): Promise<any> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.authServiceUrl}/v1/oauth-config/enabled`),
+      );
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to fetch enabled providers from auth-service:', error);
+      // Return empty list on error to avoid breaking frontend
+      return { providers: [] };
+    }
+  }
 
   @Get(':provider')
   @Public()
   @ApiOperation({ summary: 'Start OAuth flow' })
   @ApiParam({ name: 'provider', enum: OAUTH_PROVIDERS })
   @ApiResponse({ status: 302, description: 'Redirect to OAuth provider' })
+  @ApiResponse({ status: 400, description: 'Provider disabled or not configured' })
   async startOAuth(
     @Param('provider') provider: string,
     @Res() res: Response,
@@ -25,6 +76,13 @@ export class OAuthController {
     }
 
     const normalizedProvider = this.normalizeProvider(provider);
+
+    // Check if provider is enabled
+    const isEnabled = await this.checkProviderEnabled(normalizedProvider);
+    if (!isEnabled) {
+      throw new BadRequestException(`OAuth provider ${provider} is not enabled`);
+    }
+
     const config = this.getProviderConfig(normalizedProvider);
     if (!config.clientId) {
       throw new BadRequestException(`OAuth provider ${provider} is not configured`);
@@ -149,5 +207,22 @@ export class OAuthController {
       redirectUri,
     };
     return Buffer.from(JSON.stringify(stateData)).toString('base64url');
+  }
+
+  /**
+   * Check if OAuth provider is enabled via auth-service
+   */
+  private async checkProviderEnabled(provider: OAuthProvider): Promise<boolean> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.authServiceUrl}/v1/oauth-config/${provider}/status`),
+      );
+      return response.data.enabled === true;
+    } catch (error) {
+      this.logger.error(`Failed to check provider ${provider} status:`, error);
+      // Default to enabled on error to avoid blocking OAuth flow
+      // In production, you might want to default to disabled for security
+      return true;
+    }
   }
 }
