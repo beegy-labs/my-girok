@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Prisma } from '../../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import { IdentityType } from '@my-girok/types';
 import {
@@ -20,6 +21,22 @@ import {
   AdminDetailResponse,
 } from '../dto';
 import { AdminProfileService } from './admin-profile.service';
+
+const adminWithRelations = Prisma.validator<Prisma.adminsArgs>()({
+  include: {
+    roles: true,
+    tenants: true,
+    admins: {
+      // manager
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        job_title: true,
+      },
+    },
+  },
+});
 
 @Injectable()
 export class AdminEnterpriseService {
@@ -66,13 +83,14 @@ export class AdminEnterpriseService {
         credential_type: dto.credentialType,
         secret_rotation_days: dto.secretRotationDays ?? 90,
         nhi_expiry_date: dto.nhiExpiryDate ? new Date(dto.nhiExpiryDate) : undefined,
-        nhi_config: dto.nhiConfig as any,
+        nhi_config: (dto.nhiConfig as Prisma.JsonValue) ?? Prisma.JsonNull,
       },
+      ...adminWithRelations,
     });
 
     this.logger.log(`NHI created: ${nhi.id} by admin ${createdBy}`);
 
-    return this.adminProfileService.getAdminDetail(nhi.id);
+    return this.adminProfileService.mapAdminToDetailResponse(nhi);
   }
 
   /**
@@ -82,7 +100,7 @@ export class AdminEnterpriseService {
     adminId: string,
     dto: UpdateNhiAttributesDto,
   ): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         identity_type: dto.identityType,
@@ -96,11 +114,12 @@ export class AdminEnterpriseService {
         last_credential_rotation: dto.lastCredentialRotation
           ? new Date(dto.lastCredentialRotation)
           : undefined,
-        nhi_config: dto.nhiConfig as any,
+        nhi_config: (dto.nhiConfig as Prisma.JsonValue) ?? Prisma.JsonNull,
       },
+      ...adminWithRelations,
     });
 
-    return this.adminProfileService.getAdminDetail(adminId);
+    return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
@@ -140,7 +159,7 @@ export class AdminEnterpriseService {
     adminId: string,
     dto: UpdatePhysicalLocationDto,
   ): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         legal_entity_id: dto.legalEntityId,
@@ -150,9 +169,9 @@ export class AdminEnterpriseService {
         desk_code: dto.deskCode,
         remote_work_type: dto.remoteWorkType,
       },
+      ...adminWithRelations,
     });
-
-    return this.adminProfileService.getAdminDetail(adminId);
+    return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
@@ -162,7 +181,7 @@ export class AdminEnterpriseService {
     adminId: string,
     dto: UpdateTaxLegalLocationDto,
   ): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         legal_country_code: dto.legalCountryCode,
@@ -170,9 +189,9 @@ export class AdminEnterpriseService {
         tax_residence_country: dto.taxResidenceCountry,
         payroll_country_code: dto.payrollCountryCode,
       },
+      ...adminWithRelations,
     });
-
-    return this.adminProfileService.getAdminDetail(adminId);
+    return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
@@ -182,7 +201,7 @@ export class AdminEnterpriseService {
     adminId: string,
     dto: UpdateAccessControlDto,
   ): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         security_clearance: dto.securityClearance,
@@ -190,9 +209,9 @@ export class AdminEnterpriseService {
         access_end_date: dto.accessEndDate ? new Date(dto.accessEndDate) : undefined,
         allowed_ip_ranges: dto.allowedIpRanges,
       },
+      ...adminWithRelations,
     });
-
-    return this.adminProfileService.getAdminDetail(adminId);
+    return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
@@ -202,7 +221,7 @@ export class AdminEnterpriseService {
     adminId: string,
     dto: UpdateIdentityVerificationDto,
   ): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         identity_verified: dto.identityVerified,
@@ -214,9 +233,9 @@ export class AdminEnterpriseService {
           ? new Date(dto.backgroundCheckDate)
           : undefined,
       },
+      ...adminWithRelations,
     });
-
-    return this.adminProfileService.getAdminDetail(adminId);
+    return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
@@ -228,8 +247,9 @@ export class AdminEnterpriseService {
     verifiedBy: string,
   ): Promise<AdminDetailResponse> {
     const now = new Date();
+    const currentMetadata = await this.getAdminMetadata(adminId);
 
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         identity_verified: true,
@@ -237,7 +257,7 @@ export class AdminEnterpriseService {
         verification_method: dto.method,
         verification_level: dto.level,
         metadata: {
-          ...(await this.getAdminMetadata(adminId)),
+          ...currentMetadata,
           identityVerification: {
             verifiedBy,
             verifiedAt: now.toISOString(),
@@ -246,13 +266,14 @@ export class AdminEnterpriseService {
             documentId: dto.documentId,
             notes: dto.notes,
           },
-        } as any,
+        },
       },
+      ...adminWithRelations,
     });
 
     this.logger.log(`Identity verified for admin ${adminId} by ${verifiedBy}`);
 
-    return this.adminProfileService.getAdminDetail(adminId);
+    return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
@@ -262,20 +283,20 @@ export class AdminEnterpriseService {
     adminId: string,
     dto: UpdateExtensionAttributesDto,
   ): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
-        skills: dto.skills as any,
-        certifications: dto.certifications as any,
-        education: dto.education as any,
-        work_history: dto.workHistory as any,
-        custom_attributes: dto.customAttributes as any,
-        preferences: dto.preferences as any,
-        metadata: dto.metadata as any,
+        skills: (dto.skills as Prisma.JsonValue) ?? Prisma.JsonNull,
+        certifications: (dto.certifications as Prisma.JsonValue) ?? Prisma.JsonNull,
+        education: (dto.education as Prisma.JsonValue) ?? Prisma.JsonNull,
+        work_history: (dto.workHistory as Prisma.JsonValue) ?? Prisma.JsonNull,
+        custom_attributes: (dto.customAttributes as Prisma.JsonValue) ?? Prisma.JsonNull,
+        preferences: (dto.preferences as Prisma.JsonValue) ?? Prisma.JsonNull,
+        metadata: (dto.metadata as Prisma.JsonValue) ?? Prisma.JsonNull,
       },
+      ...adminWithRelations,
     });
-
-    return this.adminProfileService.getAdminDetail(adminId);
+    return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
@@ -285,26 +306,22 @@ export class AdminEnterpriseService {
     adminId: string,
     dto: UpdateAdminEnterpriseDto,
   ): Promise<AdminDetailResponse> {
-    if (dto.nhi) {
-      await this.updateNhiAttributes(adminId, dto.nhi);
-    }
-    if (dto.physicalLocation) {
-      await this.updatePhysicalLocation(adminId, dto.physicalLocation);
-    }
-    if (dto.taxLegalLocation) {
-      await this.updateTaxLegalLocation(adminId, dto.taxLegalLocation);
-    }
-    if (dto.accessControl) {
-      await this.updateAccessControl(adminId, dto.accessControl);
-    }
-    if (dto.identityVerification) {
-      await this.updateIdentityVerification(adminId, dto.identityVerification);
-    }
-    if (dto.extensions) {
-      await this.updateExtensions(adminId, dto.extensions);
-    }
+    const data: Prisma.adminsUpdateInput = {};
 
-    return this.adminProfileService.getAdminDetail(adminId);
+    if (dto.nhi) Object.assign(data, dto.nhi);
+    if (dto.physicalLocation) Object.assign(data, dto.physicalLocation);
+    if (dto.taxLegalLocation) Object.assign(data, dto.taxLegalLocation);
+    if (dto.accessControl) Object.assign(data, dto.accessControl);
+    if (dto.identityVerification) Object.assign(data, dto.identityVerification);
+    if (dto.extensions) Object.assign(data, dto.extensions);
+
+    const updatedAdmin = await this.prisma.admins.update({
+      where: { id: adminId },
+      data,
+      ...adminWithRelations,
+    });
+
+    return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
@@ -319,24 +336,14 @@ export class AdminEnterpriseService {
     const { page = 1, limit = 20, search, sortBy = 'createdAt', sortOrder = 'desc' } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.adminsWhereInput = {};
 
     // Apply filters
-    if (query.employeeType) {
-      where.employee_type = query.employeeType;
-    }
-    if (query.identityType) {
-      where.identity_type = query.identityType;
-    }
-    if (query.organizationUnitId) {
-      where.organization_unit_id = query.organizationUnitId;
-    }
-    if (query.managerAdminId) {
-      where.manager_admin_id = query.managerAdminId;
-    }
-    if (query.isActive !== undefined) {
-      where.is_active = query.isActive;
-    }
+    if (query.employeeType) where.employee_type = query.employeeType;
+    if (query.identityType) where.identity_type = query.identityType;
+    if (query.organizationUnitId) where.organization_unit_id = query.organizationUnitId;
+    if (query.managerAdminId) where.manager_admin_id = query.managerAdminId;
+    if (query.isActive !== undefined) where.is_active = query.isActive;
 
     // Search by name, email, or username
     if (search) {
@@ -347,31 +354,19 @@ export class AdminEnterpriseService {
       ];
     }
 
-    const [admins, total] = await Promise.all([
+    const [admins, total] = await this.prisma.$transaction([
       this.prisma.admins.findMany({
         where,
         skip,
         take: limit,
         orderBy: { [sortBy]: sortOrder },
-        include: {
-          roles: true,
-          tenants: true,
-          admins: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              job_title: true,
-            },
-          },
-        },
+        ...adminWithRelations,
       }),
       this.prisma.admins.count({ where }),
     ]);
 
-    const data = await Promise.all(
-      admins.map((admin) => this.adminProfileService.getAdminDetail(admin.id)),
-    );
+    // Map directly to DTO without additional DB queries
+    const data = admins.map((admin) => this.adminProfileService.mapAdminToDetailResponse(admin));
 
     return {
       data,
@@ -389,11 +384,14 @@ export class AdminEnterpriseService {
     });
 
     if (!role) {
-      // Fallback to lowest level role
+      this.logger.warn('NHI_SERVICE_ACCOUNT role not found, falling back to lowest level role.');
       const fallbackRole = await this.prisma.roles.findFirst({
         orderBy: { level: 'asc' },
       });
-      return fallbackRole!.id;
+      if (!fallbackRole) {
+        throw new Error('No roles found in the database.');
+      }
+      return fallbackRole.id;
     }
 
     return role.id;
@@ -404,6 +402,6 @@ export class AdminEnterpriseService {
       where: { id: adminId },
       select: { metadata: true },
     });
-    return (admin?.metadata as any) ?? {};
+    return (admin?.metadata as Record<string, any>) ?? {};
   }
 }

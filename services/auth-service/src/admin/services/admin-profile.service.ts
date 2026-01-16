@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma } from '../../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   UpdateScimCoreDto,
@@ -17,37 +18,37 @@ import {
   UpdateAdminProfileDto,
   AdminDetailResponse,
 } from '../dto';
+import { EmployeeType, EmploymentStatus, JobFamily, ProbationStatus } from '@my-girok/types';
+
+const adminWithRelations = Prisma.validator<Prisma.adminsArgs>()({
+  include: {
+    roles: true,
+    tenants: true,
+    admins: {
+      // manager
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        job_title: true,
+      },
+    },
+  },
+});
+
+type AdminWithRelations = Prisma.adminsGetPayload<typeof adminWithRelations>;
 
 @Injectable()
 export class AdminProfileService {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * Get admin detail with Phase 2 fields
+   * Maps a Prisma admin object to the AdminDetailResponse DTO.
+   * This is a public method to allow reuse by other services (e.g., for list operations).
+   * @param admin The admin object with relations included.
+   * @returns The detailed admin response DTO.
    */
-  async getAdminDetail(adminId: string): Promise<AdminDetailResponse> {
-    const admin = await this.prisma.admins.findUnique({
-      where: { id: adminId },
-      include: {
-        roles: true,
-        tenants: true,
-        admins: {
-          // manager
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            job_title: true,
-          },
-        },
-      },
-    });
-
-    if (!admin) {
-      throw new NotFoundException('Admin not found');
-    }
-
-    // Map Prisma result to AdminDetailResponse
+  mapAdminToDetailResponse(admin: AdminWithRelations): AdminDetailResponse {
     return {
       // Core fields
       id: admin.id,
@@ -64,71 +65,73 @@ export class AdminProfileService {
       countryCode: admin.country_code,
 
       // SCIM Core
-      username: admin.username ?? undefined,
-      externalId: admin.external_id ?? undefined,
-      displayName: admin.display_name ?? undefined,
-      givenName: admin.given_name ?? undefined,
-      familyName: admin.family_name ?? undefined,
-      nativeGivenName: admin.native_given_name ?? undefined,
-      nativeFamilyName: admin.native_family_name ?? undefined,
-      nickname: admin.nickname ?? undefined,
-      preferredLanguage: admin.preferred_language ?? undefined,
-      locale: admin.locale ?? undefined,
-      timezone: admin.timezone ?? undefined,
-      profileUrl: admin.profile_url ?? undefined,
-      profilePhotoUrl: admin.profile_photo_url ?? undefined,
+      username: admin.username,
+      externalId: admin.external_id,
+      displayName: admin.display_name,
+      givenName: admin.given_name,
+      familyName: admin.family_name,
+      nativeGivenName: admin.native_given_name,
+      nativeFamilyName: admin.native_family_name,
+      nickname: admin.nickname,
+      preferredLanguage: admin.preferred_language,
+      locale: admin.locale,
+      timezone: admin.timezone,
+      profileUrl: admin.profile_url,
+      profilePhotoUrl: admin.profile_photo_url,
 
       // Employee Info
-      employeeNumber: admin.employee_number ?? undefined,
-      employeeType: (admin.employee_type as any) ?? undefined,
-      employmentStatus: (admin.employment_status as any) ?? undefined,
-      lifecycleStatus: (admin.lifecycle_status as any) ?? undefined,
+      employeeNumber: admin.employee_number,
+      employeeType: admin.employee_type as EmployeeType,
+      employmentStatus: admin.employment_status as EmploymentStatus,
+      lifecycleStatus: admin.lifecycle_status,
 
       // Job & Organization
-      jobGradeId: admin.job_grade_id ?? undefined,
-      jobTitle: admin.job_title ?? undefined,
-      jobTitleEn: admin.job_title_en ?? undefined,
-      jobCode: admin.job_code ?? undefined,
-      jobFamily: (admin.job_family as any) ?? undefined,
-      organizationUnitId: admin.organization_unit_id ?? undefined,
-      costCenter: admin.cost_center ?? undefined,
-      managerAdminId: admin.manager_admin_id ?? undefined,
-      dottedLineManagerId: admin.dotted_line_manager_id ?? undefined,
-      directReportsCount: admin.direct_reports_count ?? undefined,
+      jobGradeId: admin.job_grade_id,
+      jobTitle: admin.job_title,
+      jobTitleEn: admin.job_title_en,
+      jobCode: admin.job_code,
+      jobFamily: admin.job_family as JobFamily,
+      organizationUnitId: admin.organization_unit_id,
+      costCenter: admin.cost_center,
+      managerAdminId: admin.manager_admin_id,
+      dottedLineManagerId: admin.dotted_line_manager_id,
+      directReportsCount: admin.direct_reports_count,
 
       // Partner
-      partnerCompanyId: admin.partner_company_id ?? undefined,
-      partnerEmployeeId: admin.partner_employee_id ?? undefined,
-      partnerContractEndDate: admin.partner_contract_end_date ?? undefined,
+      partnerCompanyId: admin.partner_company_id,
+      partnerEmployeeId: admin.partner_employee_id,
+      partnerContractEndDate: admin.partner_contract_end_date,
 
       // JML - Joiner
-      hireDate: admin.hire_date ?? undefined,
-      originalHireDate: admin.original_hire_date ?? undefined,
-      startDate: admin.start_date ?? undefined,
-      onboardingCompletedAt: admin.onboarding_completed_at ?? undefined,
-      probationEndDate: admin.probation_end_date ?? undefined,
-      probationStatus: admin.probation_status as any,
+      hireDate: admin.hire_date,
+      originalHireDate: admin.original_hire_date,
+      startDate: admin.start_date,
+      onboardingCompletedAt: admin.onboarding_completed_at,
+      probationEndDate: admin.probation_end_date,
+      probationStatus: admin.probation_status as ProbationStatus,
 
       // JML - Mover
-      lastRoleChangeAt: admin.last_role_change_at ?? undefined,
-      lastPromotionDate: admin.last_promotion_date ?? undefined,
-      lastTransferDate: admin.last_transfer_date ?? undefined,
+      lastRoleChangeAt: admin.last_role_change_at,
+      lastPromotionDate: admin.last_promotion_date,
+      lastTransferDate: admin.last_transfer_date,
 
       // JML - Leaver
-      terminationDate: admin.termination_date ?? undefined,
-      lastWorkingDay: admin.last_working_day ?? undefined,
-      terminationReason: admin.termination_reason ?? undefined,
-      terminationType: admin.termination_type ?? undefined,
-      eligibleForRehire: admin.eligible_for_rehire ?? undefined,
-      exitInterviewCompleted: admin.exit_interview_completed ?? undefined,
+      terminationDate: admin.termination_date,
+      lastWorkingDay: admin.last_working_day,
+      terminationReason: admin.termination_reason,
+      terminationType: admin.termination_type,
+      eligibleForRehire: admin.eligible_for_rehire,
+      exitInterviewCompleted: admin.exit_interview_completed,
 
       // Contact
-      phoneNumber: admin.phone_number ?? undefined,
-      phoneCountryCode: admin.phone_country_code ?? undefined,
-      mobileNumber: admin.mobile_number ?? undefined,
-      mobileCountryCode: admin.mobile_country_code ?? undefined,
-      workPhone: admin.work_phone ?? undefined,
-      emergencyContact: (admin.emergency_contact as any) ?? undefined,
+      phoneNumber: admin.phone_number,
+      phoneCountryCode: admin.phone_country_code,
+      mobileNumber: admin.mobile_number,
+      mobileCountryCode: admin.mobile_country_code,
+      workPhone: admin.work_phone,
+      emergencyContact: admin.emergency_contact
+        ? (admin.emergency_contact as Record<string, any>)
+        : undefined,
 
       // Relations
       role: admin.roles
@@ -153,10 +156,26 @@ export class AdminProfileService {
             id: admin.admins.id,
             name: admin.admins.name,
             email: admin.admins.email,
-            jobTitle: admin.admins.job_title ?? undefined,
+            jobTitle: admin.admins.job_title,
           }
         : undefined,
     };
+  }
+
+  /**
+   * Get admin detail with Phase 2 fields
+   */
+  async getAdminDetail(adminId: string): Promise<AdminDetailResponse> {
+    const admin = await this.prisma.admins.findUnique({
+      where: { id: adminId },
+      ...adminWithRelations,
+    });
+
+    if (!admin) {
+      throw new NotFoundException('Admin not found');
+    }
+
+    return this.mapAdminToDetailResponse(admin);
   }
 
   /**
@@ -176,7 +195,7 @@ export class AdminProfileService {
       }
     }
 
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         username: dto.username,
@@ -193,9 +212,10 @@ export class AdminProfileService {
         profile_url: dto.profileUrl,
         profile_photo_url: dto.profilePhotoUrl,
       },
+      ...adminWithRelations,
     });
 
-    return this.getAdminDetail(adminId);
+    return this.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
@@ -205,7 +225,7 @@ export class AdminProfileService {
     adminId: string,
     dto: UpdateEmployeeInfoDto,
   ): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         employee_number: dto.employeeNumber,
@@ -213,9 +233,9 @@ export class AdminProfileService {
         employment_status: dto.employmentStatus,
         lifecycle_status: dto.lifecycleStatus,
       },
+      ...adminWithRelations,
     });
-
-    return this.getAdminDetail(adminId);
+    return this.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
@@ -225,7 +245,7 @@ export class AdminProfileService {
     adminId: string,
     dto: UpdateJobOrganizationDto,
   ): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         job_grade_id: dto.jobGradeId,
@@ -239,9 +259,9 @@ export class AdminProfileService {
         dotted_line_manager_id: dto.dottedLineManagerId,
         direct_reports_count: dto.directReportsCount,
       },
+      ...adminWithRelations,
     });
-
-    return this.getAdminDetail(adminId);
+    return this.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
@@ -251,7 +271,7 @@ export class AdminProfileService {
     adminId: string,
     dto: UpdatePartnerInfoDto,
   ): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         partner_company_id: dto.partnerCompanyId,
@@ -260,16 +280,16 @@ export class AdminProfileService {
           ? new Date(dto.partnerContractEndDate)
           : undefined,
       },
+      ...adminWithRelations,
     });
-
-    return this.getAdminDetail(adminId);
+    return this.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
    * Update Joiner Info
    */
   async updateJoinerInfo(adminId: string, dto: UpdateJoinerInfoDto): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         hire_date: dto.hireDate ? new Date(dto.hireDate) : undefined,
@@ -281,32 +301,32 @@ export class AdminProfileService {
         probation_end_date: dto.probationEndDate ? new Date(dto.probationEndDate) : undefined,
         probation_status: dto.probationStatus,
       },
+      ...adminWithRelations,
     });
-
-    return this.getAdminDetail(adminId);
+    return this.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
    * Update Mover Info
    */
   async updateMoverInfo(adminId: string, dto: UpdateMoverInfoDto): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         last_role_change_at: dto.lastRoleChangeAt ? new Date(dto.lastRoleChangeAt) : undefined,
         last_promotion_date: dto.lastPromotionDate ? new Date(dto.lastPromotionDate) : undefined,
         last_transfer_date: dto.lastTransferDate ? new Date(dto.lastTransferDate) : undefined,
       },
+      ...adminWithRelations,
     });
-
-    return this.getAdminDetail(adminId);
+    return this.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
    * Update Leaver Info
    */
   async updateLeaverInfo(adminId: string, dto: UpdateLeaverInfoDto): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         termination_date: dto.terminationDate ? new Date(dto.terminationDate) : undefined,
@@ -316,9 +336,9 @@ export class AdminProfileService {
         eligible_for_rehire: dto.eligibleForRehire,
         exit_interview_completed: dto.exitInterviewCompleted,
       },
+      ...adminWithRelations,
     });
-
-    return this.getAdminDetail(adminId);
+    return this.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
@@ -328,7 +348,7 @@ export class AdminProfileService {
     adminId: string,
     dto: UpdateContactInfoDto,
   ): Promise<AdminDetailResponse> {
-    await this.prisma.admins.update({
+    const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
         phone_number: dto.phoneNumber,
@@ -336,42 +356,74 @@ export class AdminProfileService {
         mobile_number: dto.mobileNumber,
         mobile_country_code: dto.mobileCountryCode,
         work_phone: dto.workPhone,
-        emergency_contact: dto.emergencyContact as any,
+        emergency_contact: dto.emergencyContact,
       },
+      ...adminWithRelations,
     });
-
-    return this.getAdminDetail(adminId);
+    return this.mapAdminToDetailResponse(updatedAdmin);
   }
 
   /**
    * Update complete admin profile (all sections at once)
    */
   async updateProfile(adminId: string, dto: UpdateAdminProfileDto): Promise<AdminDetailResponse> {
-    if (dto.scim) {
-      await this.updateScimCore(adminId, dto.scim);
-    }
-    if (dto.employee) {
-      await this.updateEmployeeInfo(adminId, dto.employee);
-    }
-    if (dto.job) {
-      await this.updateJobOrganization(adminId, dto.job);
-    }
-    if (dto.partner) {
-      await this.updatePartnerInfo(adminId, dto.partner);
-    }
-    if (dto.joiner) {
-      await this.updateJoinerInfo(adminId, dto.joiner);
-    }
-    if (dto.mover) {
-      await this.updateMoverInfo(adminId, dto.mover);
-    }
-    if (dto.leaver) {
-      await this.updateLeaverInfo(adminId, dto.leaver);
-    }
-    if (dto.contact) {
-      await this.updateContactInfo(adminId, dto.contact);
-    }
+    const data: Prisma.adminsUpdateInput = {};
 
-    return this.getAdminDetail(adminId);
+    if (dto.scim) Object.assign(data, dto.scim);
+    if (dto.employee) Object.assign(data, dto.employee);
+    if (dto.job) Object.assign(data, dto.job);
+    if (dto.partner)
+      Object.assign(data, {
+        ...dto.partner,
+        partner_contract_end_date: dto.partner.partnerContractEndDate
+          ? new Date(dto.partner.partnerContractEndDate)
+          : undefined,
+      });
+    if (dto.joiner)
+      Object.assign(data, {
+        ...dto.joiner,
+        hire_date: dto.joiner.hireDate ? new Date(dto.joiner.hireDate) : undefined,
+        original_hire_date: dto.joiner.originalHireDate
+          ? new Date(dto.joiner.originalHireDate)
+          : undefined,
+        start_date: dto.joiner.startDate ? new Date(dto.joiner.startDate) : undefined,
+        onboarding_completed_at: dto.joiner.onboardingCompletedAt
+          ? new Date(dto.joiner.onboardingCompletedAt)
+          : undefined,
+        probation_end_date: dto.joiner.probationEndDate
+          ? new Date(dto.joiner.probationEndDate)
+          : undefined,
+      });
+    if (dto.mover)
+      Object.assign(data, {
+        ...dto.mover,
+        last_role_change_at: dto.mover.lastRoleChangeAt
+          ? new Date(dto.mover.lastRoleChangeAt)
+          : undefined,
+        last_promotion_date: dto.mover.lastPromotionDate
+          ? new Date(dto.mover.lastPromotionDate)
+          : undefined,
+        last_transfer_date: dto.mover.lastTransferDate
+          ? new Date(dto.mover.lastTransferDate)
+          : undefined,
+      });
+    if (dto.leaver)
+      Object.assign(data, {
+        ...dto.leaver,
+        termination_date: dto.leaver.terminationDate
+          ? new Date(dto.leaver.terminationDate)
+          : undefined,
+        last_working_day: dto.leaver.lastWorkingDay
+          ? new Date(dto.leaver.lastWorkingDay)
+          : undefined,
+      });
+    if (dto.contact) Object.assign(data, dto.contact);
+
+    const updatedAdmin = await this.prisma.admins.update({
+      where: { id: adminId },
+      data,
+      ...adminWithRelations,
+    });
+    return this.mapAdminToDetailResponse(updatedAdmin);
   }
 }
