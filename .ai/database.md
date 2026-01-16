@@ -51,3 +51,4 @@ DROP TABLE IF EXISTS features;
 
 - Policy: `docs/llm/policies/database.md`
 - Migration Guide: `docs/llm/guides/db-migration.md`
+- **Troubleshooting**: `docs/llm/guides/migration-troubleshooting.md`
