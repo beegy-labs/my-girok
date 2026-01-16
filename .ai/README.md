@@ -56,15 +56,29 @@
 | MonacoAuthDSLEditor | Monaco Editor for authz DSL | [monaco-auth-dsl-editor.md](../docs/llm/components/monaco-auth-dsl-editor.md) |
 | ToastProvider       | Toast notification provider | See [toast-notifications.md](../docs/llm/guides/toast-notifications.md)       |
 
+## Database
+
+**Quick Ref**: [database.md](database.md)
+
+**SSOT**:
+
+- Policy: `docs/llm/policies/database.md`
+- Migration: `docs/en/guides/db-migration.md`
+- **Troubleshooting**: `docs/llm/guides/migration-troubleshooting.md`
+
+**Stack**: goose (SSOT) + Prisma (client) + PostgreSQL 16 + ClickHouse
+
 ## Guides
 
 **SSOT**: `docs/llm/guides/`
 
-| Guide                   | Description                      | File                                                                        |
-| ----------------------- | -------------------------------- | --------------------------------------------------------------------------- |
-| Toast Notifications     | Toast system usage & integration | [toast-notifications.md](../docs/llm/guides/toast-notifications.md)         |
-| Monaco Editor           | Monaco integration guide         | [monaco-editor.md](../docs/llm/guides/monaco-editor.md)                     |
-| Frontend Error Handling | Error handling patterns          | [frontend-error-handling.md](../docs/llm/guides/frontend-error-handling.md) |
+| Guide                         | Description                      | File                                                                            |
+| ----------------------------- | -------------------------------- | ------------------------------------------------------------------------------- |
+| DB Migration                  | Database migration workflow      | [db-migration.md](../docs/en/guides/db-migration.md)                            |
+| **Migration Troubleshooting** | goose issues & recovery          | [migration-troubleshooting.md](../docs/llm/guides/migration-troubleshooting.md) |
+| Toast Notifications           | Toast system usage & integration | [toast-notifications.md](../docs/llm/guides/toast-notifications.md)             |
+| Monaco Editor                 | Monaco integration guide         | [monaco-editor.md](../docs/llm/guides/monaco-editor.md)                         |
+| Frontend Error Handling       | Error handling patterns          | [frontend-error-handling.md](../docs/llm/guides/frontend-error-handling.md)     |
 
 ### Working on error handling or API calls?
 
