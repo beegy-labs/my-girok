@@ -1,6 +1,6 @@
 # Web Girok App
 
-> Public-facing web application for My-Girok | **Last Updated**: 2026-01-11
+> Public-facing web application for My-Girok | **Last Updated**: 2026-01-16
 
 ## Quick Reference
 
@@ -49,6 +49,7 @@ interface AuthState {
 
 ## Performance Rules
 
+- `React.lazy()` for all page components (route-based code splitting)
 - `useCallback`/`useMemo` for handlers and expensive ops
 - Static constants outside components
 - Direct navigation (no state-based)

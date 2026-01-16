@@ -1,35 +1,62 @@
+import { lazy, Suspense, type ReactNode } from 'react';
 import { createBrowserRouter } from 'react-router';
 import { MainLayout, FullWidthLayout } from './layouts';
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import MfaVerificationPage from './pages/MfaVerificationPage';
-import OAuthCallbackPage from './pages/OAuthCallbackPage';
-import ConsentPage from './pages/ConsentPage';
-import RegisterPage from './pages/RegisterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ChangePasswordPage from './pages/ChangePasswordPage';
-import NotFoundPage from './pages/NotFoundPage';
 import PrivateRoute from './components/PrivateRoute';
-import ResumeEditPage from './pages/resume/ResumeEditPage';
-import ResumePreviewPage from './pages/resume/ResumePreviewPage';
-import PublicResumePage from './pages/resume/PublicResumePage';
-import SharedResumePage from './pages/resume/SharedResumePage';
-import MyResumePage from './pages/resume/MyResumePage';
-import SettingsPage from './pages/settings/SettingsPage';
-import SessionsPage from './pages/settings/SessionsPage';
+import LoadingSpinner from './components/LoadingSpinner';
+
+// Lazy load all page components for code splitting
+const HomePage = lazy(() => import('./pages/HomePage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const MfaVerificationPage = lazy(() => import('./pages/MfaVerificationPage'));
+const OAuthCallbackPage = lazy(() => import('./pages/OAuthCallbackPage'));
+const ConsentPage = lazy(() => import('./pages/ConsentPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ChangePasswordPage = lazy(() => import('./pages/ChangePasswordPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+
+// Resume pages
+const ResumeEditPage = lazy(() => import('./pages/resume/ResumeEditPage'));
+const ResumePreviewPage = lazy(() => import('./pages/resume/ResumePreviewPage'));
+const PublicResumePage = lazy(() => import('./pages/resume/PublicResumePage'));
+const SharedResumePage = lazy(() => import('./pages/resume/SharedResumePage'));
+const MyResumePage = lazy(() => import('./pages/resume/MyResumePage'));
+
+// Settings pages
+const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'));
+const SessionsPage = lazy(() => import('./pages/settings/SessionsPage'));
+
 // Placeholder pages for upcoming features
-import JournalPage from './pages/JournalPage';
-import SchedulePage from './pages/SchedulePage';
-import FinancePage from './pages/FinancePage';
-import LibraryPage from './pages/LibraryPage';
-import NetworkPage from './pages/NetworkPage';
-import StatsPage from './pages/StatsPage';
-import NotificationsPage from './pages/NotificationsPage';
+const JournalPage = lazy(() => import('./pages/JournalPage'));
+const SchedulePage = lazy(() => import('./pages/SchedulePage'));
+const FinancePage = lazy(() => import('./pages/FinancePage'));
+const LibraryPage = lazy(() => import('./pages/LibraryPage'));
+const NetworkPage = lazy(() => import('./pages/NetworkPage'));
+const StatsPage = lazy(() => import('./pages/StatsPage'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+
 // Legal pages
-import PrivacyPage from './pages/PrivacyPage';
-import TermsPage from './pages/TermsPage';
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const TermsPage = lazy(() => import('./pages/TermsPage'));
+
 // Design System
-import DesignSystemPage from './pages/DesignSystemPage';
+const DesignSystemPage = lazy(() => import('./pages/DesignSystemPage'));
+
+/**
+ * Suspense wrapper for lazy-loaded components
+ * Provides consistent loading state across all routes
+ */
+function SuspenseWrapper({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<LoadingSpinner fullScreen />}>{children}</Suspense>;
+}
+
+/**
+ * Helper to wrap element with Suspense and optionally PrivateRoute
+ */
+function lazyElement(element: ReactNode, isPrivate = false): ReactNode {
+  const wrapped = <SuspenseWrapper>{element}</SuspenseWrapper>;
+  return isPrivate ? <PrivateRoute>{wrapped}</PrivateRoute> : wrapped;
+}
 
 export const router = createBrowserRouter([
   // Main layout - standard pages with container constraints
@@ -39,138 +66,94 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <HomePage />,
+        element: lazyElement(<HomePage />),
       },
       {
         path: 'login',
-        element: <LoginPage />,
+        element: lazyElement(<LoginPage />),
       },
       {
         path: 'login/mfa',
-        element: <MfaVerificationPage />,
+        element: lazyElement(<MfaVerificationPage />),
       },
       {
         path: 'auth/callback',
-        element: <OAuthCallbackPage />,
+        element: lazyElement(<OAuthCallbackPage />),
       },
       {
         path: 'consent',
-        element: <ConsentPage />,
+        element: lazyElement(<ConsentPage />),
       },
       {
         path: 'register',
-        element: <RegisterPage />,
+        element: lazyElement(<RegisterPage />),
       },
       {
         path: 'forgot-password',
-        element: <ForgotPasswordPage />,
+        element: lazyElement(<ForgotPasswordPage />),
       },
       {
         path: 'change-password',
-        element: (
-          <PrivateRoute>
-            <ChangePasswordPage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<ChangePasswordPage />, true),
       },
       {
         path: 'settings',
-        element: (
-          <PrivateRoute>
-            <SettingsPage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<SettingsPage />, true),
       },
       {
         path: 'settings/sessions',
-        element: (
-          <PrivateRoute>
-            <SessionsPage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<SessionsPage />, true),
       },
       {
         path: 'resume/my',
-        element: (
-          <PrivateRoute>
-            <MyResumePage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<MyResumePage />, true),
       },
       // Placeholder routes for upcoming features
       {
         path: 'journal',
-        element: (
-          <PrivateRoute>
-            <JournalPage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<JournalPage />, true),
       },
       {
         path: 'schedule',
-        element: (
-          <PrivateRoute>
-            <SchedulePage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<SchedulePage />, true),
       },
       {
         path: 'finance',
-        element: (
-          <PrivateRoute>
-            <FinancePage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<FinancePage />, true),
       },
       {
         path: 'library',
-        element: (
-          <PrivateRoute>
-            <LibraryPage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<LibraryPage />, true),
       },
       {
         path: 'network',
-        element: (
-          <PrivateRoute>
-            <NetworkPage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<NetworkPage />, true),
       },
       {
         path: 'stats',
-        element: (
-          <PrivateRoute>
-            <StatsPage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<StatsPage />, true),
       },
       {
         path: 'notifications',
-        element: (
-          <PrivateRoute>
-            <NotificationsPage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<NotificationsPage />, true),
       },
       // Legal pages (public)
       {
         path: 'privacy',
-        element: <PrivacyPage />,
+        element: lazyElement(<PrivacyPage />),
       },
       {
         path: 'terms',
-        element: <TermsPage />,
+        element: lazyElement(<TermsPage />),
       },
       // Design System (public - for development reference)
       {
         path: 'design-system',
-        element: <DesignSystemPage />,
+        element: lazyElement(<DesignSystemPage />),
       },
       {
         path: '*',
-        element: <NotFoundPage />,
+        element: lazyElement(<NotFoundPage />),
       },
     ],
   },
@@ -181,35 +164,23 @@ export const router = createBrowserRouter([
     children: [
       {
         path: 'resume/edit',
-        element: (
-          <PrivateRoute>
-            <ResumeEditPage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<ResumeEditPage />, true),
       },
       {
         path: 'resume/edit/:resumeId',
-        element: (
-          <PrivateRoute>
-            <ResumeEditPage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<ResumeEditPage />, true),
       },
       {
         path: 'resume/preview/:resumeId',
-        element: (
-          <PrivateRoute>
-            <ResumePreviewPage />
-          </PrivateRoute>
-        ),
+        element: lazyElement(<ResumePreviewPage />, true),
       },
       {
         path: 'resume/:username',
-        element: <PublicResumePage />,
+        element: lazyElement(<PublicResumePage />),
       },
       {
         path: 'shared/:token',
-        element: <SharedResumePage />,
+        element: lazyElement(<SharedResumePage />),
       },
     ],
   },
