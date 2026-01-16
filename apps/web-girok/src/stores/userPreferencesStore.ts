@@ -98,27 +98,42 @@ export const useUserPreferencesStore = create<UserPreferencesState>((set, get) =
   },
 
   /**
-   * Set theme preference
+   * Set theme preference with optimistic update and rollback
    */
   setTheme: async (theme: Theme) => {
+    // Save previous state for rollback
+    const previousPrefs = get().preferences;
+    const previousThemeCookie = get().getThemeFromCookie();
+
     try {
-      // Update cookie first (optimistic update)
+      // Optimistic update: cookie first
       setCookieJSON(THEME_COOKIE_KEY, theme, { expires: 365 });
 
-      // Update local state
-      const currentPrefs = get().preferences;
-      if (currentPrefs) {
+      // Optimistic update: local state
+      if (previousPrefs) {
         set({
           preferences: {
-            ...currentPrefs,
+            ...previousPrefs,
             theme,
           },
         });
       }
 
-      // Update server in background
+      // Update server
       await updateUserPreferencesAPI({ theme });
     } catch (error) {
+      // Rollback: restore previous cookie
+      if (previousThemeCookie) {
+        setCookieJSON(THEME_COOKIE_KEY, previousThemeCookie, { expires: 365 });
+      } else {
+        deleteCookie(THEME_COOKIE_KEY);
+      }
+
+      // Rollback: restore previous state
+      if (previousPrefs) {
+        set({ preferences: previousPrefs });
+      }
+
       const errorMessage = error instanceof Error ? error.message : 'Failed to update theme';
       set({ error: errorMessage });
       throw error;
@@ -126,29 +141,46 @@ export const useUserPreferencesStore = create<UserPreferencesState>((set, get) =
   },
 
   /**
-   * Set section order preference
+   * Set section order preference with optimistic update and rollback
    */
   setSectionOrder: async (sectionOrder: SectionOrderItem[]) => {
+    // Save previous state for rollback
+    const previousPrefs = get().preferences;
+    const previousSectionOrderCookie = get().getSectionOrderFromCookie();
+
     try {
-      // Update cookie first (optimistic update)
+      // Optimistic update: cookie first
       setCookieJSON(SECTION_ORDER_COOKIE_KEY, sectionOrder, {
         expires: 365,
       });
 
-      // Update local state
-      const currentPrefs = get().preferences;
-      if (currentPrefs) {
+      // Optimistic update: local state
+      if (previousPrefs) {
         set({
           preferences: {
-            ...currentPrefs,
+            ...previousPrefs,
             sectionOrder,
           },
         });
       }
 
-      // Update server in background
+      // Update server
       await updateUserPreferencesAPI({ sectionOrder });
     } catch (error) {
+      // Rollback: restore previous cookie
+      if (previousSectionOrderCookie) {
+        setCookieJSON(SECTION_ORDER_COOKIE_KEY, previousSectionOrderCookie, {
+          expires: 365,
+        });
+      } else {
+        deleteCookie(SECTION_ORDER_COOKIE_KEY);
+      }
+
+      // Rollback: restore previous state
+      if (previousPrefs) {
+        set({ preferences: previousPrefs });
+      }
+
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to update section order';
       set({ error: errorMessage });
@@ -157,11 +189,16 @@ export const useUserPreferencesStore = create<UserPreferencesState>((set, get) =
   },
 
   /**
-   * Update preferences (partial)
+   * Update preferences (partial) with optimistic update and rollback
    */
   updatePreferences: async (dto: UpdateUserPreferencesDto) => {
+    // Save previous state for rollback
+    const previousPrefs = get().preferences;
+    const previousThemeCookie = get().getThemeFromCookie();
+    const previousSectionOrderCookie = get().getSectionOrderFromCookie();
+
     try {
-      // Update cookies
+      // Optimistic update: cookies
       if (dto.theme) {
         setCookieJSON(THEME_COOKIE_KEY, dto.theme, { expires: 365 });
       }
@@ -175,12 +212,11 @@ export const useUserPreferencesStore = create<UserPreferencesState>((set, get) =
         }
       }
 
-      // Update local state
-      const currentPrefs = get().preferences;
-      if (currentPrefs) {
+      // Optimistic update: local state
+      if (previousPrefs) {
         set({
           preferences: {
-            ...currentPrefs,
+            ...previousPrefs,
             ...(dto.theme && { theme: dto.theme }),
             ...(dto.sectionOrder !== undefined && {
               sectionOrder: dto.sectionOrder,
@@ -192,6 +228,29 @@ export const useUserPreferencesStore = create<UserPreferencesState>((set, get) =
       // Update server
       await updateUserPreferencesAPI(dto);
     } catch (error) {
+      // Rollback: restore previous cookies
+      if (dto.theme) {
+        if (previousThemeCookie) {
+          setCookieJSON(THEME_COOKIE_KEY, previousThemeCookie, { expires: 365 });
+        } else {
+          deleteCookie(THEME_COOKIE_KEY);
+        }
+      }
+      if (dto.sectionOrder !== undefined) {
+        if (previousSectionOrderCookie) {
+          setCookieJSON(SECTION_ORDER_COOKIE_KEY, previousSectionOrderCookie, {
+            expires: 365,
+          });
+        } else {
+          deleteCookie(SECTION_ORDER_COOKIE_KEY);
+        }
+      }
+
+      // Rollback: restore previous state
+      if (previousPrefs) {
+        set({ preferences: previousPrefs });
+      }
+
       const errorMessage = error instanceof Error ? error.message : 'Failed to update preferences';
       set({ error: errorMessage });
       throw error;
