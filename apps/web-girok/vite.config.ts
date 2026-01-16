@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import inject from '@rollup/plugin-inject';
+import { visualizer } from 'rollup-plugin-visualizer';
+
+const isAnalyze = process.env.ANALYZE === 'true';
 
 export default defineConfig({
   plugins: [
@@ -16,7 +19,16 @@ export default defineConfig({
         Buffer: true,
       },
     }),
-  ],
+    // Bundle analyzer - run with ANALYZE=true pnpm build
+    isAnalyze &&
+      visualizer({
+        filename: 'dist/stats.html',
+        open: true,
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap', // 'sunburst', 'network', 'treemap'
+      }),
+  ].filter(Boolean),
   build: {
     rollupOptions: {
       plugins: [

@@ -98,7 +98,7 @@ vi.mock('../hooks/useApiMutation', () => ({
           const result = await mutationFn(params);
           onSuccess?.(result);
         } catch (e: any) {
-          const appError = { code: e.code || ErrorCode.SERVER_ERROR, message: e.message };
+          const appError = { code: e.code || ErrorCode.INTERNAL_SERVER_ERROR, message: e.message };
           onError?.(appError);
         }
       },
@@ -303,7 +303,9 @@ describe('LoginPage', () => {
       await waitFor(
         () => {
           const buttons = screen.getAllByRole('button');
-          const loginButton = buttons.find((btn) => btn.getAttribute('type') === 'submit');
+          const loginButton = buttons.find((btn) => btn.getAttribute('type') === 'submit') as
+            | HTMLButtonElement
+            | undefined;
           // If button is disabled OR warning is shown, the rate limit UI is working
           const warningShown = screen.queryByText('Too many login attempts') !== null;
           expect(loginButton?.disabled || warningShown).toBe(true);
@@ -341,7 +343,10 @@ describe('LoginPage', () => {
 
   describe('error display', () => {
     it('should not show rate limit warning for non-rate-limit errors', async () => {
-      mockLogin.mockRejectedValue({ code: ErrorCode.SERVER_ERROR, message: 'Server error' });
+      mockLogin.mockRejectedValue({
+        code: ErrorCode.INTERNAL_SERVER_ERROR,
+        message: 'Server error',
+      });
 
       renderLoginPage();
 
