@@ -19,6 +19,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { OAuthConfigModule } from './oauth-config/oauth-config.module';
 import { AdminModule } from './admin/admin.module';
+import { OrganizationModule } from './organization/organization.module';
 import { ServicesModule } from './services/services.module';
 import { OperatorModule } from './operator/operator.module';
 import { CommonModule } from './common/common.module';
@@ -70,6 +71,7 @@ import configuration from './config/configuration';
     UsersModule,
     OAuthConfigModule,
     AdminModule,
+    OrganizationModule,
     ServicesModule,
     OperatorModule,
     HealthModule,

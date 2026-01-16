@@ -499,7 +499,228 @@ Update multiple enterprise sections at once.
 }
 ```
 
-### 4.4. AdminDetailResponse Structure
+### 4.4. Organization Management (Phase 2)
+
+This service manages organizational entities that define company structure and relationships.
+
+#### Organization Entities
+
+The organization module provides CRUD APIs for 7 entity types:
+
+| Entity                | Purpose                                         | Key Relations                          |
+| :-------------------- | :---------------------------------------------- | :------------------------------------- |
+| **Job Grade**         | Define job levels and career tracks             | Used by admins table                   |
+| **Organization Unit** | Hierarchical org structure (departments, teams) | Parent-child tree, used by admins      |
+| **Legal Entity**      | Legal companies/subsidiaries                    | Has offices, used by admins            |
+| **Office**            | Physical office locations                       | Belongs to legal entity, has buildings |
+| **Building**          | Buildings within offices                        | Belongs to office, has floors          |
+| **Floor**             | Floors within buildings                         | Belongs to building, used by admins    |
+| **Partner Company**   | External partner organizations                  | Has service agreements                 |
+
+#### Job Grade API
+
+**Endpoints**:
+
+- `POST /organization/job-grades`: Create job grade
+- `GET /organization/job-grades`: List all (filter by jobFamily, track, isActive)
+- `GET /organization/job-grades/:id`: Get by ID
+- `GET /organization/job-grades/code/:code`: Get by code
+- `PATCH /organization/job-grades/:id`: Update job grade
+- `DELETE /organization/job-grades/:id`: Delete job grade
+
+**JobFamily Enum**: `ENGINEERING`, `PRODUCT`, `DESIGN`, `MARKETING`, `SALES`, `SUPPORT`, `OPERATIONS`, `FINANCE`, `HR`, `LEGAL`, `EXECUTIVE`
+
+**Example Request** (`CreateJobGradeDto`):
+
+```typescript
+{
+  code: 'IC5',
+  name: 'Senior Engineer',
+  jobFamily: 'ENGINEERING',
+  level: 5,              // 1-10
+  track: 'IC',           // IC or M
+  description?: string,
+  isActive?: boolean
+}
+```
+
+#### Organization Unit API
+
+**Endpoints**:
+
+- `POST /organization/org-units`: Create organization unit
+- `GET /organization/org-units`: List all (filter by orgType, parentId, isActive)
+- `GET /organization/org-units/tree`: Get hierarchical tree structure
+- `GET /organization/org-units/:id`: Get by ID
+- `GET /organization/org-units/:id/children`: Get direct children
+- `PATCH /organization/org-units/:id`: Update organization unit
+- `DELETE /organization/org-units/:id`: Delete (only if no children)
+
+**OrgUnitType Enum**: `COMPANY`, `DIVISION`, `DEPARTMENT`, `TEAM`, `SQUAD`, `TRIBE`, `CHAPTER`, `GUILD`
+
+**Example Request** (`CreateOrgUnitDto`):
+
+```typescript
+{
+  code: 'ENG',
+  name: 'Engineering',
+  orgType: 'DEPARTMENT',
+  parentId?: string,           // Parent org unit ID
+  managerAdminId?: string,     // Manager admin ID
+  description?: string,
+  isActive?: boolean
+}
+```
+
+**Tree Response** (`OrgUnitTreeNodeDto`):
+
+```typescript
+{
+  id: string,
+  code: string,
+  name: string,
+  orgType: OrgUnitType,
+  parentId?: string,
+  managerAdminId?: string,
+  children: OrgUnitTreeNodeDto[] // Recursive
+}
+```
+
+#### Legal Entity API
+
+**Endpoints**:
+
+- `POST /organization/legal-entities`: Create legal entity
+- `GET /organization/legal-entities`: List all (filter by countryCode, isActive)
+- `GET /organization/legal-entities/:id`: Get by ID
+- `PATCH /organization/legal-entities/:id`: Update legal entity
+- `DELETE /organization/legal-entities/:id`: Delete legal entity
+
+**Example Request** (`CreateLegalEntityDto`):
+
+```typescript
+{
+  code: 'BEEGY-KR',
+  name: 'Beegy Korea Inc.',
+  legalName: 'Beegy Korea Inc.',
+  countryCode: 'KR',
+  taxId?: string,
+  registeredAddress?: string,
+  description?: string,
+  isActive?: boolean
+}
+```
+
+#### Office API
+
+**Endpoints**:
+
+- `POST /organization/offices`: Create office
+- `GET /organization/offices`: List all (filter by officeType, legalEntityId, countryCode, isActive)
+- `GET /organization/offices/:id`: Get by ID
+- `GET /organization/offices/:id/buildings`: Get buildings for this office
+- `PATCH /organization/offices/:id`: Update office
+- `DELETE /organization/offices/:id`: Delete office
+
+**OfficeType Enum**: `HEADQUARTERS`, `BRANCH`, `SATELLITE`, `REMOTE`, `COWORKING`
+
+**Example Request** (`CreateOfficeDto`):
+
+```typescript
+{
+  code: 'SEL-HQ',
+  name: 'Seoul Headquarters',
+  officeType: 'HEADQUARTERS',
+  legalEntityId: string,    // Must exist
+  countryCode: 'KR',
+  city?: string,
+  address?: string,
+  phoneNumber?: string,
+  description?: string,
+  isActive?: boolean
+}
+```
+
+#### Building API
+
+**Endpoints**:
+
+- `POST /organization/buildings`: Create building
+- `GET /organization/buildings`: List all (filter by officeId, isActive)
+- `GET /organization/buildings/:id`: Get by ID
+- `GET /organization/buildings/:id/floors`: Get floors for this building
+- `PATCH /organization/buildings/:id`: Update building
+- `DELETE /organization/buildings/:id`: Delete building
+
+**Example Request** (`CreateBuildingDto`):
+
+```typescript
+{
+  code: 'SEL-A',
+  name: 'Building A',
+  officeId: string,      // Must exist
+  address?: string,
+  totalFloors?: number,
+  description?: string,
+  isActive?: boolean
+}
+```
+
+#### Floor API
+
+**Endpoints**:
+
+- `POST /organization/floors`: Create floor
+- `GET /organization/floors`: List all (filter by buildingId, isActive)
+- `GET /organization/floors/:id`: Get by ID
+- `PATCH /organization/floors/:id`: Update floor
+- `DELETE /organization/floors/:id`: Delete floor
+
+**Example Request** (`CreateFloorDto`):
+
+```typescript
+{
+  code: 'SEL-A-5F',
+  name: '5th Floor',
+  buildingId: string,     // Must exist
+  floorNumber: number,
+  floorArea?: number,
+  description?: string,
+  isActive?: boolean
+}
+```
+
+#### Partner Company API
+
+**Endpoints**:
+
+- `POST /organization/partner-companies`: Create partner company
+- `GET /organization/partner-companies`: List all (filter by partnerType, isActive)
+- `GET /organization/partner-companies/:id`: Get by ID
+- `GET /organization/partner-companies/:id/agreements`: Get service agreements
+- `PATCH /organization/partner-companies/:id`: Update partner company
+- `DELETE /organization/partner-companies/:id`: Delete partner company
+
+**PartnerType Enum**: `VENDOR`, `CONTRACTOR`, `CONSULTANT`, `AGENCY`, `SUPPLIER`, `PARTNER`
+
+**Example Request** (`CreatePartnerCompanyDto`):
+
+```typescript
+{
+  code: 'ACME',
+  name: 'ACME Corporation',
+  partnerType: 'VENDOR',
+  contactEmail?: string,
+  contactPhone?: string,
+  contactPerson?: string,
+  taxId?: string,
+  address?: string,
+  description?: string,
+  isActive?: boolean
+}
+```
+
+### 4.5. AdminDetailResponse Structure
 
 All profile and enterprise endpoints return `AdminDetailResponse`:
 
@@ -663,6 +884,90 @@ Located at: `src/admin/services/admin-enterprise.service.ts`
 - All updates include relations in single query (optimized)
 - `verifyIdentity` merges verification details into metadata JSONB
 
+### 5.3. Organization Services (Phase 2)
+
+Located at: `src/organization/services/`
+
+The organization module provides 7 services for managing organizational entities:
+
+#### JobGradeService
+
+**Methods**: `create`, `findAll`, `findOne`, `findByCode`, `update`, `remove`
+
+**Features**:
+
+- Code uniqueness validation
+- Filter by jobFamily, track, isActive
+- Sort by level ascending, then track
+
+#### OrgUnitService
+
+**Methods**: `create`, `findAll`, `findTree`, `findOne`, `findChildren`, `update`, `remove`
+
+**Features**:
+
+- Hierarchical tree structure with recursive `buildTree` method
+- Parent-child validation (no self-parent, no circular references)
+- Cannot delete unit with children
+- Filter by orgType, parentId, isActive
+
+#### LegalEntityService
+
+**Methods**: `create`, `findAll`, `findOne`, `update`, `remove`
+
+**Features**:
+
+- Code uniqueness validation
+- Filter by countryCode, isActive
+
+#### OfficeService
+
+**Methods**: `create`, `findAll`, `findOne`, `findBuildings`, `update`, `remove`
+
+**Features**:
+
+- Validates legalEntity exists before creating
+- `findBuildings` returns related buildings
+- Filter by officeType, legalEntityId, countryCode, isActive
+
+#### BuildingService
+
+**Methods**: `create`, `findAll`, `findOne`, `findFloors`, `update`, `remove`
+
+**Features**:
+
+- Validates office exists before creating
+- `findFloors` returns related floors
+- Filter by officeId, isActive
+
+#### FloorService
+
+**Methods**: `create`, `findAll`, `findOne`, `update`, `remove`
+
+**Features**:
+
+- Validates building exists before creating
+- Sorted by floor_number ascending
+- Filter by buildingId, isActive
+
+#### PartnerCompanyService
+
+**Methods**: `create`, `findAll`, `findOne`, `findAgreements`, `update`, `remove`
+
+**Features**:
+
+- Code uniqueness validation
+- `findAgreements` returns partner service agreements
+- Filter by partnerType, isActive
+
+**Common Patterns**:
+
+- All services use snake_case for database fields, camelCase for DTOs
+- All services have private `mapToResponse` method for DB-to-DTO conversion
+- All create methods check for duplicate codes (ConflictException)
+- All findOne methods throw NotFoundException when not found
+- All services inject PrismaService for database operations
+
 ## 6. Performance Optimizations
 
 ### 6.1. Query Optimization (Applied: 2026-01-16)
@@ -744,29 +1049,55 @@ The service uses the outbox pattern to publish events to Redpanda.
 
 ### 9.1. Test Coverage
 
-**Unit Tests**: 26 tests across 2 test suites
+**Admin Module**: 26 tests across 2 test suites
 
 - `admin-profile.service.spec.ts`: 11 tests
 - `admin-enterprise.service.spec.ts`: 15 tests
 
+**Organization Module**: 73 tests across 7 test suites
+
+- `job-grade.service.spec.ts`: 14 tests
+- `org-unit.service.spec.ts`: 16 tests
+- `legal-entity.service.spec.ts`: 11 tests
+- `office.service.spec.ts`: 9 tests
+- `building.service.spec.ts`: 7 tests
+- `floor.service.spec.ts`: 7 tests
+- `partner-company.service.spec.ts`: 9 tests
+
+**Total**: 99 tests across 9 test suites
+
 **Coverage Status**: ✅ All tests passing
+
+- Organization services: 84.22% overall coverage (exceeds 80% target)
+- Individual service coverage: 62-97% (varies by service)
 
 **Test Categories**:
 
 - Service initialization
-- CRUD operations for all profile sections
-- NHI creation with validation (rejects HUMAN type)
-- NHI credential rotation
-- Bulk profile updates
-- List/search with filters
-- Error handling (NotFoundException, BadRequestException)
+- CRUD operations for all sections
+- Code uniqueness validation (ConflictException)
+- Foreign key validation (NotFoundException)
+- Hierarchical tree operations (OrgUnitService)
+- Relationship queries (findBuildings, findFloors, findAgreements)
+- Filter and query parameter validation
+- Error handling (NotFoundException, ConflictException, BadRequestException)
 
 ### 9.2. Test Files
 
-Located at: `src/admin/services/`
+**Admin Tests**: `src/admin/services/`
 
 - `admin-profile.service.spec.ts`
 - `admin-enterprise.service.spec.ts`
+
+**Organization Tests**: `src/organization/services/`
+
+- `job-grade.service.spec.ts`
+- `org-unit.service.spec.ts`
+- `legal-entity.service.spec.ts`
+- `office.service.spec.ts`
+- `building.service.spec.ts`
+- `floor.service.spec.ts`
+- `partner-company.service.spec.ts`
 
 ### 9.3. Mock Strategy
 
@@ -774,6 +1105,7 @@ Tests use Vitest mocks for:
 
 - PrismaService (all database operations)
 - AdminProfileService (for cross-service dependencies)
+- All organization entity tables (job_grade, organization_unit, legal_entity, office, building, floor, partner_company)
 
 ## 10. Security Considerations
 
@@ -798,30 +1130,79 @@ Tests use Vitest mocks for:
 
 ## 11. Implementation Files
 
-### Controllers
+### Admin Module
+
+**Controllers**:
 
 - `src/admin/controllers/admin-profile.controller.ts`: 10 profile endpoints
 - `src/admin/controllers/admin-enterprise.controller.ts`: 11 enterprise endpoints
 
-### Services
+**Services**:
 
 - `src/admin/services/admin-profile.service.ts`: Profile management logic
 - `src/admin/services/admin-enterprise.service.ts`: Enterprise/NHI management logic
 
-### DTOs
+**DTOs**:
 
 - `src/admin/dto/admin-profile.dto.ts`: Profile request/response DTOs
 - `src/admin/dto/admin-enterprise.dto.ts`: Enterprise request/response DTOs
 
-### Types
-
-- `packages/types/src/admin/admin.enums.ts`: 11 enum types
-- `packages/types/src/admin/admin.types.ts`: Admin interface (83 fields)
-
-### Tests
+**Tests**:
 
 - `src/admin/services/admin-profile.service.spec.ts`: 11 tests
 - `src/admin/services/admin-enterprise.service.spec.ts`: 15 tests
+
+### Organization Module
+
+**Module Registration**:
+
+- `src/organization/organization.module.ts`: Module definition with 7 services and 7 controllers
+- Registered in `src/app.module.ts`
+
+**Controllers**: `src/organization/controllers/` (41 endpoints total)
+
+- `job-grade.controller.ts`: 6 endpoints
+- `org-unit.controller.ts`: 7 endpoints (includes tree and children)
+- `legal-entity.controller.ts`: 5 endpoints
+- `office.controller.ts`: 6 endpoints (includes buildings relation)
+- `building.controller.ts`: 6 endpoints (includes floors relation)
+- `floor.controller.ts`: 5 endpoints
+- `partner-company.controller.ts`: 6 endpoints (includes agreements relation)
+
+**Services**: `src/organization/services/`
+
+- `job-grade.service.ts`: JobGrade CRUD with code lookup
+- `org-unit.service.ts`: OrgUnit CRUD with tree structure
+- `legal-entity.service.ts`: LegalEntity CRUD
+- `office.service.ts`: Office CRUD with buildings relation
+- `building.service.ts`: Building CRUD with floors relation
+- `floor.service.ts`: Floor CRUD
+- `partner-company.service.ts`: PartnerCompany CRUD with agreements relation
+
+**DTOs**: `src/organization/dto/`
+
+- `job-grade.dto.ts`: JobGrade DTOs with JobFamily enum
+- `org-unit.dto.ts`: OrgUnit DTOs with OrgUnitType enum and tree structure
+- `legal-entity.dto.ts`: LegalEntity DTOs
+- `office.dto.ts`: Office DTOs with OfficeType enum
+- `building.dto.ts`: Building DTOs
+- `floor.dto.ts`: Floor DTOs
+- `partner-company.dto.ts`: PartnerCompany DTOs with PartnerType enum
+
+**Tests**: `src/organization/services/` (73 tests total)
+
+- `job-grade.service.spec.ts`: 14 tests
+- `org-unit.service.spec.ts`: 16 tests
+- `legal-entity.service.spec.ts`: 11 tests
+- `office.service.spec.ts`: 9 tests
+- `building.service.spec.ts`: 7 tests
+- `floor.service.spec.ts`: 7 tests
+- `partner-company.service.spec.ts`: 9 tests
+
+### Shared Types
+
+- `packages/types/src/admin/admin.enums.ts`: 11 admin enum types
+- `packages/types/src/admin/admin.types.ts`: Admin interface (83 fields)
 
 ### Migrations
 
@@ -830,5 +1211,11 @@ Tests use Vitest mocks for:
 ---
 
 **Version**: Phase 2 (2026-01-16)
-**Last Updated**: Performance optimizations applied, N+1 queries eliminated, all tests passing
+**Last Updated**: Organization Management APIs implemented (7 entities, 41 endpoints, 73 tests)
+**Status**:
+
+- Admin Profile & Enterprise APIs: Complete (26 tests, 100% passing)
+- Organization APIs: Complete (73 tests, 84.22% coverage, 100% passing)
+- Total: 1,123 tests passing across entire auth-service
+
 _This document is the Single Source of Truth for the auth-service. For a quick summary, see `.ai/services/auth-service.md`._
