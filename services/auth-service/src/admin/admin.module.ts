@@ -24,6 +24,8 @@ import {
   ServiceFeatureController,
   ServiceTesterController,
   SanctionController,
+  AdminProfileController,
+  AdminEnterpriseController,
 } from './controllers';
 import { UserPersonalInfoController } from './controllers/user-personal-info.controller';
 
@@ -47,6 +49,8 @@ import {
   AdminMfaService,
   AdminPasswordService,
   OperatorAssignmentService,
+  AdminProfileService,
+  AdminEnterpriseService,
 } from './services';
 
 // Guards
@@ -88,6 +92,8 @@ import { AuditInterceptor } from './interceptors';
     ServiceFeatureController,
     ServiceTesterController,
     SanctionController,
+    AdminProfileController,
+    AdminEnterpriseController,
   ],
   providers: [
     // Interceptors (global for AdminModule)
@@ -114,6 +120,8 @@ import { AuditInterceptor } from './interceptors';
     AdminMfaService,
     AdminPasswordService,
     OperatorAssignmentService,
+    AdminProfileService,
+    AdminEnterpriseService,
     // Guards
     AdminAuthGuard,
     PermissionGuard,
@@ -140,6 +148,8 @@ import { AuditInterceptor } from './interceptors';
     AdminPasswordService,
     OperatorAssignmentService,
     AdminServiceAccessGuard,
+    AdminProfileService,
+    AdminEnterpriseService,
   ],
 })
 export class AdminModule {}

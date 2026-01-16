@@ -16,3 +16,7 @@ export * from './admin-session.service';
 export * from './admin-mfa.service';
 export * from './admin-password.service';
 export * from './operator-assignment.service';
+
+// Phase 2: Admin Enterprise Services
+export * from './admin-profile.service';
+export * from './admin-enterprise.service';

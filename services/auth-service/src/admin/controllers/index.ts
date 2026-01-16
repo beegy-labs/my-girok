@@ -12,3 +12,7 @@ export * from './service-config.controller';
 export * from './service-feature.controller';
 export * from './service-tester.controller';
 export * from './sanction.controller';
+
+// Phase 2: Admin Enterprise Controllers
+export * from './admin-profile.controller';
+export * from './admin-enterprise.controller';
