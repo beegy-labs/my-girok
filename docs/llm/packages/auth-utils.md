@@ -73,5 +73,5 @@ Features:
 
 | App       | Usage                                 |
 | --------- | ------------------------------------- |
-| web-main  | User authentication                   |
+| web-girok | User authentication                   |
 | web-admin | Admin authentication with permissions |

@@ -281,11 +281,11 @@ services:
       - my-girok-network
 
   # Web Main Application
-  web-main:
+  web-girok:
     build:
       context: .
-      dockerfile: apps/web-main/Dockerfile
-    container_name: my-girok-web-main
+      dockerfile: apps/web-girok/Dockerfile
+    container_name: my-girok-web-girok
     restart: unless-stopped
     depends_on:
       auth-service:

@@ -1,0 +1,42 @@
+name: CI - Web Girok
+
+on:
+  push:
+    branches: [develop, release, main]
+    paths:
+      - 'apps/web-girok/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    branches: [develop, release, main]
+    paths:
+      - 'apps/web-girok/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Deploy environment'
+        required: false
+        default: 'develop'
+        type: choice
+        options:
+          - develop
+          - release
+          - main
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_web-ci.yml
+    with:
+      app_name: web-girok
+      app_path: apps/web-girok
+      image_name: beegy-labs/web-girok
+      gitops_file_prefix: my-girok-web-girok
+      build_args: |
+        VITE_API_URL=${{ github.ref_name == 'main' && 'https://my-api.girok.dev/auth' || 'https://my-api-dev.girok.dev/auth' }}
+        VITE_PERSONAL_API_URL=${{ github.ref_name == 'main' && 'https://my-api.girok.dev/personal' || 'https://my-api-dev.girok.dev/personal' }}
+    secrets:
+      GITEA_USERNAME: ${{ secrets.GITEA_USERNAME }}
+      GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+      GITOPS_PAT: ${{ secrets.GITOPS_PAT }}

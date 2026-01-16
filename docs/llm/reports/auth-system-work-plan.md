@@ -86,7 +86,7 @@ Operator Assignment (6): Assign, Revoke, Get, GetService, UpdatePermissions, Get
 
 ### Overview
 
-프론트엔드 인증 UI 구현. web-admin (Admin MFA 로그인), web-main (User 로그인/회원가입).
+프론트엔드 인증 UI 구현. web-admin (Admin MFA 로그인), web-girok (User 로그인/회원가입).
 
 ### Branch
 
@@ -101,9 +101,9 @@ git checkout -b feat/auth-frontend
 | Admin Login Page     | P0       | web-admin | 이메일/비밀번호 로그인 폼   |
 | Admin MFA Page       | P0       | web-admin | TOTP/백업코드 입력 폼       |
 | Admin Dashboard Auth | P0       | web-admin | 세션 관리, 로그아웃         |
-| User Login Page      | P0       | web-main  | 이메일/비밀번호 로그인 폼   |
-| User Register Page   | P0       | web-main  | 회원가입 폼                 |
-| OAuth Buttons        | P1       | web-main  | Google, Kakao, Naver, Apple |
+| User Login Page      | P0       | web-girok | 이메일/비밀번호 로그인 폼   |
+| User Register Page   | P0       | web-girok | 회원가입 폼                 |
+| OAuth Buttons        | P1       | web-girok | Google, Kakao, Naver, Apple |
 | Auth Store (Zustand) | P0       | Both      | 인증 상태 관리              |
 | Protected Routes     | P0       | Both      | 인증 필요 라우트 가드       |
 

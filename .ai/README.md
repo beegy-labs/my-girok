@@ -44,7 +44,7 @@
 
 | App       | File                                   |
 | --------- | -------------------------------------- |
-| web-main  | [apps/web-main.md](apps/web-main.md)   |
+| web-girok | [apps/web-girok.md](apps/web-girok.md) |
 | web-admin | [apps/web-admin.md](apps/web-admin.md) |
 
 ## Components

@@ -55,7 +55,7 @@ pnpm dev
 ```
 my-girok/
 ├── apps/
-│   ├── web-main/             # React web app
+│   ├── web-girok/             # React web app
 │   ├── web-admin/            # Admin dashboard
 │   └── storybook/            # Component library
 ├── services/

@@ -43,9 +43,9 @@ import PretendardBold from '@my-girok/design-tokens/fonts/pretendard/Pretendard-
 
 ## Self-Hosted JavaScript Libraries
 
-| Resource          | Location                                |
-| ----------------- | --------------------------------------- |
-| pdfjs-dist worker | apps/web-main/public/pdf.worker.min.mjs |
+| Resource          | Location                                 |
+| ----------------- | ---------------------------------------- |
+| pdfjs-dist worker | apps/web-girok/public/pdf.worker.min.mjs |
 
 ## Allowed External Services
 

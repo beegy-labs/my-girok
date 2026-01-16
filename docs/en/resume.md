@@ -105,8 +105,8 @@ The PDF generation supports both A4 (international) and Letter (US) paper sizes 
 | Path                                             | Purpose |
 | ------------------------------------------------ | ------- |
 | `services/personal-service/prisma/schema.prisma` | Schema  |
-| `apps/web-main/src/api/resume.ts`                | Types   |
-| `apps/web-main/src/components/resume/*`          | UI      |
+| `apps/web-girok/src/api/resume.ts`               | Types   |
+| `apps/web-girok/src/components/resume/*`         | UI      |
 
 ---
 

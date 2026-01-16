@@ -421,7 +421,7 @@ LogAuthEvent, LogSecurityEvent, LogAdminAction, GetAuthEvents, GetSecurityEvents
 - MFA setup UI
 - Session management UI
 
-**web-main:**
+**web-girok:**
 
 - Update API client for auth-bff
 - Login and registration flow

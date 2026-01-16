@@ -30,7 +30,7 @@
 | ---------------- | ----------- | ---------------- |
 | auth-service     | Implemented | NestJS, REST     |
 | personal-service | Implemented | NestJS, REST     |
-| web-main         | Implemented | React 19.2, Vite |
+| web-girok        | Implemented | React 19.2, Vite |
 
 ## NATS JetStream
 

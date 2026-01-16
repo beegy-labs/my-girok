@@ -5,6 +5,7 @@ This guide explains how to set up automated GitOps updates for the my-girok proj
 ## Overview
 
 When code is pushed to `my-girok` repository, GitHub Actions will:
+
 1. Build and test the application
 2. Build and push Docker images to Harbor registry (environment-specific repositories)
 3. Automatically update the `platform-gitops` repository with the new image tags
@@ -14,13 +15,14 @@ When code is pushed to `my-girok` repository, GitHub Actions will:
 
 The my-girok project supports three environments:
 
-| Environment | Branch | Namespace Prefix | Domain Prefix | ArgoCD Apps |
-|-------------|--------|------------------|---------------|-------------|
-| **Development** | `develop` | `dev-my-girok-*` | `my-*-dev.girok.dev` | 2 apps (auth, web) |
-| **Staging** | `release/*` | `staging-my-girok-*` | `my-*-staging.girok.dev` | 2 apps (auth, web) |
-| **Production** | `main` | `prod-my-girok-*` | `my-*.girok.dev` | 2 apps (auth, web) |
+| Environment     | Branch      | Namespace Prefix     | Domain Prefix            | ArgoCD Apps        |
+| --------------- | ----------- | -------------------- | ------------------------ | ------------------ |
+| **Development** | `develop`   | `dev-my-girok-*`     | `my-*-dev.girok.dev`     | 2 apps (auth, web) |
+| **Staging**     | `release/*` | `staging-my-girok-*` | `my-*-staging.girok.dev` | 2 apps (auth, web) |
+| **Production**  | `main`      | `prod-my-girok-*`    | `my-*.girok.dev`         | 2 apps (auth, web) |
 
 Each environment has:
+
 - Dedicated Kubernetes namespaces
 - Separate values files in `platform-gitops`
 - Independent ArgoCD Applications
@@ -97,7 +99,7 @@ The GitHub Actions workflows are configured to access the private repository:
   uses: actions/checkout@v4
   with:
     repository: beegy-labs/platform-gitops
-    token: ${{ secrets.GITOPS_PAT }}  # Uses the PAT
+    token: ${{ secrets.GITOPS_PAT }} # Uses the PAT
     path: gitops
 ```
 
@@ -123,24 +125,26 @@ When code is pushed to `develop`, `main`, or `release/*` branches:
    - Syncs the new image tag to Kubernetes
    - Rolls out the new deployment
 
-### For `web-main`
+### For `web-girok`
 
 Similar flow as `auth-service`, but updates:
-- Image: `harbor.girok.dev/my-girok/web-main/develop:<commit-hash>`
-- GitOps file: `apps/my-girok/web-main/values.yaml`
+
+- Image: `harbor.girok.dev/my-girok/web-girok/develop:<commit-hash>`
+- GitOps file: `apps/my-girok/web-girok/values.yaml`
 
 ## Branch Strategy
 
-| Branch | Docker Tag | Environment | GitOps Values File | Namespace |
-|--------|-----------|-------------|-------------------|-----------|
-| `main` | `latest` | Production | `my-girok-*-prod.yaml` | `prod-my-girok-*` |
-| `develop` | `<commit-hash>` | Development | `my-girok-*-dev.yaml` | `dev-my-girok-*` |
-| `release/*` | `<commit-hash>` | Staging | `my-girok-*-staging.yaml` | `staging-my-girok-*` |
-| Other branches | `<branch>-<hash>` | N/A | ❌ No update | N/A |
+| Branch         | Docker Tag        | Environment | GitOps Values File        | Namespace            |
+| -------------- | ----------------- | ----------- | ------------------------- | -------------------- |
+| `main`         | `latest`          | Production  | `my-girok-*-prod.yaml`    | `prod-my-girok-*`    |
+| `develop`      | `<commit-hash>`   | Development | `my-girok-*-dev.yaml`     | `dev-my-girok-*`     |
+| `release/*`    | `<commit-hash>`   | Staging     | `my-girok-*-staging.yaml` | `staging-my-girok-*` |
+| Other branches | `<branch>-<hash>` | N/A         | ❌ No update              | N/A                  |
 
 **Example for auth-service:**
 
 **Develop Branch:**
+
 - Push to `develop` with commit `abc1234567890`
 - Docker repository: `harbor.girok.dev/my-girok/auth-service/develop`
 - Docker tag: `abc1234` (first 7 chars)
@@ -149,6 +153,7 @@ Similar flow as `auth-service`, but updates:
 - Domain: `my-api-dev.girok.dev/auth`
 
 **Release Branch:**
+
 - Push to `release/v1.0` with commit `def5678901234`
 - Docker repository: `harbor.girok.dev/my-girok/auth-service/release`
 - Docker tag: `def5678` (first 7 chars)
@@ -157,6 +162,7 @@ Similar flow as `auth-service`, but updates:
 - Domain: `my-api-staging.girok.dev/auth`
 
 **Main Branch:**
+
 - Push to `main` (after release merge)
 - Docker repository: `harbor.girok.dev/my-girok/auth-service`
 - Docker tag: `latest`
@@ -169,6 +175,7 @@ Similar flow as `auth-service`, but updates:
 The automated commits to `platform-gitops` follow this format:
 
 **Development:**
+
 ```
 chore(development): update auth-service image to abc1234
 
@@ -178,6 +185,7 @@ Environment: development
 ```
 
 **Staging:**
+
 ```
 chore(staging): update auth-service image to def5678
 
@@ -187,6 +195,7 @@ Environment: staging
 ```
 
 **Production:**
+
 ```
 chore(production): update auth-service image to latest
 
@@ -202,6 +211,7 @@ Environment: production
 **Cause**: The `GITOPS_PAT` secret is missing or has insufficient permissions.
 
 **Solution**:
+
 1. Verify the secret exists: Settings → Secrets and variables → Actions
 2. Check the PAT has `repo` scope
 3. Ensure the PAT hasn't expired
@@ -212,17 +222,19 @@ Environment: production
 **Cause**: The `platform-gitops` repository structure doesn't match expected paths.
 
 **Solution**:
+
 1. Check the environment-specific values files exist:
    - Development: `clusters/home/values/my-girok-auth-service-dev.yaml`
    - Staging: `clusters/home/values/my-girok-auth-service-staging.yaml`
    - Production: `clusters/home/values/my-girok-auth-service-prod.yaml`
 
 2. Verify each file has the correct structure:
+
    ```yaml
    image:
-     repository: harbor.girok.dev/my-girok/auth-service/develop  # Environment-specific repository
+     repository: harbor.girok.dev/my-girok/auth-service/develop # Environment-specific repository
      pullPolicy: Always
-     tag: "abc1234"  # This line gets updated by CI/CD
+     tag: 'abc1234' # This line gets updated by CI/CD
    ```
 
 3. Check the ApplicationSet references the correct values files:
@@ -238,6 +250,7 @@ Environment: production
 **Cause**: ArgoCD sync settings or repository connection.
 
 **Solution**:
+
 1. Check ArgoCD Application settings
 2. Verify ArgoCD has access to `platform-gitops` repository
 3. Check sync interval (default: 3 minutes)
@@ -248,6 +261,7 @@ Environment: production
 If you need to manually update the image tag for a specific environment:
 
 **Development:**
+
 ```bash
 # Clone platform-gitops
 git clone git@github.com:beegy-labs/platform-gitops.git
@@ -267,12 +281,14 @@ git push
 ```
 
 **Staging:**
+
 ```bash
 vim clusters/home/values/my-girok-auth-service-staging.yaml
 # Update tag and commit with: chore(staging): ...
 ```
 
 **Production:**
+
 ```bash
 vim clusters/home/values/my-girok-auth-service-prod.yaml
 # Update tag and commit with: chore(production): ...
@@ -324,18 +340,21 @@ argocd app history auth-service
 To add GitOps automation for a new service:
 
 1. **Create GitHub Actions workflow** in my-girok:
+
    ```yaml
    # .github/workflows/ci-new-service.yml
    # Copy from ci-auth-service.yml and modify service name
    ```
 
 2. **Create Helm chart** in platform-gitops:
+
    ```bash
    mkdir -p apps/my-girok/new-service
    # Add Chart.yaml, values.yaml, templates/
    ```
 
 3. **Update workflow** to point to correct values file:
+
    ```yaml
    VALUES_FILE="apps/my-girok/new-service/values.yaml"
    ```

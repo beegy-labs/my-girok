@@ -36,7 +36,7 @@
 | identity-service | Implemented | NestJS, REST + gRPC  |
 | legal-service    | Implemented | NestJS, REST + gRPC  |
 | personal-service | Implemented | NestJS, REST         |
-| web-main         | Implemented | React 19.2, Vite 7.2 |
+| web-girok        | Implemented | React 19.2, Vite 7.2 |
 
 ## NATS JetStream Configuration
 

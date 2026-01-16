@@ -176,7 +176,7 @@ The auth-bff service provides:
 
 ### Overview
 
-The frontend phase implements authentication UI for both web-admin (admin portal) and web-main (user-facing application).
+The frontend phase implements authentication UI for both web-admin (admin portal) and web-girok (user-facing application).
 
 ### Getting Started
 
@@ -192,7 +192,7 @@ git checkout -b feat/auth-frontend
 - Admin MFA Page: TOTP and backup code verification
 - Admin Dashboard Auth: Session management and logout
 
-**Critical (P0) for web-main:**
+**Critical (P0) for web-girok:**
 
 - User Login Page: Email/password login form
 - User Register Page: New account registration

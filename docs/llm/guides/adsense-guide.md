@@ -10,7 +10,7 @@
 ## Toggle
 
 ```tsx
-// apps/web-main/src/pages/HomePage.tsx
+// apps/web-girok/src/pages/HomePage.tsx
 const isAdEnabled = true;
 // Future: import.meta.env.VITE_AD_ENABLED
 ```

@@ -38,8 +38,8 @@ for (const skill of skills) {
 | Purpose   | Path                                                     |
 | --------- | -------------------------------------------------------- |
 | Schema    | `services/personal-service/prisma/schema.prisma`         |
-| API Types | `apps/web-main/src/api/resume.ts`                        |
+| API Types | `apps/web-girok/src/api/resume.ts`                       |
 | Service   | `services/personal-service/src/resume/resume.service.ts` |
-| UI        | `apps/web-main/src/components/resume/`                   |
+| UI        | `apps/web-girok/src/components/resume/`                  |
 
 **SSOT**: `docs/llm/resume.md`

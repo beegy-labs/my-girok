@@ -115,10 +115,10 @@ architecture:
         details: "docs/llm/services/analytics-service.md"
 
     apps:
-      - path: "apps/web-main.md"
+      - path: "apps/web-girok.md"
         purpose: "React 19 web app"
         last_updated: "2026-01-11"
-        details: "docs/llm/apps/web-main.md"
+        details: "docs/llm/apps/web-girok.md"
       - path: "apps/web-admin.md"
         purpose: "Admin dashboard"
         last_updated: "2026-01-11"
@@ -220,7 +220,7 @@ task_routing:
   resume_profile: [".ai/services/personal-service.md", ".ai/resume.md"]
   audit_compliance: [".ai/services/audit-service.md"]
   analytics: [".ai/services/analytics-service.md"]
-  frontend: [".ai/rules.md", ".ai/apps/web-main.md"]
+  frontend: [".ai/rules.md", ".ai/apps/web-girok.md"]
   design_tokens: [".ai/ssot.md", ".ai/packages/design-tokens.md"]
   database_migration: [".ai/database.md", ".ai/rules.md"]
   caching: [".ai/caching.md"]

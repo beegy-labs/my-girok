@@ -54,7 +54,7 @@ Client -> GraphQL BFF -> gRPC -> Services -> Database
 ```
 my-girok/
 ├── apps/
-│   └── web-main/               # Public web application
+│   └── web-girok/               # Public web application
 ├── services/
 │   ├── auth-service/           # Authentication/authorization
 │   ├── identity-service/       # User identity

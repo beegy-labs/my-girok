@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       app_name:
-        description: 'App name (e.g., web-admin, web-main)'
+        description: 'App name (e.g., web-admin, web-girok)'
         required: true
         type: string
       app_path:

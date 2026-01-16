@@ -55,7 +55,7 @@ Full guide: `docs/llm/services/authorization-service.md`
 ### Frontend Development
 
 **Working on web app?**
-Read: `.ai/rules.md` + `.ai/apps/web-main.md`
+Read: `.ai/rules.md` + `.ai/apps/web-girok.md`
 
 **Working on design tokens/styling?**
 Read: `.ai/ssot.md` + `.ai/packages/design-tokens.md`
@@ -64,7 +64,7 @@ Read: `.ai/ssot.md` + `.ai/packages/design-tokens.md`
 Read: `.ai/apps/storybook.md`
 
 **Working on i18n/localization?**
-Read: `.ai/i18n-locale.md` + `.ai/apps/web-main.md`
+Read: `.ai/i18n-locale.md` + `.ai/apps/web-girok.md`
 
 ### Database & Deployment
 
