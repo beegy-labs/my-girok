@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreatePartnerCompanyDto,
@@ -45,7 +46,7 @@ export class PartnerCompanyService {
   async findAll(query?: PartnerCompanyListQueryDto): Promise<PartnerCompanyResponseDto[]> {
     this.logger.log('Fetching all partner companies');
 
-    const where: any = {};
+    const where: Prisma.PartnerCompanyWhereInput = {};
 
     if (query?.partnerType) {
       where.partner_type = query.partnerType;

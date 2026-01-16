@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateLegalEntityDto,
@@ -43,7 +44,7 @@ export class LegalEntityService {
   async findAll(query?: LegalEntityListQueryDto): Promise<LegalEntityResponseDto[]> {
     this.logger.log('Fetching all legal entities');
 
-    const where: any = {};
+    const where: Prisma.LegalEntityWhereInput = {};
 
     if (query?.countryCode) {
       where.country_code = query.countryCode;

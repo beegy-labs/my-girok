@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateJobGradeDto,
@@ -43,7 +44,7 @@ export class JobGradeService {
   async findAll(query?: JobGradeListQueryDto): Promise<JobGradeResponseDto[]> {
     this.logger.log('Fetching all job grades');
 
-    const where: any = {};
+    const where: Prisma.JobGradeWhereInput = {};
 
     if (query?.jobFamily) {
       where.job_family = query.jobFamily;

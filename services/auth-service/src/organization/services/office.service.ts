@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateOfficeDto,
@@ -54,7 +55,7 @@ export class OfficeService {
   async findAll(query?: OfficeListQueryDto): Promise<OfficeResponseDto[]> {
     this.logger.log('Fetching all offices');
 
-    const where: any = {};
+    const where: Prisma.OfficeWhereInput = {};
 
     if (query?.officeType) {
       where.office_type = query.officeType;

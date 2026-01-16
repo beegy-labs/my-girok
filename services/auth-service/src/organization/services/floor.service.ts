@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateFloorDto,
@@ -50,7 +51,7 @@ export class FloorService {
   async findAll(query?: FloorListQueryDto): Promise<FloorResponseDto[]> {
     this.logger.log('Fetching all floors');
 
-    const where: any = {};
+    const where: Prisma.FloorWhereInput = {};
 
     if (query?.buildingId) {
       where.building_id = query.buildingId;

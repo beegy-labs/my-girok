@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateOrgUnitDto,
@@ -61,7 +62,7 @@ export class OrgUnitService {
   async findAll(query?: OrgUnitListQueryDto): Promise<OrgUnitResponseDto[]> {
     this.logger.log('Fetching all organization units');
 
-    const where: any = {};
+    const where: Prisma.OrganizationUnitWhereInput = {};
 
     if (query?.orgType) {
       where.org_type = query.orgType;
@@ -148,7 +149,8 @@ export class OrgUnitService {
         throw new NotFoundException(`Parent organization unit with ID ${dto.parentId} not found`);
       }
 
-      // TODO: Check for circular reference (parent's parent chain)
+      // Check for circular reference (parent's parent chain)
+      await this.checkCircularReference(id, dto.parentId);
     }
 
     const orgUnit = await this.prisma.organizationUnit.update({
@@ -188,6 +190,45 @@ export class OrgUnitService {
     });
 
     this.logger.log(`Organization unit ${id} deleted successfully`);
+  }
+
+  /**
+   * Check for circular reference in parent-child relationships
+   * Throws BadRequestException if setting newParentId as parent would create a cycle
+   */
+  private async checkCircularReference(nodeId: string, newParentId: string): Promise<void> {
+    let currentId = newParentId;
+    const visited = new Set<string>();
+
+    // Traverse up the parent chain from the new parent
+    while (currentId) {
+      // If we encounter the node being updated, it's a circular reference
+      if (currentId === nodeId) {
+        throw new BadRequestException(
+          'Circular reference detected: Cannot set this parent as it would create a cycle in the organization hierarchy',
+        );
+      }
+
+      // Prevent infinite loops by tracking visited nodes
+      if (visited.has(currentId)) {
+        // If we revisit a node, there's already a cycle in existing data
+        this.logger.warn(`Existing circular reference detected at node ${currentId}`);
+        break;
+      }
+      visited.add(currentId);
+
+      // Move up to the next parent
+      const parent = await this.prisma.organizationUnit.findUnique({
+        where: { id: currentId },
+        select: { parent_id: true },
+      });
+
+      if (!parent || !parent.parent_id) {
+        break;
+      }
+
+      currentId = parent.parent_id;
+    }
   }
 
   private buildTree(node: any, allNodes: any[]): OrgUnitTreeNodeDto {
