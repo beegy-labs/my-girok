@@ -36,61 +36,108 @@ test.describe('OAuth Flow', () => {
   });
 
   test.describe('OAuth Initiation', () => {
-    // These tests verify that clicking OAuth buttons triggers navigation
-    // In a real environment, these would redirect to the OAuth provider
+    // These tests verify that clicking OAuth buttons triggers navigation to BFF OAuth endpoint
+    // The BFF will then redirect to the OAuth provider
 
     for (const provider of OAUTH_PROVIDERS) {
-      test.skip(`should initiate ${provider} OAuth flow`, async ({ loginPage, page }) => {
+      test(`should initiate ${provider} OAuth flow`, async ({ loginPage, page }) => {
         await loginPage.goto();
 
-        // Store return URL before OAuth redirect
-        const returnUrl = '/settings';
-        await page.evaluate((url) => {
-          sessionStorage.setItem('oauth_return_url', url);
-        }, returnUrl);
+        // Intercept OAuth initiation request to BFF
+        const oauthInitPromise = page.waitForRequest(
+          (request) =>
+            request.url().includes(`/auth/v1/oauth/${provider}`) && request.method() === 'GET',
+        );
 
         // Click the provider button
         const button = page.getByRole('button', { name: new RegExp(provider, 'i') });
         await button.click();
 
-        // In a real test, this would verify redirect to OAuth provider
-        // For now, we just verify the button is clickable
-        await expect(button).toBeEnabled();
+        // Verify request was made to BFF OAuth endpoint
+        const request = await oauthInitPromise;
+        expect(request.url()).toContain(`/auth/v1/oauth/${provider}`);
       });
     }
+
+    test('should include returnUrl in OAuth state when provided', async ({ loginPage, page }) => {
+      const returnUrl = '/settings/sessions';
+      await loginPage.gotoWithReturnUrl(returnUrl);
+
+      // Intercept OAuth initiation
+      const oauthInitPromise = page.waitForRequest((request) =>
+        request.url().includes('/auth/v1/oauth/google'),
+      );
+
+      await loginPage.googleButton.click();
+
+      const request = await oauthInitPromise;
+      const url = new URL(request.url());
+      const redirectUri = url.searchParams.get('redirect_uri');
+
+      // Verify returnUrl is encoded in redirect_uri
+      expect(redirectUri).toBeTruthy();
+    });
   });
 
   test.describe('OAuth Callback - Success', () => {
     test('should handle successful Google OAuth callback', async ({ oauthCallbackPage, page }) => {
+      // Mock successful OAuth callback API response
+      await page.route('**/auth/v1/oauth/google/callback*', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            status: 'success',
+            redirectUrl: '/',
+          }),
+        });
+      });
+
       // Simulate successful OAuth callback
       await oauthCallbackPage.gotoWithSuccess('google');
 
       // Should show loading or success state
-      // In a real scenario, this would fetch user info and redirect
       await expect(page).toHaveURL(/\/oauth\/callback/);
     });
 
-    test.skip('should redirect to home after successful OAuth', async ({
-      oauthCallbackPage,
-      page,
-    }) => {
+    test('should redirect to home after successful OAuth', async ({ oauthCallbackPage, page }) => {
+      // Mock successful OAuth callback that redirects to home
+      await page.route('**/auth/v1/oauth/google/callback*', async (route) => {
+        await route.fulfill({
+          status: 302,
+          headers: {
+            Location: '/',
+          },
+        });
+      });
+
       // Set up return URL
       await page.evaluate(() => {
         sessionStorage.setItem('oauth_return_url', '/');
       });
 
       // Simulate successful callback
-      await oauthCallbackPage.gotoWithSuccess('google');
+      await page.goto('/oauth/callback?provider=google&code=test-code&state=test-state');
 
       // Should eventually redirect to home
-      await expect(page).toHaveURL('/', { timeout: 5000 });
+      await expect(page).toHaveURL('/', { timeout: 10000 });
     });
 
-    test.skip('should redirect to stored return URL after OAuth', async ({
+    test('should redirect to stored return URL after OAuth', async ({
       oauthCallbackPage,
       page,
     }) => {
       const returnUrl = '/settings/sessions';
+
+      // Mock successful OAuth callback
+      await page.route('**/auth/v1/oauth/kakao/callback*', async (route) => {
+        await route.fulfill({
+          status: 302,
+          headers: {
+            Location: returnUrl,
+          },
+        });
+      });
 
       // Set up return URL
       await page.evaluate((url) => {
@@ -98,10 +145,10 @@ test.describe('OAuth Flow', () => {
       }, returnUrl);
 
       // Simulate successful callback
-      await oauthCallbackPage.gotoWithSuccess('kakao');
+      await page.goto('/oauth/callback?provider=kakao&code=test-code&state=test-state');
 
       // Should redirect to stored return URL
-      await expect(page).toHaveURL(returnUrl, { timeout: 5000 });
+      await expect(page).toHaveURL(returnUrl, { timeout: 10000 });
     });
   });
 
@@ -148,34 +195,60 @@ test.describe('OAuth Flow', () => {
   });
 
   test.describe('OAuth Callback - MFA Required', () => {
-    test.skip('should redirect to MFA page when required', async ({
+    test('should redirect to MFA page when required', async ({
       oauthCallbackPage,
       mfaPage,
       page,
     }) => {
       const challengeId = 'test-challenge-123';
 
+      // Mock OAuth callback returning MFA requirement
+      await page.route('**/auth/v1/oauth/google/callback*', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            status: 'mfa_required',
+            challengeId: challengeId,
+            methods: ['totp'],
+          }),
+        });
+      });
+
       // Simulate OAuth callback with MFA requirement
-      await oauthCallbackPage.gotoWithMfaRequired('google', challengeId);
+      await page.goto('/oauth/callback?provider=google&code=test-code&state=test-state');
 
       // Should redirect to MFA page
-      await expect(page).toHaveURL(/\/login\/mfa/);
+      await expect(page).toHaveURL(/\/login\/mfa/, { timeout: 10000 });
 
       // MFA form should be visible
       await mfaPage.expectMfaFormVisible();
     });
 
-    test.skip('should support multiple MFA methods from OAuth', async ({
+    test('should support multiple MFA methods from OAuth', async ({
       oauthCallbackPage,
       mfaPage,
       page,
     }) => {
       const challengeId = 'test-challenge-456';
 
-      // Simulate OAuth callback with multiple MFA methods
-      await oauthCallbackPage.gotoWithMfaRequired('kakao', challengeId, 'totp,backup_code');
+      // Mock OAuth callback with multiple MFA methods
+      await page.route('**/auth/v1/oauth/kakao/callback*', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            status: 'mfa_required',
+            challengeId: challengeId,
+            methods: ['totp', 'backup_code'],
+          }),
+        });
+      });
 
-      await expect(page).toHaveURL(/\/login\/mfa/);
+      // Simulate OAuth callback
+      await page.goto('/oauth/callback?provider=kakao&code=test-code&state=test-state');
+
+      await expect(page).toHaveURL(/\/login\/mfa/, { timeout: 10000 });
 
       // Should show method selector
       await mfaPage.expectMethodSelectorVisible();

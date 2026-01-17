@@ -12,9 +12,16 @@ export const TEST_CONFIG = {
     password: process.env.E2E_TEST_PASSWORD || 'SuperAdmin123!',
   },
 
+  // Master admin credentials (full system access including OAuth settings)
+  master: {
+    email: process.env.E2E_TEST_MASTER_EMAIL || 'master@girok.dev',
+    password: process.env.E2E_TEST_MASTER_PASSWORD || 'MasterAdmin123!',
+  },
+
   // Service URLs
   baseUrl: process.env.E2E_BASE_URL || 'http://localhost:3002',
   authBffUrl: process.env.E2E_AUTH_BFF_URL || 'http://localhost:4005',
+  apiUrl: process.env.E2E_API_URL || 'http://localhost:4005',
 
   // API endpoints
   endpoints: {
