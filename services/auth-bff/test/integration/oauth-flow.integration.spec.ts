@@ -176,12 +176,7 @@ describe('BFF OAuth Flow Integration', () => {
         });
       });
 
-      const mockResponse = {
-        redirect: vi.fn(),
-      } as any;
-
-      // Should throw or return error (depending on implementation)
-      // For now, we verify the status check was made
+      // Verify the status check returns disabled
       const statusCheck = await httpService
         .get('http://localhost:3001/oauth/kakao/status')
         .toPromise();
