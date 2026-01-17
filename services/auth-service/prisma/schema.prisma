@@ -2067,3 +2067,315 @@ model PublicHoliday {
   @@index([countryCode, year], map: "idx_public_holidays_country_year")
   @@map("public_holidays")
 }
+
+// ====================
+// Phase 4: Advanced Features
+// ====================
+
+// Global Mobility: International assignments
+model GlobalAssignment {
+  id                     String            @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  adminId                String            @map("admin_id")
+  assignmentType         assignment_type   @map("assignment_type")
+  homeCountryCode        String            @map("home_country_code")
+  homeLegalEntityId      String?           @map("home_legal_entity_id") @db.Uuid
+  homeOfficeId           String?           @map("home_office_id") @db.Uuid
+  hostCountryCode        String            @map("host_country_code")
+  hostLegalEntityId      String?           @map("host_legal_entity_id") @db.Uuid
+  hostOfficeId           String?           @map("host_office_id") @db.Uuid
+  startDate              DateTime          @map("start_date") @db.Date
+  expectedEndDate        DateTime          @map("expected_end_date") @db.Date
+  actualEndDate          DateTime?         @map("actual_end_date") @db.Date
+  status                 String?           @default("PLANNED")
+  businessReason         String?           @map("business_reason")
+  projectName            String?           @map("project_name")
+  homeSalary             Decimal?          @map("home_salary") @db.Decimal(15, 2)
+  homeCurrency           String?           @map("home_currency")
+  hostAllowance          Decimal?          @map("host_allowance") @db.Decimal(15, 2)
+  hostCurrency           String?           @map("host_currency")
+  costOfLivingAdjustment Decimal?          @map("cost_of_living_adjustment") @db.Decimal(5, 2)
+  hardshipAllowance      Decimal?          @map("hardship_allowance") @db.Decimal(15, 2)
+  taxEqualization        Boolean           @default(false) @map("tax_equalization")
+  taxProvider            String?           @map("tax_provider")
+  relocationSupport      Boolean           @default(false) @map("relocation_support")
+  housingProvided        Boolean           @default(false) @map("housing_provided")
+  schoolingSupport       Boolean           @default(false) @map("schooling_support")
+  spouseWorkSupport      Boolean           @default(false) @map("spouse_work_support")
+  approvedBy             String?           @map("approved_by")
+  approvedAt             DateTime?         @map("approved_at") @db.Timestamptz(6)
+  notes                  String?
+  documents              Json              @default("[]")
+  createdAt              DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  workAuthorizations WorkAuthorization[]
+
+  @@index([adminId], map: "idx_global_assignments_admin")
+  @@index([status], map: "idx_global_assignments_status")
+  @@index([hostCountryCode], map: "idx_global_assignments_host_country")
+  @@index([startDate, expectedEndDate], map: "idx_global_assignments_dates")
+  @@map("global_assignments")
+}
+
+// Work authorizations: Visa and work permits
+model WorkAuthorization {
+  id                   String           @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  adminId              String           @map("admin_id")
+  globalAssignmentId   String?          @map("global_assignment_id") @db.Uuid
+  countryCode          String           @map("country_code")
+  authorizationType    work_permit_type @map("authorization_type")
+  visaType             String?          @map("visa_type")
+  status               visa_status      @default(PENDING)
+  applicationDate      DateTime?        @map("application_date") @db.Date
+  approvalDate         DateTime?        @map("approval_date") @db.Date
+  startDate            DateTime?        @map("start_date") @db.Date
+  expiryDate           DateTime?        @map("expiry_date") @db.Date
+  documentNumber       String?          @map("document_number")
+  documentUrl          String?          @map("document_url")
+  sponsorType          String?          @map("sponsor_type")
+  sponsoringEntityId   String?          @map("sponsoring_entity_id") @db.Uuid
+  employerRestricted   Boolean          @default(true) @map("employer_restricted")
+  locationRestricted   Boolean          @default(false) @map("location_restricted")
+  allowedActivities    String[]         @map("allowed_activities")
+  renewable            Boolean          @default(true)
+  maxRenewals          Int?             @map("max_renewals")
+  renewalLeadDays      Int              @default(90) @map("renewal_lead_days")
+  expiryReminderSent   Boolean          @default(false) @map("expiry_reminder_sent")
+  notes                String?
+  createdAt            DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  globalAssignment GlobalAssignment? @relation(fields: [globalAssignmentId], references: [id])
+
+  @@index([adminId], map: "idx_work_authorizations_admin")
+  @@index([globalAssignmentId], map: "idx_work_authorizations_assignment")
+  @@index([expiryDate], map: "idx_work_authorizations_expiry")
+  @@index([status], map: "idx_work_authorizations_status")
+  @@index([countryCode], map: "idx_work_authorizations_country")
+  @@map("work_authorizations")
+}
+
+// Admin delegations: Temporary permission delegation
+model AdminDelegation {
+  id                   String            @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  delegatorId          String            @map("delegator_id")
+  delegateId           String            @map("delegate_id")
+  delegationType       delegation_type   @map("delegation_type")
+  delegationScope      delegation_scope  @map("delegation_scope")
+  delegationReason     delegation_reason @map("delegation_reason")
+  specificPermissions  String[]          @map("specific_permissions")
+  specificRoleIds      String[]          @map("specific_role_ids")
+  resourceIds          String[]          @map("resource_ids")
+  startDate            DateTime          @map("start_date") @db.Timestamptz(6)
+  endDate              DateTime          @map("end_date") @db.Timestamptz(6)
+  status               delegation_status @default(PENDING)
+  requiresApproval     Boolean           @default(true) @map("requires_approval")
+  approvedBy           String?           @map("approved_by")
+  approvedAt           DateTime?         @map("approved_at") @db.Timestamptz(6)
+  rejectionReason      String?           @map("rejection_reason")
+  maxActions           Int?              @map("max_actions")
+  allowedHours         String[]          @map("allowed_hours")
+  allowedIps           String[]          @map("allowed_ips")
+  notifyOnUse          Boolean           @default(true) @map("notify_on_use")
+  notifyOnExpiry       Boolean           @default(true) @map("notify_on_expiry")
+  expiryReminderDays   Int[]             @default([7, 1]) @map("expiry_reminder_days")
+  revokedAt            DateTime?         @map("revoked_at") @db.Timestamptz(6)
+  revokedBy            String?           @map("revoked_by")
+  revocationReason     String?           @map("revocation_reason")
+  notes                String?
+  createdAt            DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  delegationLogs AdminDelegationLog[]
+
+  @@index([delegatorId], map: "idx_delegations_delegator")
+  @@index([delegateId], map: "idx_delegations_delegate")
+  @@index([status], map: "idx_delegations_status")
+  @@index([startDate, endDate], map: "idx_delegations_dates")
+  @@map("admin_delegations")
+}
+
+// Delegation usage logs
+model AdminDelegationLog {
+  id           String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  delegationId String    @map("delegation_id") @db.Uuid
+  delegateId   String    @map("delegate_id")
+  action       String
+  resourceType String?   @map("resource_type")
+  resourceId   String?   @map("resource_id") @db.Uuid
+  ipAddress    String?   @map("ip_address")
+  userAgent    String?   @map("user_agent")
+  success      Boolean   @default(true)
+  errorMessage String?   @map("error_message")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  delegation AdminDelegation @relation(fields: [delegationId], references: [id], onDelete: Cascade)
+
+  @@index([delegationId], map: "idx_delegation_logs_delegation")
+  @@index([delegateId], map: "idx_delegation_logs_delegate")
+  @@index([createdAt], map: "idx_delegation_logs_created_at")
+  @@map("admin_delegation_logs")
+}
+
+// Compliance attestations
+model AdminAttestation {
+  id              String             @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  adminId         String             @map("admin_id")
+  attestationType attestation_type   @map("attestation_type")
+  documentVersion String?            @map("document_version")
+  documentUrl     String?            @map("document_url")
+  documentHash    String?            @map("document_hash")
+  status          attestation_status @default(PENDING)
+  dueDate         DateTime?          @map("due_date") @db.Date
+  completedAt     DateTime?          @map("completed_at") @db.Timestamptz(6)
+  ipAddress       String?            @map("ip_address")
+  userAgent       String?            @map("user_agent")
+  signatureData   String?            @map("signature_data")
+  isWaived        Boolean            @default(false) @map("is_waived")
+  waivedBy        String?            @map("waived_by")
+  waiverReason    String?            @map("waiver_reason")
+  waiverExpiry    DateTime?          @map("waiver_expiry") @db.Date
+  recurrenceMonths Int               @default(12) @map("recurrence_months")
+  nextDueDate     DateTime?          @map("next_due_date") @db.Date
+  metadata        Json               @default("{}")
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([adminId], map: "idx_attestations_admin")
+  @@index([attestationType], map: "idx_attestations_type")
+  @@index([status], map: "idx_attestations_status")
+  @@index([dueDate], map: "idx_attestations_due")
+  @@index([nextDueDate], map: "idx_attestations_next_due")
+  @@map("admin_attestations")
+}
+
+// Professional certifications
+model AdminCertification {
+  id                   String               @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  adminId              String               @map("admin_id")
+  name                 String
+  issuingOrganization  String               @map("issuing_organization")
+  credentialId         String?              @map("credential_id")
+  credentialUrl        String?              @map("credential_url")
+  issueDate            DateTime             @map("issue_date") @db.Date
+  expiryDate           DateTime?            @map("expiry_date") @db.Date
+  status               certification_status @default(ACTIVE)
+  isVerified           Boolean              @default(false) @map("is_verified")
+  verifiedAt           DateTime?            @map("verified_at") @db.Timestamptz(6)
+  verifiedBy           String?              @map("verified_by")
+  verificationUrl      String?              @map("verification_url")
+  metadata             Json                 @default("{}")
+  createdAt            DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([adminId], map: "idx_certifications_admin")
+  @@index([status], map: "idx_certifications_status")
+  @@index([expiryDate], map: "idx_certifications_expiry")
+  @@index([issuingOrganization], map: "idx_certifications_organization")
+  @@map("admin_certifications")
+}
+
+// Training records
+model AdminTrainingRecord {
+  id               String           @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  adminId          String           @map("admin_id")
+  trainingType     training_type    @map("training_type")
+  name             String
+  description      String?
+  provider         String?
+  status           training_status  @default(NOT_STARTED)
+  assignedAt       DateTime?        @map("assigned_at") @db.Timestamptz(6)
+  startedAt        DateTime?        @map("started_at") @db.Timestamptz(6)
+  completedAt      DateTime?        @map("completed_at") @db.Timestamptz(6)
+  dueDate          DateTime?        @map("due_date") @db.Date
+  score            Decimal?         @db.Decimal(5, 2)
+  passingScore     Decimal?         @map("passing_score") @db.Decimal(5, 2)
+  isMandatory      Boolean          @default(false) @map("is_mandatory")
+  recurrenceMonths Int?             @map("recurrence_months")
+  nextDueDate      DateTime?        @map("next_due_date") @db.Date
+  isWaived         Boolean          @default(false) @map("is_waived")
+  waivedBy         String?          @map("waived_by")
+  waiverReason     String?          @map("waiver_reason")
+  certificateUrl   String?          @map("certificate_url")
+  metadata         Json             @default("{}")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([adminId], map: "idx_training_admin")
+  @@index([trainingType], map: "idx_training_type")
+  @@index([status], map: "idx_training_status")
+  @@index([dueDate], map: "idx_training_due")
+  @@index([isMandatory, dueDate], map: "idx_training_mandatory")
+  @@map("admin_training_records")
+}
+
+// Organization change history
+model AdminOrganizationHistory {
+  id                     String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  adminId                String    @map("admin_id")
+  changeType             String    @map("change_type")
+  previousJobGradeId     String?   @map("previous_job_grade_id") @db.Uuid
+  previousJobTitle       String?   @map("previous_job_title")
+  previousOrgUnitId      String?   @map("previous_org_unit_id") @db.Uuid
+  previousManagerId      String?   @map("previous_manager_id")
+  previousLegalEntityId  String?   @map("previous_legal_entity_id") @db.Uuid
+  previousOfficeId       String?   @map("previous_office_id") @db.Uuid
+  previousCostCenter     String?   @map("previous_cost_center")
+  newJobGradeId          String?   @map("new_job_grade_id") @db.Uuid
+  newJobTitle            String?   @map("new_job_title")
+  newOrgUnitId           String?   @map("new_org_unit_id") @db.Uuid
+  newManagerId           String?   @map("new_manager_id")
+  newLegalEntityId       String?   @map("new_legal_entity_id") @db.Uuid
+  newOfficeId            String?   @map("new_office_id") @db.Uuid
+  newCostCenter          String?   @map("new_cost_center")
+  effectiveDate          DateTime  @map("effective_date") @db.Date
+  reason                 String?
+  notes                  String?
+  requestedBy            String?   @map("requested_by")
+  approvedBy             String?   @map("approved_by")
+  approvedAt             DateTime? @map("approved_at") @db.Timestamptz(6)
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([adminId], map: "idx_org_history_admin")
+  @@index([effectiveDate], map: "idx_org_history_effective")
+  @@index([changeType], map: "idx_org_history_type")
+  @@index([adminId, effectiveDate], map: "idx_org_history_admin_effective")
+  @@index([newManagerId], map: "idx_org_history_manager")
+  @@index([newOrgUnitId], map: "idx_org_history_org_unit")
+  @@map("admin_organization_history")
+}
+
+// Country configurations
+model CountryConfig {
+  id                       String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  countryCode              String    @unique @map("country_code")
+  countryName              String    @map("country_name")
+  countryNameNative        String?   @map("country_name_native")
+  region                   String?
+  subregion                String?
+  currencyCode             String    @map("currency_code")
+  currencySymbol           String?   @map("currency_symbol")
+  defaultTimezone          String    @map("default_timezone")
+  timezones                String[]
+  standardWorkHoursPerWeek Decimal   @default(40) @map("standard_work_hours_per_week") @db.Decimal(4, 2)
+  standardWorkDays         String[]  @default(["MON", "TUE", "WED", "THU", "FRI"]) @map("standard_work_days")
+  overtimeAllowed          Boolean   @default(true) @map("overtime_allowed")
+  maxOvertimeHoursPerWeek  Decimal?  @map("max_overtime_hours_per_week") @db.Decimal(4, 2)
+  minAnnualLeaveDays       Int       @default(10) @map("min_annual_leave_days")
+  statutorySickDays        Int?      @map("statutory_sick_days")
+  maternityLeaveWeeks      Int?      @map("maternity_leave_weeks")
+  paternityLeaveWeeks      Int?      @map("paternity_leave_weeks")
+  taxYearStartMonth        Int       @default(1) @map("tax_year_start_month")
+  taxIdFormat              String?   @map("tax_id_format")
+  dataPrivacyLaw           String?   @map("data_privacy_law")
+  employmentLawNotes       String?   @map("employment_law_notes")
+  isActive                 Boolean   @default(true) @map("is_active")
+  metadata                 Json      @default("{}")
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([countryCode], map: "idx_country_configs_code")
+  @@index([region], map: "idx_country_configs_region")
+  @@index([isActive], map: "idx_country_configs_active")
+  @@map("country_configs")
+}
