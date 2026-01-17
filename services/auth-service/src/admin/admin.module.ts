@@ -59,24 +59,22 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard, AdminServiceAccessGuard }
 // Interceptors
 import { AuditInterceptor } from './interceptors';
 
-@Module({
-  imports: [
-    DatabaseModule,
-    UsersModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const expiresIn = configService.get<string>('JWT_ACCESS_EXPIRATION', '1h');
-        return {
-          secret: configService.get<string>('JWT_SECRET'),
-          signOptions: {
-            expiresIn: expiresIn as `${number}${'s' | 'm' | 'h' | 'd'}`,
-          },
-        };
+const JwtModuleConfig = JwtModule.registerAsync({
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (configService: ConfigService) => {
+    const expiresIn = configService.get<string>('JWT_ACCESS_EXPIRATION', '1h');
+    return {
+      secret: configService.get<string>('JWT_SECRET'),
+      signOptions: {
+        expiresIn: expiresIn as `${number}${'s' | 'm' | 'h' | 'd'}`,
       },
-    }),
-  ],
+    };
+  },
+});
+
+@Module({
+  imports: [DatabaseModule, UsersModule, JwtModuleConfig],
   controllers: [
     AdminAuthController,
     TenantController,
@@ -129,6 +127,7 @@ import { AuditInterceptor } from './interceptors';
     AdminServiceAccessGuard,
   ],
   exports: [
+    JwtModuleConfig,
     AdminAuthService,
     TenantService,
     AdminLegalService,
@@ -147,6 +146,7 @@ import { AuditInterceptor } from './interceptors';
     AdminMfaService,
     AdminPasswordService,
     OperatorAssignmentService,
+    AdminAuthGuard,
     AdminServiceAccessGuard,
     AdminProfileService,
     AdminEnterpriseService,
