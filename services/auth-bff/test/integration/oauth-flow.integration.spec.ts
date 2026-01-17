@@ -305,6 +305,17 @@ describe('BFF OAuth Flow Integration', () => {
 
   describe('OAuth State Management', () => {
     it('should include redirectUri in OAuth state', async () => {
+      // Mock provider enabled check
+      vi.spyOn(httpService, 'get').mockReturnValue(
+        of({
+          data: { enabled: true },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as any,
+        }),
+      );
+
       const mockResponse = {
         redirect: vi.fn(),
       } as any;
@@ -326,6 +337,17 @@ describe('BFF OAuth Flow Integration', () => {
     });
 
     it('should generate unique state for each OAuth request', async () => {
+      // Mock provider enabled check
+      vi.spyOn(httpService, 'get').mockReturnValue(
+        of({
+          data: { enabled: true },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as any,
+        }),
+      );
+
       const mockResponse = {
         redirect: vi.fn(),
       } as any;
@@ -348,6 +370,17 @@ describe('BFF OAuth Flow Integration', () => {
 
   describe('Provider-Specific Configuration', () => {
     it('should use correct scope for Google', async () => {
+      // Mock provider enabled check
+      vi.spyOn(httpService, 'get').mockReturnValue(
+        of({
+          data: { enabled: true },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as any,
+        }),
+      );
+
       const mockResponse = {
         redirect: vi.fn(),
       } as any;
@@ -362,6 +395,17 @@ describe('BFF OAuth Flow Integration', () => {
     });
 
     it('should use response_mode=form_post for Apple', async () => {
+      // Mock provider enabled check
+      vi.spyOn(httpService, 'get').mockReturnValue(
+        of({
+          data: { enabled: true },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as any,
+        }),
+      );
+
       const mockResponse = {
         redirect: vi.fn(),
       } as any;
@@ -381,6 +425,17 @@ describe('BFF OAuth Flow Integration', () => {
       } as any;
 
       for (const provider of providers) {
+        // Mock provider enabled check for each provider
+        vi.spyOn(httpService, 'get').mockReturnValue(
+          of({
+            data: { enabled: true },
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            config: {} as any,
+          }),
+        );
+
         mockResponse.redirect.mockClear();
         await oauthController.startOAuth(provider, mockResponse);
 
