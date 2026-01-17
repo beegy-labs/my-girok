@@ -24,6 +24,7 @@ const ServiceDetailPage = lazy(() => import('./pages/services/ServiceDetailPage'
 const ServiceConsentsPage = lazy(() => import('./pages/services/ServiceConsentsPage'));
 const SupportedCountriesPage = lazy(() => import('./pages/system/SupportedCountriesPage'));
 const SupportedLocalesPage = lazy(() => import('./pages/system/SupportedLocalesPage'));
+const OAuthSettingsPage = lazy(() => import('./pages/system/OAuthSettingsPage'));
 const SessionRecordingsPage = lazy(
   () => import('./pages/system/session-recordings/SessionRecordingsPage'),
 );
@@ -209,6 +210,14 @@ export const router = createBrowserRouter([
             element: (
               <PrivateRoute permission="settings:read">
                 <SupportedLocalesPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'system/oauth',
+            element: (
+              <PrivateRoute permission="settings:read">
+                <OAuthSettingsPage />
               </PrivateRoute>
             ),
           },

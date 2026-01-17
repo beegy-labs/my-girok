@@ -176,6 +176,21 @@ export const initiateOAuth = (provider: OAuthProvider): void => {
   window.location.href = getOAuthUrl(provider);
 };
 
+/**
+ * Get enabled OAuth providers
+ * Returns list of OAuth providers that are currently enabled by admin
+ */
+export const getEnabledOAuthProviders = async (): Promise<{
+  providers: Array<{
+    provider: string;
+    displayName: string;
+    description?: string;
+  }>;
+}> => {
+  const response = await apiClient.get('/oauth/enabled');
+  return response.data;
+};
+
 // Export the API client for other uses
 // Also export as publicApi and authApi for backwards compatibility
 export { apiClient, apiClient as publicApi, apiClient as authApi };
