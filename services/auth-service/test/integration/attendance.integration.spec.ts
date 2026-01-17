@@ -81,12 +81,7 @@ describe.skip('Attendance Management Integration', () => {
         notes: 'Regular work day',
       };
 
-      const result = await attendanceService.clockIn(
-        testAdminId,
-        clockInDto,
-        '192.168.1.100',
-        'Mozilla/5.0',
-      );
+      const result = await attendanceService.clockIn(testAdminId, clockInDto, '192.168.1.100');
 
       expect(result.adminId).toBe(testAdminId);
       expect(result.status).toBe(AttendanceStatus.PRESENT);
@@ -129,12 +124,7 @@ describe.skip('Attendance Management Integration', () => {
         notes: 'End of work day',
       };
 
-      const result = await attendanceService.clockOut(
-        testAdminId,
-        clockOutDto,
-        '192.168.1.100',
-        'Mozilla/5.0',
-      );
+      const result = await attendanceService.clockOut(testAdminId, clockOutDto, '192.168.1.100');
 
       expect(result.clockOut).toBeDefined();
       expect(result.actualMinutes).toBeGreaterThan(0);

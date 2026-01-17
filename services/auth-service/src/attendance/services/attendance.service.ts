@@ -24,7 +24,6 @@ export class AttendanceService {
     adminId: string,
     dto: ClockInDto,
     ipAddress?: string,
-    _userAgent?: string,
   ): Promise<AttendanceResponseDto> {
     const dateStr = this.formatDate(dto.date);
 
@@ -82,7 +81,6 @@ export class AttendanceService {
     adminId: string,
     dto: ClockOutDto,
     ipAddress?: string,
-    _userAgent?: string,
   ): Promise<AttendanceResponseDto> {
     const dateStr = this.formatDate(dto.date);
 
@@ -277,11 +275,7 @@ export class AttendanceService {
   }
 
   private formatDate(date: Date): string {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return date.toISOString().split('T')[0];
   }
 
   private mapToResponse(attendance: any): AttendanceResponseDto {

@@ -27,8 +27,7 @@ export class AttendanceController {
     @Body() dto: ClockInDto,
   ): Promise<AttendanceResponseDto> {
     const ipAddress = req.ip;
-    const userAgent = req.headers['user-agent'];
-    return this.attendanceService.clockIn(adminId, dto, ipAddress, userAgent);
+    return this.attendanceService.clockIn(adminId, dto, ipAddress);
   }
 
   @Post('clock-out')
@@ -39,8 +38,7 @@ export class AttendanceController {
     @Body() dto: ClockOutDto,
   ): Promise<AttendanceResponseDto> {
     const ipAddress = req.ip;
-    const userAgent = req.headers['user-agent'];
-    return this.attendanceService.clockOut(adminId, dto, ipAddress, userAgent);
+    return this.attendanceService.clockOut(adminId, dto, ipAddress);
   }
 
   @Get('me')
