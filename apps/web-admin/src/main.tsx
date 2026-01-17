@@ -1,11 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router';
-import { HelmetProvider } from 'react-helmet-async';
+import { AppProviders } from './providers/AppProviders';
 import { router } from './router';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { AuthProvider } from './contexts/AuthContext';
-import { ToastProvider } from './components/ToastProvider';
 import { initOtel } from './lib/otel';
 import './index.css';
 import './i18n/config';
@@ -15,14 +12,8 @@ initOtel();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <HelmetProvider>
-      <ThemeProvider>
-        <ToastProvider>
-          <AuthProvider>
-            <RouterProvider router={router} />
-          </AuthProvider>
-        </ToastProvider>
-      </ThemeProvider>
-    </HelmetProvider>
+    <AppProviders>
+      <RouterProvider router={router} />
+    </AppProviders>
   </React.StrictMode>,
 );

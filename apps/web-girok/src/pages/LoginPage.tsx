@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import Cookies from 'js-cookie';
-import { login, initiateOAuth } from '../api/auth';
+import { login, initiateOAuth, getEnabledOAuthProviders } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
 import { TextInput, Button } from '@my-girok/ui-components';
 import { AuthLayout } from '../layouts';
-import { Mail, Lock, UserPlus, Key } from 'lucide-react';
+import { Mail, Lock, UserPlus, Key, Loader2 } from 'lucide-react';
 import { AuthProvider, type OAuthProvider } from '@my-girok/types';
 
 const SAVED_EMAIL_COOKIE = 'my-girok-saved-email';
@@ -72,6 +72,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [rememberEmail, setRememberEmail] = useState(true);
+  const [enabledProviders, setEnabledProviders] = useState<string[]>([]);
+  const [loadingProviders, setLoadingProviders] = useState(true);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -101,6 +103,26 @@ export default function LoginPage() {
       setEmail(savedEmail);
       setRememberEmail(true);
     }
+  }, []);
+
+  // Fetch enabled OAuth providers on mount
+  useEffect(() => {
+    const fetchEnabledProviders = async () => {
+      try {
+        setLoadingProviders(true);
+        const response = await getEnabledOAuthProviders();
+        const providerNames = response.providers.map((p) => p.provider);
+        setEnabledProviders(providerNames);
+      } catch (error) {
+        // Gracefully handle error - show no OAuth buttons if endpoint fails
+        console.error('Failed to fetch enabled OAuth providers:', error);
+        setEnabledProviders([]);
+      } finally {
+        setLoadingProviders(false);
+      }
+    };
+
+    fetchEnabledProviders();
   }, []);
 
   // Memoized remember email handler (2025 React best practice)
@@ -257,61 +279,82 @@ export default function LoginPage() {
           {t('auth.loginButton')}
         </Button>
 
-        {/* OAuth Divider */}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-theme-border-default" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-theme-bg-page text-theme-text-tertiary">
-              {t('auth.orContinueWith')}
-            </span>
-          </div>
-        </div>
+        {/* OAuth Section - Only show if providers are available */}
+        {!loadingProviders && enabledProviders.length > 0 && (
+          <>
+            {/* OAuth Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-theme-border-default" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-theme-bg-page text-theme-text-tertiary">
+                  {t('auth.orContinueWith')}
+                </span>
+              </div>
+            </div>
 
-        {/* OAuth Buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            size="lg"
-            onClick={() => handleOAuthLogin(AuthProvider.GOOGLE)}
-            className="flex items-center justify-center gap-2"
-          >
-            {OAuthIcons.GOOGLE}
-            <span>Google</span>
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="lg"
-            onClick={() => handleOAuthLogin(AuthProvider.KAKAO)}
-            className="flex items-center justify-center gap-2 bg-[#FEE500] hover:bg-[#FDD835] text-[#000000]"
-          >
-            {OAuthIcons.KAKAO}
-            <span>Kakao</span>
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="lg"
-            onClick={() => handleOAuthLogin(AuthProvider.NAVER)}
-            className="flex items-center justify-center gap-2 bg-[#03C75A] hover:bg-[#02B350] text-white"
-          >
-            {OAuthIcons.NAVER}
-            <span>Naver</span>
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="lg"
-            onClick={() => handleOAuthLogin(AuthProvider.APPLE)}
-            className="flex items-center justify-center gap-2 bg-black hover:bg-gray-900 text-white"
-          >
-            {OAuthIcons.APPLE}
-            <span>Apple</span>
-          </Button>
-        </div>
+            {/* Dynamic OAuth Buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              {enabledProviders.includes('GOOGLE') && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="lg"
+                  onClick={() => handleOAuthLogin(AuthProvider.GOOGLE)}
+                  className="flex items-center justify-center gap-2"
+                >
+                  {OAuthIcons.GOOGLE}
+                  <span>Google</span>
+                </Button>
+              )}
+              {enabledProviders.includes('KAKAO') && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="lg"
+                  onClick={() => handleOAuthLogin(AuthProvider.KAKAO)}
+                  className="flex items-center justify-center gap-2 bg-[#FEE500] hover:bg-[#FDD835] text-[#000000]"
+                >
+                  {OAuthIcons.KAKAO}
+                  <span>Kakao</span>
+                </Button>
+              )}
+              {enabledProviders.includes('NAVER') && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="lg"
+                  onClick={() => handleOAuthLogin(AuthProvider.NAVER)}
+                  className="flex items-center justify-center gap-2 bg-[#03C75A] hover:bg-[#02B350] text-white"
+                >
+                  {OAuthIcons.NAVER}
+                  <span>Naver</span>
+                </Button>
+              )}
+              {enabledProviders.includes('APPLE') && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="lg"
+                  onClick={() => handleOAuthLogin(AuthProvider.APPLE)}
+                  className="flex items-center justify-center gap-2 bg-black hover:bg-gray-900 text-white"
+                >
+                  {OAuthIcons.APPLE}
+                  <span>Apple</span>
+                </Button>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* OAuth Loading State */}
+        {loadingProviders && (
+          <div className="flex items-center justify-center gap-2 py-4 text-theme-text-tertiary">
+            <Loader2 size={16} className="animate-spin" />
+            <span className="text-sm">{t('auth.loadingProviders')}</span>
+          </div>
+        )}
       </form>
     </AuthLayout>
   );
