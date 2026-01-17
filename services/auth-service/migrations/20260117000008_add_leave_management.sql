@@ -1,100 +1,100 @@
 -- +goose Up
 
--- 휴가 신청
+-- Leave request records
 CREATE TABLE admin_leaves (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
   admin_id TEXT NOT NULL,
 
-  -- 휴가 유형
+  -- Leave type
   leave_type leave_type NOT NULL,
 
-  -- 기간
+  -- Period
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
-  start_half TEXT,                        -- AM, PM (반차인 경우)
+  start_half TEXT,                        -- AM, PM (for half-day leaves)
   end_half TEXT,
-  days_count DECIMAL(4,2) NOT NULL,       -- 0.5 = 반차
+  days_count DECIMAL(4,2) NOT NULL,       -- 0.5 = half-day
 
-  -- 상태
+  -- Status
   status leave_status DEFAULT 'PENDING',
 
-  -- 승인 워크플로우
+  -- Approval workflow
   requested_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
   submitted_at TIMESTAMPTZ(6),
 
-  -- 1차 승인 (팀장)
+  -- First approval (Team Lead)
   first_approver_id TEXT,
   first_approved_at TIMESTAMPTZ(6),
   first_approval_status TEXT,
 
-  -- 2차 승인 (필요시)
+  -- Second approval (if required)
   second_approver_id TEXT,
   second_approved_at TIMESTAMPTZ(6),
   second_approval_status TEXT,
 
-  -- 최종 승인
+  -- Final approval
   final_approved_by TEXT,
   final_approved_at TIMESTAMPTZ(6),
 
-  -- 반려
+  -- Rejection
   rejected_by TEXT,
   rejected_at TIMESTAMPTZ(6),
   rejection_reason TEXT,
 
-  -- 취소
+  -- Cancellation
   cancelled_at TIMESTAMPTZ(6),
   cancellation_reason TEXT,
 
-  -- 상세
+  -- Details
   reason TEXT,
   emergency_contact TEXT,
   handover_to TEXT,
   handover_notes TEXT,
   attachment_urls TEXT[],
 
-  -- 메타
+  -- Metadata
   created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
 );
 
--- 연차 잔여 현황
+-- Leave balance tracking
 CREATE TABLE admin_leave_balances (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
   admin_id TEXT NOT NULL,
   year INT NOT NULL,
 
-  -- 연차 (Annual Leave)
-  annual_entitled DECIMAL(5,2) DEFAULT 15,    -- 부여 연차
-  annual_used DECIMAL(5,2) DEFAULT 0,         -- 사용
-  annual_pending DECIMAL(5,2) DEFAULT 0,      -- 승인 대기
-  annual_remaining DECIMAL(5,2) DEFAULT 15,   -- 잔여
+  -- Annual Leave
+  annual_entitled DECIMAL(5,2) DEFAULT 15,    -- Entitled days
+  annual_used DECIMAL(5,2) DEFAULT 0,         -- Used days
+  annual_pending DECIMAL(5,2) DEFAULT 0,      -- Pending approval
+  annual_remaining DECIMAL(5,2) DEFAULT 15,   -- Remaining days
 
-  -- 병가 (Sick Leave)
+  -- Sick Leave
   sick_entitled DECIMAL(5,2) DEFAULT 10,
   sick_used DECIMAL(5,2) DEFAULT 0,
   sick_remaining DECIMAL(5,2) DEFAULT 10,
 
-  -- 보상휴가 (Compensatory)
+  -- Compensatory Leave
   compensatory_entitled DECIMAL(5,2) DEFAULT 0,
   compensatory_used DECIMAL(5,2) DEFAULT 0,
   compensatory_remaining DECIMAL(5,2) DEFAULT 0,
   compensatory_expiry_date DATE,
 
-  -- 특별휴가 (Special)
+  -- Special Leave
   special_entitled DECIMAL(5,2) DEFAULT 0,
   special_used DECIMAL(5,2) DEFAULT 0,
   special_remaining DECIMAL(5,2) DEFAULT 0,
 
-  -- 이월
+  -- Carryover
   carryover_from_previous DECIMAL(5,2) DEFAULT 0,
   carryover_expiry_date DATE,
 
-  -- 조정
+  -- Adjustment
   adjustment DECIMAL(5,2) DEFAULT 0,
   adjustment_reason TEXT,
   adjusted_by TEXT,
 
-  -- 메타
+  -- Metadata
   last_calculated_at TIMESTAMPTZ(6),
 
   created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
@@ -103,15 +103,15 @@ CREATE TABLE admin_leave_balances (
   UNIQUE(admin_id, year)
 );
 
--- 휴가 정책 (국가별)
+-- Leave policies (by country)
 CREATE TABLE leave_policies (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
 
-  -- 적용 범위
-  country_code TEXT,                      -- NULL = 글로벌 기본값
+  -- Scope
+  country_code TEXT,                      -- NULL = global default
   legal_entity_id TEXT,
 
-  -- 연차 정책
+  -- Annual leave policy
   annual_base_days DECIMAL(5,2) DEFAULT 15,
   annual_max_days DECIMAL(5,2) DEFAULT 25,
   annual_accrual_type TEXT DEFAULT 'YEARLY', -- YEARLY, MONTHLY, HOURLY
@@ -119,20 +119,20 @@ CREATE TABLE leave_policies (
   annual_carryover_max DECIMAL(5,2) DEFAULT 5,
   annual_carryover_expiry_months INT DEFAULT 3,
 
-  -- 병가 정책
+  -- Sick leave policy
   sick_days DECIMAL(5,2) DEFAULT 10,
-  sick_requires_certificate_after INT DEFAULT 3, -- 3일 이상 진단서 필요
+  sick_requires_certificate_after INT DEFAULT 3, -- Medical certificate required after 3 days
 
-  -- 근속 가산
+  -- Tenure bonus
   tenure_bonus_enabled BOOLEAN DEFAULT TRUE,
-  tenure_bonus_years INT[] DEFAULT '{3,5,10}',   -- 가산 시점
-  tenure_bonus_days DECIMAL(5,2)[] DEFAULT '{1,2,3}', -- 가산 일수
+  tenure_bonus_years INT[] DEFAULT '{3,5,10}',   -- Bonus trigger years
+  tenure_bonus_days DECIMAL(5,2)[] DEFAULT '{1,2,3}', -- Bonus days
 
-  -- 수습 기간
+  -- Probation period
   probation_leave_allowed BOOLEAN DEFAULT FALSE,
   probation_accrual_rate DECIMAL(3,2) DEFAULT 0.5,
 
-  -- 메타
+  -- Metadata
   effective_date DATE NOT NULL,
   end_date DATE,
   is_active BOOLEAN DEFAULT TRUE,
@@ -141,18 +141,18 @@ CREATE TABLE leave_policies (
   updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
 );
 
--- 공휴일 (국가별)
+-- Public holidays (by country)
 CREATE TABLE public_holidays (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
   country_code TEXT NOT NULL,
-  subdivision_code TEXT,                  -- 지역별 공휴일
+  subdivision_code TEXT,                  -- Regional holidays
 
   date DATE NOT NULL,
   name TEXT NOT NULL,
   name_en TEXT,
 
   is_national BOOLEAN DEFAULT TRUE,
-  is_floating BOOLEAN DEFAULT FALSE,      -- 대체공휴일 여부
+  is_floating BOOLEAN DEFAULT FALSE,      -- Substitute holiday flag
   year INT NOT NULL,
 
   created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),

@@ -7,12 +7,11 @@ import {
   Param,
   Query,
   UseGuards,
-  Req,
   ParseIntPipe,
-} from '@nestjs/swagger';
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { Request } from 'express';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { AdminId } from '../../common/decorators/admin-id.decorator';
 import { LeaveBalanceService } from '../services/leave-balance.service';
 import {
   CreateLeaveBalanceDto,
@@ -35,18 +34,16 @@ export class LeaveBalanceController {
 
   @Get('me')
   @ApiOperation({ summary: 'Get my current leave balance' })
-  getMyBalance(@Req() req: Request): Promise<LeaveBalanceResponseDto> {
-    const adminId = (req.user as any).id;
+  getMyBalance(@AdminId() adminId: string): Promise<LeaveBalanceResponseDto> {
     return this.leaveBalanceService.getCurrentBalance(adminId);
   }
 
   @Get('me/:year')
   @ApiOperation({ summary: 'Get my leave balance for a specific year' })
   getMyBalanceByYear(
-    @Req() req: Request,
+    @AdminId() adminId: string,
     @Param('year', ParseIntPipe) year: number,
   ): Promise<LeaveBalanceResponseDto> {
-    const adminId = (req.user as any).id;
     return this.leaveBalanceService.getBalance(adminId, year);
   }
 
@@ -62,12 +59,11 @@ export class LeaveBalanceController {
   @Patch(':adminId/:year/adjust')
   @ApiOperation({ summary: 'Adjust leave balance (HR/Admin)' })
   adjust(
-    @Req() req: Request,
+    @AdminId() adjustedBy: string,
     @Param('adminId') adminId: string,
     @Param('year', ParseIntPipe) year: number,
     @Body() dto: AdjustBalanceDto,
   ): Promise<LeaveBalanceResponseDto> {
-    const adjustedBy = (req.user as any).id;
     return this.leaveBalanceService.adjust(adminId, year, adjustedBy, dto);
   }
 

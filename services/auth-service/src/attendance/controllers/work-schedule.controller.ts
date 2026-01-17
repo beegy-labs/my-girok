@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Req } from '@nestjs/swagger';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { Request } from 'express';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { AdminId } from '../../common/decorators/admin-id.decorator';
 import { WorkScheduleService } from '../services/work-schedule.service';
 import {
   CreateWorkScheduleDto,
@@ -24,15 +24,13 @@ export class WorkScheduleController {
 
   @Get('me')
   @ApiOperation({ summary: 'Get my work schedules' })
-  getMySchedules(@Req() req: Request): Promise<WorkScheduleResponseDto[]> {
-    const adminId = (req.user as any).id;
+  getMySchedules(@AdminId() adminId: string): Promise<WorkScheduleResponseDto[]> {
     return this.workScheduleService.findByAdmin(adminId);
   }
 
   @Get('me/active')
   @ApiOperation({ summary: 'Get my active work schedule' })
-  getMyActiveSchedule(@Req() req: Request): Promise<WorkScheduleResponseDto | null> {
-    const adminId = (req.user as any).id;
+  getMyActiveSchedule(@AdminId() adminId: string): Promise<WorkScheduleResponseDto | null> {
     return this.workScheduleService.findActiveByAdmin(adminId);
   }
 

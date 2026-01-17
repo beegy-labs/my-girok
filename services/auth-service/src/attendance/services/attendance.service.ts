@@ -4,6 +4,7 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   ClockInDto,
@@ -58,7 +59,7 @@ export class AttendanceService {
         remote_location: dto.remoteLocation,
         clock_in_method: 'APP',
         clock_in_ip: ipAddress,
-        clock_in_location: dto.location as any,
+        clock_in_location: dto.location as Prisma.JsonValue,
         notes: dto.notes,
         status: AttendanceStatus.PRESENT,
       },
@@ -69,7 +70,7 @@ export class AttendanceService {
         remote_location: dto.remoteLocation,
         clock_in_method: 'APP',
         clock_in_ip: ipAddress,
-        clock_in_location: dto.location as any,
+        clock_in_location: dto.location as Prisma.JsonValue,
         notes: dto.notes,
         status: AttendanceStatus.PRESENT,
       },
@@ -118,7 +119,7 @@ export class AttendanceService {
       clock_out: clockOutTime,
       clock_out_method: 'APP',
       clock_out_ip: ipAddress,
-      clock_out_location: dto.location as any,
+      clock_out_location: dto.location as Prisma.JsonValue,
       actual_minutes: workMinutes,
     };
 

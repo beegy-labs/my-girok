@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, Req } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { Request } from 'express';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { AdminId } from '../../common/decorators/admin-id.decorator';
 import { LeaveService } from '../services/leave.service';
 import {
   CreateLeaveDto,
@@ -21,58 +21,52 @@ export class LeaveController {
 
   @Post()
   @ApiOperation({ summary: 'Create a leave request (draft)' })
-  create(@Req() req: Request, @Body() dto: CreateLeaveDto): Promise<LeaveResponseDto> {
-    const adminId = (req.user as any).id;
+  create(@AdminId() adminId: string, @Body() dto: CreateLeaveDto): Promise<LeaveResponseDto> {
     return this.leaveService.create(adminId, dto);
   }
 
   @Post(':id/submit')
   @ApiOperation({ summary: 'Submit a leave request for approval' })
   submit(
-    @Req() req: Request,
+    @AdminId() adminId: string,
     @Param('id') id: string,
     @Body() dto: SubmitLeaveDto,
   ): Promise<LeaveResponseDto> {
-    const adminId = (req.user as any).id;
     return this.leaveService.submit(id, adminId, dto);
   }
 
   @Post(':id/approve')
   @ApiOperation({ summary: 'Approve or reject a leave request (manager)' })
   approve(
-    @Req() req: Request,
+    @AdminId() approverId: string,
     @Param('id') id: string,
     @Body() dto: ApproveLeaveDto,
   ): Promise<LeaveResponseDto> {
-    const approverId = (req.user as any).id;
     return this.leaveService.approve(id, approverId, dto);
   }
 
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancel a leave request' })
   cancel(
-    @Req() req: Request,
+    @AdminId() adminId: string,
     @Param('id') id: string,
     @Body() dto: CancelLeaveDto,
   ): Promise<LeaveResponseDto> {
-    const adminId = (req.user as any).id;
     return this.leaveService.cancel(id, adminId, dto);
   }
 
   @Get('me')
   @ApiOperation({ summary: 'Get my leave requests' })
   getMyLeaves(
-    @Req() req: Request,
+    @AdminId() adminId: string,
     @Query() query: LeaveQueryDto,
   ): Promise<{ data: LeaveResponseDto[]; total: number }> {
-    const adminId = (req.user as any).id;
     return this.leaveService.list({ ...query, adminId });
   }
 
   @Get('pending-approvals')
   @ApiOperation({ summary: 'Get pending leave approvals for me (manager)' })
-  getPendingApprovals(@Req() req: Request): Promise<LeaveResponseDto[]> {
-    const approverId = (req.user as any).id;
+  getPendingApprovals(@AdminId() approverId: string): Promise<LeaveResponseDto[]> {
     return this.leaveService.getPendingApprovals(approverId);
   }
 
