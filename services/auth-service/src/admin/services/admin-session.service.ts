@@ -177,7 +177,7 @@ export class AdminSessionService {
       (AdminSessionData & { previousRefreshTokenHash: string | null })[]
     >`
       SELECT
-        s.id, s.admin_id as "adminId",
+        s.id, s.adminId as "adminId",
         s.refresh_token_hash as "refreshTokenHash",
         s.previous_refresh_token_hash as "previousRefreshTokenHash",
         s.mfa_verified as "mfaVerified",

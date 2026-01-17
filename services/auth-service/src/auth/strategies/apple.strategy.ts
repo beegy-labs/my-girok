@@ -14,7 +14,7 @@ export class AppleStrategy extends PassportStrategy(Strategy, 'apple') {
   constructor(
     private authService: AuthService,
     private oauthConfigService: OAuthConfigService,
-    private configService: ConfigService,
+    configService: ConfigService,
   ) {
     // Initialize strategy with default config
     // Actual credentials will be loaded dynamically from database
@@ -22,11 +22,11 @@ export class AppleStrategy extends PassportStrategy(Strategy, 'apple') {
       clientID: 'placeholder',
       teamID: configService.get('APPLE_TEAM_ID') || 'placeholder',
       keyID: configService.get('APPLE_KEY_ID') || 'placeholder',
-      key: AppleStrategy.loadPrivateKey(configService),
+      privateKeyString: AppleStrategy.loadPrivateKey(configService),
       callbackURL: 'placeholder',
       scope: ['name', 'email'],
       passReqToCallback: false,
-    });
+    } as any);
 
     // Override the options dynamically
     this.initializeFromDatabase();
@@ -85,8 +85,8 @@ export class AppleStrategy extends PassportStrategy(Strategy, 'apple') {
   }
 
   async validate(
-    accessToken: string,
-    refreshToken: string,
+    _accessToken: string,
+    _refreshToken: string,
     profile: Profile,
     done: VerifyCallback,
   ): Promise<any> {

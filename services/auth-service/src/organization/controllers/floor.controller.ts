@@ -12,7 +12,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { AdminAuthGuard } from '../../admin/guards/admin-auth.guard';
 import { FloorService } from '../services/floor.service';
 import {
   CreateFloorDto,
@@ -23,7 +23,7 @@ import {
 
 @ApiTags('Organization - Floors')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(AdminAuthGuard)
 @Controller('organization/floors')
 export class FloorController {
   constructor(private readonly floorService: FloorService) {}

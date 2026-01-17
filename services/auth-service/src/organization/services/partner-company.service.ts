@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/auth-client';
+import { Prisma, partner_type } from '../../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreatePartnerCompanyDto,
@@ -17,7 +17,7 @@ export class PartnerCompanyService {
   async create(dto: CreatePartnerCompanyDto): Promise<PartnerCompanyResponseDto> {
     this.logger.log(`Creating partner company: ${dto.code}`);
 
-    const existing = await this.prisma.partnerCompany.findUnique({
+    const existing = await this.prisma.partner_companies.findUnique({
       where: { code: dto.code },
     });
 
@@ -25,17 +25,17 @@ export class PartnerCompanyService {
       throw new ConflictException(`Partner company with code ${dto.code} already exists`);
     }
 
-    const partnerCompany = await this.prisma.partnerCompany.create({
+    const partnerCompany = await this.prisma.partner_companies.create({
       data: {
         code: dto.code,
         name: dto.name,
-        partner_type: dto.partnerType,
-        contact_email: dto.contactEmail,
-        contact_phone: dto.contactPhone,
-        contact_person: dto.contactPerson,
+        partner_type: dto.partnerType as partner_type,
+        country_code: 'US', // TODO: Add to DTO
+        primary_contact_email: dto.contactEmail,
+        primary_contact_phone: dto.contactPhone,
+        primary_contact_name: dto.contactPerson,
         tax_id: dto.taxId,
         address: dto.address,
-        description: dto.description,
         is_active: dto.isActive ?? true,
       },
     });
@@ -46,17 +46,17 @@ export class PartnerCompanyService {
   async findAll(query?: PartnerCompanyListQueryDto): Promise<PartnerCompanyResponseDto[]> {
     this.logger.log('Fetching all partner companies');
 
-    const where: Prisma.PartnerCompanyWhereInput = {};
+    const where: Prisma.partner_companiesWhereInput = {};
 
     if (query?.partnerType) {
-      where.partner_type = query.partnerType;
+      where.partner_type = query.partnerType as partner_type;
     }
 
     if (query?.isActive !== undefined) {
       where.is_active = query.isActive;
     }
 
-    const partnerCompanies = await this.prisma.partnerCompany.findMany({
+    const partnerCompanies = await this.prisma.partner_companies.findMany({
       where,
       orderBy: [{ name: 'asc' }],
     });
@@ -67,7 +67,7 @@ export class PartnerCompanyService {
   async findOne(id: string): Promise<PartnerCompanyResponseDto> {
     this.logger.log(`Fetching partner company: ${id}`);
 
-    const partnerCompany = await this.prisma.partnerCompany.findUnique({
+    const partnerCompany = await this.prisma.partner_companies.findUnique({
       where: { id },
     });
 
@@ -83,7 +83,7 @@ export class PartnerCompanyService {
 
     await this.findOne(id);
 
-    const agreements = await this.prisma.partnerServiceAgreement.findMany({
+    const agreements = await this.prisma.partner_service_agreements.findMany({
       where: { partner_company_id: id },
       orderBy: [{ start_date: 'desc' }],
     });
@@ -96,17 +96,16 @@ export class PartnerCompanyService {
 
     await this.findOne(id);
 
-    const partnerCompany = await this.prisma.partnerCompany.update({
+    const partnerCompany = await this.prisma.partner_companies.update({
       where: { id },
       data: {
         name: dto.name,
-        partner_type: dto.partnerType,
-        contact_email: dto.contactEmail,
-        contact_phone: dto.contactPhone,
-        contact_person: dto.contactPerson,
+        partner_type: dto.partnerType as partner_type,
+        primary_contact_email: dto.contactEmail,
+        primary_contact_phone: dto.contactPhone,
+        primary_contact_name: dto.contactPerson,
         tax_id: dto.taxId,
         address: dto.address,
-        description: dto.description,
         is_active: dto.isActive,
       },
     });
@@ -119,7 +118,7 @@ export class PartnerCompanyService {
 
     await this.findOne(id);
 
-    await this.prisma.partnerCompany.delete({
+    await this.prisma.partner_companies.delete({
       where: { id },
     });
 

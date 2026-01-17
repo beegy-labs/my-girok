@@ -4,7 +4,7 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, work_type } from '../../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   ClockInDto,
@@ -30,45 +30,45 @@ export class AttendanceService {
     // Check if already clocked in
     const existing = await this.prisma.adminAttendance.findUnique({
       where: {
-        admin_id_date: {
-          admin_id: adminId,
+        adminId_date: {
+          adminId: adminId,
           date: new Date(dateStr),
         },
       },
     });
 
-    if (existing && existing.clock_in) {
+    if (existing && existing.clockIn) {
       throw new ConflictException(`Already clocked in for ${dateStr}. Clock out first.`);
     }
 
     const attendance = await this.prisma.adminAttendance.upsert({
       where: {
-        admin_id_date: {
-          admin_id: adminId,
+        adminId_date: {
+          adminId: adminId,
           date: new Date(dateStr),
         },
       },
       create: {
-        admin_id: adminId,
+        adminId: adminId,
         date: new Date(dateStr),
-        clock_in: new Date(),
-        work_type: dto.workType || WorkType.OFFICE,
-        office_id: dto.officeId,
-        remote_location: dto.remoteLocation,
-        clock_in_method: 'APP',
-        clock_in_ip: ipAddress,
-        clock_in_location: dto.location as Prisma.JsonValue,
+        clockIn: new Date(),
+        workType: (dto.workType as work_type) || ('OFFICE' as work_type),
+        officeId: dto.officeId,
+        remoteLocation: dto.remoteLocation,
+        clockInMethod: 'APP',
+        clockInIp: ipAddress,
+        clockInLocation: dto.location as Prisma.JsonValue,
         notes: dto.notes,
         status: AttendanceStatus.PRESENT,
       },
       update: {
-        clock_in: new Date(),
-        work_type: dto.workType || WorkType.OFFICE,
-        office_id: dto.officeId,
-        remote_location: dto.remoteLocation,
-        clock_in_method: 'APP',
-        clock_in_ip: ipAddress,
-        clock_in_location: dto.location as Prisma.JsonValue,
+        clockIn: new Date(),
+        workType: (dto.workType as work_type) || ('OFFICE' as work_type),
+        officeId: dto.officeId,
+        remoteLocation: dto.remoteLocation,
+        clockInMethod: 'APP',
+        clockInIp: ipAddress,
+        clockInLocation: dto.location as Prisma.JsonValue,
         notes: dto.notes,
         status: AttendanceStatus.PRESENT,
       },
@@ -86,8 +86,8 @@ export class AttendanceService {
 
     const existing = await this.prisma.adminAttendance.findUnique({
       where: {
-        admin_id_date: {
-          admin_id: adminId,
+        adminId_date: {
+          adminId: adminId,
           date: new Date(dateStr),
         },
       },
@@ -97,32 +97,32 @@ export class AttendanceService {
       throw new NotFoundException(`No clock-in record found for ${dateStr}`);
     }
 
-    if (!existing.clock_in) {
+    if (!existing.clockIn) {
       throw new BadRequestException(`Must clock in before clocking out for ${dateStr}`);
     }
 
-    if (existing.clock_out) {
+    if (existing.clockOut) {
       throw new ConflictException(`Already clocked out for ${dateStr}`);
     }
 
     const clockOutTime = new Date();
     const workMinutes = this.calculateWorkMinutes(
-      existing.clock_in,
+      existing.clockIn,
       clockOutTime,
-      existing.break_minutes || 60,
+      existing.breakMinutes || 60,
     );
 
     const updateData: any = {
-      clock_out: clockOutTime,
-      clock_out_method: 'APP',
-      clock_out_ip: ipAddress,
-      clock_out_location: dto.location as Prisma.JsonValue,
-      actual_minutes: workMinutes,
+      clockOut: clockOutTime,
+      clockOutMethod: 'APP',
+      clockOutIp: ipAddress,
+      clockOutLocation: dto.location as Prisma.JsonValue,
+      actualMinutes: workMinutes,
     };
 
     if (dto.overtimeMinutes && dto.overtimeMinutes > 0) {
-      updateData.overtime_minutes = dto.overtimeMinutes;
-      updateData.overtime_requested = true;
+      updateData.overtimeMinutes = dto.overtimeMinutes;
+      updateData.overtimeRequested = true;
       updateData.overtime_reason = dto.overtimeReason;
     }
 
@@ -132,8 +132,8 @@ export class AttendanceService {
 
     const attendance = await this.prisma.adminAttendance.update({
       where: {
-        admin_id_date: {
-          admin_id: adminId,
+        adminId_date: {
+          adminId: adminId,
           date: new Date(dateStr),
         },
       },
@@ -156,17 +156,17 @@ export class AttendanceService {
       throw new NotFoundException(`Attendance record ${attendanceId} not found`);
     }
 
-    if (!attendance.overtime_requested) {
+    if (!attendance.overtimeRequested) {
       throw new BadRequestException('No overtime request exists for this attendance');
     }
 
     const updated = await this.prisma.adminAttendance.update({
       where: { id: attendanceId },
       data: {
-        overtime_approved: dto.approved,
-        overtime_approved_by: approverId,
-        overtime_approved_at: new Date(),
-        manager_notes: dto.managerNotes,
+        overtimeApproved: dto.approved,
+        overtimeApprovedBy: approverId,
+        overtimeApprovedAt: new Date(),
+        managerNotes: dto.managerNotes,
       },
     });
 
@@ -178,8 +178,8 @@ export class AttendanceService {
 
     const attendance = await this.prisma.adminAttendance.findUnique({
       where: {
-        admin_id_date: {
-          admin_id: adminId,
+        adminId_date: {
+          adminId: adminId,
           date: new Date(dateStr),
         },
       },
@@ -194,7 +194,7 @@ export class AttendanceService {
     const where: any = {};
 
     if (query.adminId) {
-      where.admin_id = query.adminId;
+      where.adminId = query.adminId;
     }
 
     if (query.startDate || query.endDate) {
@@ -212,7 +212,7 @@ export class AttendanceService {
     }
 
     if (query.workType) {
-      where.work_type = query.workType;
+      where.workType = query.workType;
     }
 
     const skip = (query.page - 1) * query.limit;
@@ -236,7 +236,7 @@ export class AttendanceService {
   async getStats(adminId: string, startDate: Date, endDate: Date): Promise<AttendanceStatsDto> {
     const attendances = await this.prisma.adminAttendance.findMany({
       where: {
-        admin_id: adminId,
+        adminId: adminId,
         date: {
           gte: new Date(this.formatDate(startDate)),
           lte: new Date(this.formatDate(endDate)),
@@ -248,13 +248,13 @@ export class AttendanceService {
     const presentDays = attendances.filter((a) => a.status === AttendanceStatus.PRESENT).length;
     const absentDays = attendances.filter((a) => a.status === AttendanceStatus.ABSENT).length;
     const lateDays = attendances.filter(
-      (a) => a.status === AttendanceStatus.LATE || a.late_minutes > 0,
+      (a) => a.status === AttendanceStatus.LATE || a.lateMinutes > 0,
     ).length;
-    const remoteDays = attendances.filter((a) => a.work_type === WorkType.REMOTE).length;
+    const remoteDays = attendances.filter((a) => a.workType === ('REMOTE' as work_type)).length;
 
-    const totalOvertimeMinutes = attendances.reduce((sum, a) => sum + (a.overtime_minutes || 0), 0);
+    const totalOvertimeMinutes = attendances.reduce((sum, a) => sum + (a.overtimeMinutes || 0), 0);
 
-    const totalWorkMinutes = attendances.reduce((sum, a) => sum + (a.actual_minutes || 0), 0);
+    const totalWorkMinutes = attendances.reduce((sum, a) => sum + (a.actualMinutes || 0), 0);
     const averageWorkMinutes = presentDays > 0 ? Math.round(totalWorkMinutes / presentDays) : 0;
 
     return {
@@ -281,29 +281,29 @@ export class AttendanceService {
   private mapToResponse(attendance: any): AttendanceResponseDto {
     return {
       id: attendance.id,
-      adminId: attendance.admin_id,
+      adminId: attendance.adminId,
       date: attendance.date,
       scheduledStart: attendance.scheduled_start,
       scheduledEnd: attendance.scheduled_end,
-      clockIn: attendance.clock_in,
-      clockOut: attendance.clock_out,
+      clockIn: attendance.clockIn,
+      clockOut: attendance.clockOut,
       scheduledMinutes: attendance.scheduled_minutes,
-      actualMinutes: attendance.actual_minutes,
-      overtimeMinutes: attendance.overtime_minutes,
-      breakMinutes: attendance.break_minutes,
+      actualMinutes: attendance.actualMinutes,
+      overtimeMinutes: attendance.overtimeMinutes,
+      breakMinutes: attendance.breakMinutes,
       status: attendance.status as AttendanceStatus,
-      lateMinutes: attendance.late_minutes,
+      lateMinutes: attendance.lateMinutes,
       earlyLeaveMinutes: attendance.early_leave_minutes,
-      workType: attendance.work_type as WorkType,
+      workType: attendance.workType as WorkType,
       officeId: attendance.office_id,
       remoteLocation: attendance.remote_location,
-      overtimeRequested: attendance.overtime_requested,
+      overtimeRequested: attendance.overtimeRequested,
       overtimeApproved: attendance.overtime_approved,
       overtimeApprovedBy: attendance.overtime_approved_by,
       overtimeApprovedAt: attendance.overtime_approved_at,
       overtimeReason: attendance.overtime_reason,
-      clockInMethod: attendance.clock_in_method,
-      clockOutMethod: attendance.clock_out_method,
+      clockInMethod: attendance.clockIn_method,
+      clockOutMethod: attendance.clockOut_method,
       notes: attendance.notes,
       managerNotes: attendance.manager_notes,
       isHoliday: attendance.is_holiday,

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/auth-client';
+import { Prisma } from '../../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateFloorDto,
@@ -15,17 +15,22 @@ export class FloorService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateFloorDto): Promise<FloorResponseDto> {
-    this.logger.log(`Creating floor: ${dto.code}`);
+    this.logger.log(`Creating floor: ${dto.floorNumber} in building ${dto.buildingId}`);
 
-    const existing = await this.prisma.floor.findUnique({
-      where: { code: dto.code },
+    const existing = await this.prisma.floors.findUnique({
+      where: {
+        building_id_floor_number: {
+          building_id: dto.buildingId,
+          floor_number: dto.floorNumber,
+        },
+      },
     });
 
     if (existing) {
-      throw new ConflictException(`Floor with code ${dto.code} already exists`);
+      throw new ConflictException(`Floor ${dto.floorNumber} already exists in this building`);
     }
 
-    const building = await this.prisma.building.findUnique({
+    const building = await this.prisma.buildings.findUnique({
       where: { id: dto.buildingId },
     });
 
@@ -33,14 +38,11 @@ export class FloorService {
       throw new NotFoundException(`Building with ID ${dto.buildingId} not found`);
     }
 
-    const floor = await this.prisma.floor.create({
+    const floor = await this.prisma.floors.create({
       data: {
-        code: dto.code,
-        name: dto.name,
         building_id: dto.buildingId,
         floor_number: dto.floorNumber,
-        floor_area: dto.floorArea,
-        description: dto.description,
+        name: dto.name,
         is_active: dto.isActive ?? true,
       },
     });
@@ -51,7 +53,7 @@ export class FloorService {
   async findAll(query?: FloorListQueryDto): Promise<FloorResponseDto[]> {
     this.logger.log('Fetching all floors');
 
-    const where: Prisma.FloorWhereInput = {};
+    const where: Prisma.floorsWhereInput = {};
 
     if (query?.buildingId) {
       where.building_id = query.buildingId;
@@ -61,7 +63,7 @@ export class FloorService {
       where.is_active = query.isActive;
     }
 
-    const floors = await this.prisma.floor.findMany({
+    const floors = await this.prisma.floors.findMany({
       where,
       orderBy: [{ floor_number: 'asc' }],
     });
@@ -72,7 +74,7 @@ export class FloorService {
   async findOne(id: string): Promise<FloorResponseDto> {
     this.logger.log(`Fetching floor: ${id}`);
 
-    const floor = await this.prisma.floor.findUnique({
+    const floor = await this.prisma.floors.findUnique({
       where: { id },
     });
 
@@ -88,13 +90,11 @@ export class FloorService {
 
     await this.findOne(id);
 
-    const floor = await this.prisma.floor.update({
+    const floor = await this.prisma.floors.update({
       where: { id },
       data: {
         name: dto.name,
         floor_number: dto.floorNumber,
-        floor_area: dto.floorArea,
-        description: dto.description,
         is_active: dto.isActive,
       },
     });
@@ -107,7 +107,7 @@ export class FloorService {
 
     await this.findOne(id);
 
-    await this.prisma.floor.delete({
+    await this.prisma.floors.delete({
       where: { id },
     });
 

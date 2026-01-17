@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../database/prisma.module';
+import { DatabaseModule } from '../database/database.module';
 
 // Services
 import { JobGradeService } from './services/job-grade.service';
@@ -20,7 +20,7 @@ import { FloorController } from './controllers/floor.controller';
 import { PartnerCompanyController } from './controllers/partner-company.controller';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [DatabaseModule],
   controllers: [
     JobGradeController,
     OrgUnitController,

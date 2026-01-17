@@ -4,6 +4,7 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
+import { leave_type } from '../../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateLeaveDto,
@@ -23,16 +24,16 @@ export class LeaveService {
     // Check for overlapping leaves
     const overlapping = await this.prisma.adminLeave.findFirst({
       where: {
-        admin_id: adminId,
+        adminId: adminId,
         status: {
           in: [LeaveStatus.PENDING, LeaveStatus.APPROVED],
         },
         OR: [
           {
-            start_date: {
+            startDate: {
               lte: dto.endDate,
             },
-            end_date: {
+            endDate: {
               gte: dto.startDate,
             },
           },
@@ -46,19 +47,19 @@ export class LeaveService {
 
     const leave = await this.prisma.adminLeave.create({
       data: {
-        admin_id: adminId,
-        leave_type: dto.leaveType,
-        start_date: dto.startDate,
-        end_date: dto.endDate,
-        start_half: dto.startHalf,
-        end_half: dto.endHalf,
-        days_count: dto.daysCount,
+        adminId: adminId,
+        leaveType: dto.leaveType as leave_type,
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        startHalf: dto.startHalf,
+        endHalf: dto.endHalf,
+        daysCount: dto.daysCount,
         status: LeaveStatus.DRAFT,
         reason: dto.reason,
-        emergency_contact: dto.emergencyContact,
-        handover_to: dto.handoverTo,
-        handover_notes: dto.handoverNotes,
-        attachment_urls: dto.attachmentUrls,
+        emergencyContact: dto.emergencyContact,
+        handoverTo: dto.handoverTo,
+        handoverNotes: dto.handoverNotes,
+        attachmentUrls: dto.attachmentUrls,
       },
     });
 
@@ -74,7 +75,7 @@ export class LeaveService {
       throw new NotFoundException(`Leave request ${leaveId} not found`);
     }
 
-    if (leave.admin_id !== adminId) {
+    if (leave.adminId !== adminId) {
       throw new ForbiddenException('You can only submit your own leave requests');
     }
 
@@ -86,9 +87,9 @@ export class LeaveService {
       where: { id: leaveId },
       data: {
         status: LeaveStatus.PENDING,
-        submitted_at: new Date(),
-        first_approver_id: dto.firstApproverId,
-        second_approver_id: dto.secondApproverId,
+        submittedAt: new Date(),
+        firstApproverId: dto.firstApproverId,
+        secondApproverId: dto.secondApproverId,
       },
     });
 
@@ -115,17 +116,17 @@ export class LeaveService {
     const updateData: any = {};
 
     // First approver
-    if (leave.first_approver_id === approverId && !leave.first_approved_at) {
-      updateData.first_approver_id = approverId;
-      updateData.first_approved_at = new Date();
-      updateData.first_approval_status = dto.approvalStatus;
+    if (leave.firstApproverId === approverId && !leave.firstApprovedAt) {
+      updateData.firstApproverId = approverId;
+      updateData.firstApprovedAt = new Date();
+      updateData.firstApprovalStatus = dto.approvalStatus;
 
       if (dto.approvalStatus === 'REJECTED') {
         updateData.status = LeaveStatus.REJECTED;
         updateData.rejected_by = approverId;
         updateData.rejected_at = new Date();
         updateData.rejection_reason = dto.rejectionReason;
-      } else if (!leave.second_approver_id) {
+      } else if (!leave.secondApproverId) {
         // No second approver needed
         updateData.status = LeaveStatus.APPROVED;
         updateData.final_approved_by = approverId;
@@ -134,12 +135,12 @@ export class LeaveService {
     }
     // Second approver
     else if (
-      leave.second_approver_id === approverId &&
-      leave.first_approval_status === 'APPROVED' &&
-      !leave.second_approved_at
+      leave.secondApproverId === approverId &&
+      leave.firstApprovalStatus === 'APPROVED' &&
+      !leave.secondApprovedAt
     ) {
-      updateData.second_approver_id = approverId;
-      updateData.second_approved_at = new Date();
+      updateData.secondApproverId = approverId;
+      updateData.secondApprovedAt = new Date();
       updateData.second_approval_status = dto.approvalStatus;
 
       if (dto.approvalStatus === 'REJECTED') {
@@ -178,7 +179,7 @@ export class LeaveService {
       throw new NotFoundException(`Leave request ${leaveId} not found`);
     }
 
-    if (leave.admin_id !== adminId) {
+    if (leave.adminId !== adminId) {
       throw new ForbiddenException('You can only cancel your own leave requests');
     }
 
@@ -194,8 +195,8 @@ export class LeaveService {
       where: { id: leaveId },
       data: {
         status: LeaveStatus.CANCELLED,
-        cancelled_at: new Date(),
-        cancellation_reason: dto.cancellationReason,
+        cancelledAt: new Date(),
+        cancellationReason: dto.cancellationReason,
       },
     });
 
@@ -223,11 +224,11 @@ export class LeaveService {
     const where: any = {};
 
     if (query.adminId) {
-      where.admin_id = query.adminId;
+      where.adminId = query.adminId;
     }
 
     if (query.leaveType) {
-      where.leave_type = query.leaveType;
+      where.leaveType = query.leaveType;
     }
 
     if (query.status) {
@@ -251,7 +252,7 @@ export class LeaveService {
         where,
         skip,
         take: query.limit,
-        orderBy: { created_at: 'desc' },
+        orderBy: { createdAt: 'desc' },
       }),
       this.prisma.adminLeave.count({ where }),
     ]);
@@ -266,9 +267,9 @@ export class LeaveService {
     const leaves = await this.prisma.adminLeave.findMany({
       where: {
         status: LeaveStatus.PENDING,
-        OR: [{ first_approver_id: approverId }, { second_approver_id: approverId }],
+        OR: [{ firstApproverId: approverId }, { secondApproverId: approverId }],
       },
-      orderBy: { submitted_at: 'asc' },
+      orderBy: { submittedAt: 'asc' },
     });
 
     return leaves.map((l) => this.mapToResponse(l));
@@ -279,8 +280,8 @@ export class LeaveService {
 
     const balance = await this.prisma.adminLeaveBalance.findUnique({
       where: {
-        admin_id_year: {
-          admin_id: leave.admin_id,
+        adminId_year: {
+          adminId: leave.adminId,
           year,
         },
       },
@@ -290,27 +291,28 @@ export class LeaveService {
       return;
     }
 
-    const updateData: any = { last_calculated_at: new Date() };
+    const updateData: any = { lastCalculatedAt: new Date() };
+    const days = Number(leave.daysCount);
 
-    switch (leave.leave_type) {
+    switch (leave.leaveType) {
       case LeaveType.ANNUAL:
-        updateData.annual_used = balance.annual_used + leave.days_count;
-        updateData.annual_remaining = balance.annual_remaining - leave.days_count;
+        updateData.annualUsed = Number(balance.annualUsed) + days;
+        updateData.annualRemaining = Number(balance.annualRemaining) - days;
         break;
       case LeaveType.SICK:
-        updateData.sick_used = balance.sick_used + leave.days_count;
-        updateData.sick_remaining = balance.sick_remaining - leave.days_count;
+        updateData.sickUsed = Number(balance.sickUsed) + days;
+        updateData.sickRemaining = Number(balance.sickRemaining) - days;
         break;
       case LeaveType.COMPENSATORY:
-        updateData.compensatory_used = balance.compensatory_used + leave.days_count;
-        updateData.compensatory_remaining = balance.compensatory_remaining - leave.days_count;
+        updateData.compensatoryUsed = Number(balance.compensatoryUsed) + days;
+        updateData.compensatoryRemaining = Number(balance.compensatoryRemaining) - days;
         break;
     }
 
     await this.prisma.adminLeaveBalance.update({
       where: {
-        admin_id_year: {
-          admin_id: leave.admin_id,
+        adminId_year: {
+          adminId: leave.adminId,
           year,
         },
       },
@@ -323,8 +325,8 @@ export class LeaveService {
 
     const balance = await this.prisma.adminLeaveBalance.findUnique({
       where: {
-        admin_id_year: {
-          admin_id: leave.admin_id,
+        adminId_year: {
+          adminId: leave.adminId,
           year,
         },
       },
@@ -334,27 +336,28 @@ export class LeaveService {
       return;
     }
 
-    const updateData: any = { last_calculated_at: new Date() };
+    const updateData: any = { lastCalculatedAt: new Date() };
+    const days = Number(leave.daysCount);
 
-    switch (leave.leave_type) {
+    switch (leave.leaveType) {
       case LeaveType.ANNUAL:
-        updateData.annual_used = balance.annual_used - leave.days_count;
-        updateData.annual_remaining = balance.annual_remaining + leave.days_count;
+        updateData.annualUsed = Number(balance.annualUsed) - days;
+        updateData.annualRemaining = Number(balance.annualRemaining) + days;
         break;
       case LeaveType.SICK:
-        updateData.sick_used = balance.sick_used - leave.days_count;
-        updateData.sick_remaining = balance.sick_remaining + leave.days_count;
+        updateData.sickUsed = Number(balance.sickUsed) - days;
+        updateData.sickRemaining = Number(balance.sickRemaining) + days;
         break;
       case LeaveType.COMPENSATORY:
-        updateData.compensatory_used = balance.compensatory_used - leave.days_count;
-        updateData.compensatory_remaining = balance.compensatory_remaining + leave.days_count;
+        updateData.compensatoryUsed = Number(balance.compensatoryUsed) - days;
+        updateData.compensatoryRemaining = Number(balance.compensatoryRemaining) + days;
         break;
     }
 
     await this.prisma.adminLeaveBalance.update({
       where: {
-        admin_id_year: {
-          admin_id: leave.admin_id,
+        adminId_year: {
+          adminId: leave.adminId,
           year,
         },
       },
@@ -365,21 +368,21 @@ export class LeaveService {
   private mapToResponse(leave: any): LeaveResponseDto {
     return {
       id: leave.id,
-      adminId: leave.admin_id,
-      leaveType: leave.leave_type as LeaveType,
+      adminId: leave.adminId,
+      leaveType: leave.leaveType as LeaveType,
       startDate: leave.start_date,
       endDate: leave.end_date,
       startHalf: leave.start_half,
       endHalf: leave.end_half,
-      daysCount: parseFloat(leave.days_count || '0'),
+      daysCount: parseFloat(leave.daysCount || '0'),
       status: leave.status as LeaveStatus,
       requestedAt: leave.requested_at,
       submittedAt: leave.submitted_at,
-      firstApproverId: leave.first_approver_id,
-      firstApprovedAt: leave.first_approved_at,
-      firstApprovalStatus: leave.first_approval_status,
-      secondApproverId: leave.second_approver_id,
-      secondApprovedAt: leave.second_approved_at,
+      firstApproverId: leave.firstApproverId,
+      firstApprovedAt: leave.firstApprovedAt,
+      firstApprovalStatus: leave.firstApprovalStatus,
+      secondApproverId: leave.secondApproverId,
+      secondApprovedAt: leave.secondApprovedAt,
       secondApprovalStatus: leave.second_approval_status,
       finalApprovedBy: leave.final_approved_by,
       finalApprovedAt: leave.final_approved_at,

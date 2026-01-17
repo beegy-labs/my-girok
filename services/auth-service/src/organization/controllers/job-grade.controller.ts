@@ -12,7 +12,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { AdminAuthGuard } from '../../admin/guards/admin-auth.guard';
 import { JobGradeService } from '../services/job-grade.service';
 import {
   CreateJobGradeDto,
@@ -23,7 +23,7 @@ import {
 
 @ApiTags('Organization - Job Grades')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(AdminAuthGuard)
 @Controller('organization/job-grades')
 export class JobGradeController {
   constructor(private readonly jobGradeService: JobGradeService) {}

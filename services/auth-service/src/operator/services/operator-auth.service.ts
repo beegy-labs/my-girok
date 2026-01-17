@@ -58,7 +58,7 @@ export class OperatorAuthService {
     const operators = await this.prisma.$queryRaw<OperatorWithRelations[]>`
       SELECT
         o.id, o.email, o.password, o.name,
-        o.admin_id as "adminId", o.service_id as "serviceId",
+        o.adminId as "adminId", o.service_id as "serviceId",
         s.slug as "serviceSlug", s.name as "serviceName",
         o.country_code as "countryCode", o.is_active as "isActive",
         o.last_login_at as "lastLoginAt", o.created_at as "createdAt"
@@ -120,7 +120,7 @@ export class OperatorAuthService {
     // Find valid invitation
     const invitations = await this.prisma.$queryRaw<InvitationRow[]>`
       SELECT
-        i.id, i.admin_id as "adminId", i.service_id as "serviceId",
+        i.id, i.adminId as "adminId", i.service_id as "serviceId",
         s.slug as "serviceSlug", i.country_code as "countryCode",
         i.email, i.name, i.permissions
       FROM operator_invitations i
@@ -177,7 +177,7 @@ export class OperatorAuthService {
       const fullOperators = await tx.$queryRaw<OperatorWithRelations[]>`
         SELECT
           o.id, o.email, o.password, o.name,
-          o.admin_id as "adminId", o.service_id as "serviceId",
+          o.adminId as "adminId", o.service_id as "serviceId",
           s.slug as "serviceSlug", s.name as "serviceName",
           o.country_code as "countryCode", o.is_active as "isActive",
           o.last_login_at as "lastLoginAt", o.created_at as "createdAt"
@@ -241,7 +241,7 @@ export class OperatorAuthService {
       const operators = await this.prisma.$queryRaw<OperatorWithRelations[]>`
         SELECT
           o.id, o.email, o.password, o.name,
-          o.admin_id as "adminId", o.service_id as "serviceId",
+          o.adminId as "adminId", o.service_id as "serviceId",
           s.slug as "serviceSlug", s.name as "serviceName",
           o.country_code as "countryCode", o.is_active as "isActive",
           o.last_login_at as "lastLoginAt", o.created_at as "createdAt"
@@ -299,7 +299,7 @@ export class OperatorAuthService {
     const operators = await this.prisma.$queryRaw<OperatorWithRelations[]>`
       SELECT
         o.id, o.email, o.password, o.name,
-        o.admin_id as "adminId", o.service_id as "serviceId",
+        o.adminId as "adminId", o.service_id as "serviceId",
         s.slug as "serviceSlug", s.name as "serviceName",
         o.country_code as "countryCode", o.is_active as "isActive",
         o.last_login_at as "lastLoginAt", o.created_at as "createdAt"

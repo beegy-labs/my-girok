@@ -20,23 +20,21 @@ import {
 } from '../dto';
 import { EmployeeType, EmploymentStatus, JobFamily, ProbationStatus } from '@my-girok/types';
 
-const adminWithRelations = Prisma.validator<Prisma.adminsArgs>()({
-  include: {
-    roles: true,
-    tenants: true,
-    admins: {
-      // manager
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        job_title: true,
-      },
+const adminInclude = {
+  roles: true,
+  tenants: true,
+  admins: {
+    // manager
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      job_title: true,
     },
   },
-});
+} satisfies Prisma.adminsInclude;
 
-type AdminWithRelations = Prisma.adminsGetPayload<typeof adminWithRelations>;
+type AdminWithRelations = Prisma.adminsGetPayload<{ include: typeof adminInclude }>;
 
 @Injectable()
 export class AdminProfileService {
@@ -83,7 +81,7 @@ export class AdminProfileService {
       employeeNumber: admin.employee_number,
       employeeType: admin.employee_type as EmployeeType,
       employmentStatus: admin.employment_status as EmploymentStatus,
-      lifecycleStatus: admin.lifecycle_status,
+      lifecycleStatus: admin.lifecycle_status as any,
 
       // Job & Organization
       jobGradeId: admin.job_grade_id,
@@ -168,7 +166,7 @@ export class AdminProfileService {
   async getAdminDetail(adminId: string): Promise<AdminDetailResponse> {
     const admin = await this.prisma.admins.findUnique({
       where: { id: adminId },
-      ...adminWithRelations,
+      include: adminInclude,
     });
 
     if (!admin) {
@@ -212,7 +210,7 @@ export class AdminProfileService {
         profile_url: dto.profileUrl,
         profile_photo_url: dto.profilePhotoUrl,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
 
     return this.mapAdminToDetailResponse(updatedAdmin);
@@ -233,7 +231,7 @@ export class AdminProfileService {
         employment_status: dto.employmentStatus,
         lifecycle_status: dto.lifecycleStatus,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.mapAdminToDetailResponse(updatedAdmin);
   }
@@ -259,7 +257,7 @@ export class AdminProfileService {
         dotted_line_manager_id: dto.dottedLineManagerId,
         direct_reports_count: dto.directReportsCount,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.mapAdminToDetailResponse(updatedAdmin);
   }
@@ -280,7 +278,7 @@ export class AdminProfileService {
           ? new Date(dto.partnerContractEndDate)
           : undefined,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.mapAdminToDetailResponse(updatedAdmin);
   }
@@ -301,7 +299,7 @@ export class AdminProfileService {
         probation_end_date: dto.probationEndDate ? new Date(dto.probationEndDate) : undefined,
         probation_status: dto.probationStatus,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.mapAdminToDetailResponse(updatedAdmin);
   }
@@ -317,7 +315,7 @@ export class AdminProfileService {
         last_promotion_date: dto.lastPromotionDate ? new Date(dto.lastPromotionDate) : undefined,
         last_transfer_date: dto.lastTransferDate ? new Date(dto.lastTransferDate) : undefined,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.mapAdminToDetailResponse(updatedAdmin);
   }
@@ -336,7 +334,7 @@ export class AdminProfileService {
         eligible_for_rehire: dto.eligibleForRehire,
         exit_interview_completed: dto.exitInterviewCompleted,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.mapAdminToDetailResponse(updatedAdmin);
   }
@@ -358,7 +356,7 @@ export class AdminProfileService {
         work_phone: dto.workPhone,
         emergency_contact: dto.emergencyContact,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.mapAdminToDetailResponse(updatedAdmin);
   }
@@ -422,7 +420,7 @@ export class AdminProfileService {
     const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data,
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.mapAdminToDetailResponse(updatedAdmin);
   }

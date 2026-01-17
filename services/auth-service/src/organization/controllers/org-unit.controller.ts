@@ -12,7 +12,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { AdminAuthGuard } from '../../admin/guards/admin-auth.guard';
 import { OrgUnitService } from '../services/org-unit.service';
 import {
   CreateOrgUnitDto,
@@ -24,7 +24,7 @@ import {
 
 @ApiTags('Organization - Organization Units')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(AdminAuthGuard)
 @Controller('organization/org-units')
 export class OrgUnitController {
   constructor(private readonly orgUnitService: OrgUnitService) {}

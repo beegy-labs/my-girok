@@ -347,13 +347,13 @@ export class ServiceTesterService {
     const testers = await this.prisma.$queryRaw<TesterAdminRow[]>(
       Prisma.sql`
       SELECT
-        t.id, t.service_id as "serviceId", t.admin_id as "adminId",
+        t.id, t.service_id as "serviceId", t.adminId as "adminId",
         a.email as "adminEmail", a.name as "adminName",
         t.bypass_all as "bypassAll", t.bypass_domain as "bypassDomain",
         t.note, t.expires_at as "expiresAt",
         t.created_at as "createdAt", t.created_by as "createdBy"
       FROM service_tester_admins t
-      JOIN admins a ON a.id = t.admin_id
+      JOIN admins a ON a.id = t.adminId
       WHERE t.service_id = ${serviceId}::uuid
       ORDER BY t.created_at DESC
     `,
@@ -480,11 +480,11 @@ export class ServiceTesterService {
     const testers = await this.prisma.$queryRaw<TesterAdminRow[]>(
       Prisma.sql`
       SELECT
-        t.id, t.service_id as "serviceId", t.admin_id as "adminId",
+        t.id, t.service_id as "serviceId", t.adminId as "adminId",
         a.email as "adminEmail", a.name as "adminName"
       FROM service_tester_admins t
-      JOIN admins a ON a.id = t.admin_id
-      WHERE t.service_id = ${serviceId}::uuid AND t.admin_id = ${adminId}::uuid
+      JOIN admins a ON a.id = t.adminId
+      WHERE t.service_id = ${serviceId}::uuid AND t.adminId = ${adminId}::uuid
       LIMIT 1
     `,
     );

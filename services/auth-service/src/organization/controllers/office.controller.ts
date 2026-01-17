@@ -12,7 +12,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { AdminAuthGuard } from '../../admin/guards/admin-auth.guard';
 import { OfficeService } from '../services/office.service';
 import {
   CreateOfficeDto,
@@ -23,7 +23,7 @@ import {
 
 @ApiTags('Organization - Offices')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(AdminAuthGuard)
 @Controller('organization/offices')
 export class OfficeController {
   constructor(private readonly officeService: OfficeService) {}

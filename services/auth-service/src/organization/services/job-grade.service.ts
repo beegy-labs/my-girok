@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/auth-client';
+import { Prisma, job_family } from '../../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateJobGradeDto,
@@ -18,7 +18,7 @@ export class JobGradeService {
     this.logger.log(`Creating job grade: ${dto.code}`);
 
     // Check if code already exists
-    const existing = await this.prisma.jobGrade.findUnique({
+    const existing = await this.prisma.job_grades.findUnique({
       where: { code: dto.code },
     });
 
@@ -26,15 +26,13 @@ export class JobGradeService {
       throw new ConflictException(`Job grade with code ${dto.code} already exists`);
     }
 
-    const jobGrade = await this.prisma.jobGrade.create({
+    const jobGrade = await this.prisma.job_grades.create({
       data: {
         code: dto.code,
         name: dto.name,
-        job_family: dto.jobFamily,
+        name_en: dto.name, // TODO: Add nameEn field to DTO
+        job_family: dto.jobFamily as job_family,
         level: dto.level,
-        track: dto.track,
-        description: dto.description,
-        is_active: dto.isActive ?? true,
       },
     });
 
@@ -44,10 +42,10 @@ export class JobGradeService {
   async findAll(query?: JobGradeListQueryDto): Promise<JobGradeResponseDto[]> {
     this.logger.log('Fetching all job grades');
 
-    const where: Prisma.JobGradeWhereInput = {};
+    const where: Prisma.job_gradesWhereInput = {};
 
     if (query?.jobFamily) {
-      where.job_family = query.jobFamily;
+      where.job_family = query.jobFamily as job_family;
     }
 
     if (query?.track) {
@@ -58,7 +56,7 @@ export class JobGradeService {
       where.is_active = query.isActive;
     }
 
-    const jobGrades = await this.prisma.jobGrade.findMany({
+    const jobGrades = await this.prisma.job_grades.findMany({
       where,
       orderBy: [{ level: 'asc' }, { track: 'asc' }],
     });
@@ -69,7 +67,7 @@ export class JobGradeService {
   async findOne(id: string): Promise<JobGradeResponseDto> {
     this.logger.log(`Fetching job grade: ${id}`);
 
-    const jobGrade = await this.prisma.jobGrade.findUnique({
+    const jobGrade = await this.prisma.job_grades.findUnique({
       where: { id },
     });
 
@@ -83,7 +81,7 @@ export class JobGradeService {
   async findByCode(code: string): Promise<JobGradeResponseDto> {
     this.logger.log(`Fetching job grade by code: ${code}`);
 
-    const jobGrade = await this.prisma.jobGrade.findUnique({
+    const jobGrade = await this.prisma.job_grades.findUnique({
       where: { code },
     });
 
@@ -100,7 +98,7 @@ export class JobGradeService {
     // Check if exists
     await this.findOne(id);
 
-    const jobGrade = await this.prisma.jobGrade.update({
+    const jobGrade = await this.prisma.job_grades.update({
       where: { id },
       data: {
         name: dto.name,
@@ -118,7 +116,7 @@ export class JobGradeService {
     // Check if exists
     await this.findOne(id);
 
-    await this.prisma.jobGrade.delete({
+    await this.prisma.job_grades.delete({
       where: { id },
     });
 
