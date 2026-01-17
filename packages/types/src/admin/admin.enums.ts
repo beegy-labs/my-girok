@@ -158,3 +158,69 @@ export enum ProbationStatus {
   EXTENDED = 'EXTENDED',
   FAILED = 'FAILED',
 }
+
+/**
+ * HR Backend Enums (Phase 3)
+ * Attendance & Leave Management
+ */
+
+// Attendance Status
+export enum AttendanceStatus {
+  PRESENT = 'PRESENT',
+  ABSENT = 'ABSENT',
+  LATE = 'LATE',
+  HALF_DAY = 'HALF_DAY',
+  REMOTE = 'REMOTE',
+  ON_LEAVE = 'ON_LEAVE',
+  BUSINESS_TRIP = 'BUSINESS_TRIP',
+  TRAINING = 'TRAINING',
+  SICK = 'SICK',
+  HOLIDAY = 'HOLIDAY',
+}
+
+// Work Type (where employee worked)
+export enum WorkType {
+  OFFICE = 'OFFICE',
+  REMOTE = 'REMOTE',
+  HYBRID = 'HYBRID',
+  CLIENT_SITE = 'CLIENT_SITE',
+  FIELD = 'FIELD',
+  MOBILE = 'MOBILE',
+}
+
+// Leave Type
+export enum LeaveType {
+  ANNUAL = 'ANNUAL',
+  SICK = 'SICK',
+  PARENTAL = 'PARENTAL',
+  MATERNITY = 'MATERNITY',
+  PATERNITY = 'PATERNITY',
+  UNPAID = 'UNPAID',
+  COMPENSATORY = 'COMPENSATORY',
+  STUDY = 'STUDY',
+  BEREAVEMENT = 'BEREAVEMENT',
+  MARRIAGE = 'MARRIAGE',
+  MILITARY = 'MILITARY',
+  SABBATICAL = 'SABBATICAL',
+  SPECIAL = 'SPECIAL',
+}
+
+// Leave Status
+export enum LeaveStatus {
+  DRAFT = 'DRAFT',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  CANCELLED = 'CANCELLED',
+  COMPLETED = 'COMPLETED',
+  WITHDRAWN = 'WITHDRAWN',
+}
+
+// Work Schedule Type
+export enum ScheduleType {
+  STANDARD = 'STANDARD',
+  SHIFT = 'SHIFT',
+  FLEXIBLE = 'FLEXIBLE',
+  COMPRESSED = 'COMPRESSED',
+  ROTATING = 'ROTATING',
+}

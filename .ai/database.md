@@ -1,6 +1,6 @@
 # Database Quick Reference
 
-> goose (SSOT) + Prisma (client) + ArgoCD | **Last Updated**: 2026-01-06
+> goose (MIT, zero cost) + Prisma (TypeScript types) + ArgoCD | **Last Updated**: 2026-01-17
 
 ## Databases
 
@@ -49,6 +49,7 @@ DROP TABLE IF EXISTS features;
 
 **SSOT**:
 
+- **Migration Strategy**: `docs/llm/policies/database-migration-strategy.md` (2026 decision: goose vs Atlas/Liquibase)
 - Policy: `docs/llm/policies/database.md`
 - Migration Guide: `docs/llm/guides/db-migration.md`
 - **Troubleshooting**: `docs/llm/guides/migration-troubleshooting.md`

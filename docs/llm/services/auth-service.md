@@ -1305,6 +1305,235 @@ Tests use Vitest mocks for:
 - `floor.service.spec.ts`: 7 tests
 - `partner-company.service.spec.ts`: 9 tests
 
+### 4.6. Attendance Management (Phase 3)
+
+Manage admin clock-in/out, work schedules, and overtime.
+
+#### POST /attendance/clock-in
+
+Clock in for the day.
+
+**Request**: `ClockInDto`
+
+```typescript
+{
+  date: Date;
+  workType?: 'OFFICE' | 'REMOTE' | 'HYBRID' | 'FIELD' | 'BUSINESS_TRIP' | 'CLIENT_SITE' | 'TRAINING';
+  officeId?: string;
+  remoteLocation?: string;
+  location?: { lat: number; lng: number; address?: string };
+  notes?: string;
+}
+```
+
+**Response**: `AttendanceResponseDto`
+
+#### POST /attendance/clock-out
+
+Clock out for the day.
+
+**Request**: `ClockOutDto`
+
+```typescript
+{
+  date: Date;
+  overtimeMinutes?: number;
+  overtimeReason?: string;
+  location?: { lat: number; lng: number; address?: string };
+  notes?: string;
+}
+```
+
+#### GET /attendance/me
+
+Get my attendance records with pagination.
+
+**Query**: `AdminAttendanceQueryDto` (page, limit, status, workType, startDate, endDate)
+
+#### GET /attendance/me/stats
+
+Get my attendance statistics.
+
+**Query**: `startDate`, `endDate`
+
+**Response**: `AttendanceStatsDto` (totalDays, presentDays, absentDays, lateDays, remoteDays, totalOvertimeMinutes, averageWorkMinutes)
+
+#### PATCH /attendance/:id/approve-overtime
+
+Approve overtime request (manager).
+
+**Request**: `ApproveOvertimeDto`
+
+```typescript
+{
+  approved: boolean;
+  managerNotes?: string;
+}
+```
+
+#### Work Schedule APIs
+
+- `POST /work-schedules`: Create work schedule
+- `GET /work-schedules/me`: Get my work schedules
+- `GET /work-schedules/me/active`: Get my active schedule
+- `GET /work-schedules/:id`: Get schedule by ID
+- `PATCH /work-schedules/:id`: Update schedule
+- `DELETE /work-schedules/:id`: Delete schedule
+
+### 4.7. Leave Management (Phase 3)
+
+Manage leave requests, approvals, and balances.
+
+#### POST /leaves
+
+Create a new leave request (draft).
+
+**Request**: `CreateLeaveDto`
+
+```typescript
+{
+  leaveType: 'ANNUAL' | 'SICK' | 'PARENTAL' | 'MATERNITY' | 'PATERNITY' | 'BEREAVEMENT' | 'MARRIAGE' | 'UNPAID' | 'COMPENSATORY' | 'PUBLIC_HOLIDAY' | 'SABBATICAL' | 'JURY_DUTY' | 'MILITARY' | 'STUDY' | 'PERSONAL' | 'EMERGENCY';
+  startDate: Date;
+  endDate: Date;
+  startHalf?: 'AM' | 'PM';
+  endHalf?: 'AM' | 'PM';
+  daysCount: number;  // 0.5 for half day
+  reason?: string;
+  emergencyContact?: string;
+  handoverTo?: string;
+  handoverNotes?: string;
+  attachmentUrls?: string[];
+}
+```
+
+#### POST /leaves/:id/submit
+
+Submit a leave request for approval.
+
+**Request**: `SubmitLeaveDto`
+
+```typescript
+{
+  firstApproverId?: string;
+  secondApproverId?: string;
+}
+```
+
+#### POST /leaves/:id/approve
+
+Approve or reject a leave request (manager).
+
+**Request**: `ApproveLeaveDto`
+
+```typescript
+{
+  approvalStatus: 'APPROVED' | 'REJECTED';
+  rejectionReason?: string;
+}
+```
+
+#### POST /leaves/:id/cancel
+
+Cancel a leave request.
+
+**Request**: `CancelLeaveDto`
+
+```typescript
+{
+  cancellationReason: string;
+}
+```
+
+#### GET /leaves/me
+
+Get my leave requests with pagination.
+
+#### GET /leaves/pending-approvals
+
+Get pending leave approvals for me (manager).
+
+#### Leave Balance APIs
+
+- `POST /leave-balances`: Create leave balance (HR)
+- `GET /leave-balances/me`: Get my current leave balance
+- `GET /leave-balances/me/:year`: Get my balance for specific year
+- `GET /leave-balances/:adminId/:year`: Get admin balance (HR/Manager)
+- `PATCH /leave-balances/:adminId/:year/adjust`: Adjust balance (HR)
+- `POST /leave-balances/:adminId/:year/recalculate`: Recalculate based on approved leaves
+- `POST /leave-balances/:adminId/:year/initialize`: Initialize for new year
+
+## 12. Attendance Module Implementation
+
+### Attendance Service
+
+**Location**: `src/attendance/services/attendance.service.ts`
+
+**Methods**: `clockIn`, `clockOut`, `approveOvertime`, `getAttendanceByDate`, `listAttendances`, `getStats`
+
+**Features**:
+
+- Conflict detection (already clocked in/out)
+- Automatic work minutes calculation
+- Overtime request tracking
+- IP address and location logging
+- Statistics aggregation
+
+### Work Schedule Service
+
+**Location**: `src/attendance/services/work-schedule.service.ts`
+
+**Methods**: `create`, `findByAdmin`, `findActiveByAdmin`, `findOne`, `update`, `remove`
+
+**Features**:
+
+- Auto-deactivate previous schedules
+- Support for Standard, Shift, and Flexible schedules
+- Configurable weekly hours and core hours
+
+### Tests (Attendance Module)
+
+**Coverage**: 80%+ across all services
+
+- `attendance.service.spec.ts`: 45 tests
+- `work-schedule.service.spec.ts`: 18 tests
+
+## 13. Leave Module Implementation
+
+### Leave Service
+
+**Location**: `src/leave/services/leave.service.ts`
+
+**Methods**: `create`, `submit`, `approve`, `cancel`, `findOne`, `list`, `getPendingApprovals`
+
+**Features**:
+
+- Overlap detection (prevents double-booking)
+- Multi-level approval workflow (first + second approver)
+- Automatic leave balance deduction on approval
+- Balance restoration on cancellation
+- Leave status transitions (Draft → Pending → Approved/Rejected/Cancelled)
+
+### Leave Balance Service
+
+**Location**: `src/leave/services/leave-balance.service.ts`
+
+**Methods**: `create`, `getBalance`, `getCurrentBalance`, `adjust`, `recalculate`, `initializeForNewYear`
+
+**Features**:
+
+- Annual, sick, compensatory, special leave tracking
+- Carryover from previous year (max 5 days)
+- Tenure bonus calculation (3/5/10 years)
+- Manual adjustment with audit trail
+- Automatic recalculation based on approved leaves
+
+### Tests (Leave Module)
+
+**Coverage**: 80%+ across all services
+
+- `leave.service.spec.ts`: 42 tests
+- `leave-balance.service.spec.ts`: 24 tests
+
 ### Shared Types
 
 - `packages/types/src/admin/admin.enums.ts`: 11 admin enum types
@@ -1313,15 +1542,27 @@ Tests use Vitest mocks for:
 ### Migrations
 
 - `migrations/20260116000006_extend_admins_phase2_core.sql`: Phase 2 schema (83 fields)
+- `migrations/20260117000007_add_attendance.sql`: Phase 3 attendance tables (admin_attendances, admin_work_schedules)
+- `migrations/20260117000008_add_leave_management.sql`: Phase 3 leave tables (admin_leaves, admin_leave_balances, leave_policies, public_holidays)
 
 ---
 
-**Version**: Phase 2 (2026-01-16)
-**Last Updated**: Organization Management APIs implemented (7 entities, 41 endpoints, 73 tests)
+**Version**: Phase 3 (2026-01-17)
+**Last Updated**: HR Backend APIs implemented (Attendance + Leave Management)
 **Status**:
 
 - Admin Profile & Enterprise APIs: Complete (26 tests, 100% passing)
 - Organization APIs: Complete (73 tests, 84.22% coverage, 100% passing)
-- Total: 1,123 tests passing across entire auth-service
+- **Attendance APIs: Complete (63 tests, 80%+ coverage)** ✨ NEW
+- **Leave Management APIs: Complete (66 tests, 80%+ coverage)** ✨ NEW
+- Total: 1,252+ tests passing across entire auth-service
+
+**Phase 3 Highlights**:
+
+- 6 new tables: admin_attendances, admin_work_schedules, admin_leaves, admin_leave_balances, leave_policies, public_holidays
+- 30+ new endpoints for attendance and leave management
+- 129 new tests (attendance + leave)
+- Comprehensive approval workflows with multi-level authorization
+- Automatic balance calculation and carryover management
 
 _This document is the Single Source of Truth for the auth-service. For a quick summary, see `.ai/services/auth-service.md`._
