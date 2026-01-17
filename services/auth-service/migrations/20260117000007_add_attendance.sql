@@ -3,7 +3,7 @@
 -- Attendance tracking records
 CREATE TABLE admin_attendances (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  admin_id TEXT NOT NULL,
+  admin_id UUID NOT NULL,
 
   -- Date
   date DATE NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE admin_attendances (
 -- Work schedule (Shift)
 CREATE TABLE admin_work_schedules (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  admin_id TEXT NOT NULL,
+  admin_id UUID NOT NULL,
 
   -- Base schedule
   schedule_type TEXT DEFAULT 'STANDARD',  -- STANDARD, SHIFT, FLEXIBLE

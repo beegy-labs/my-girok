@@ -7,8 +7,8 @@
 -- 권한 위임 (Delegations)
 CREATE TABLE admin_delegations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  delegator_id TEXT NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
-  delegate_id TEXT NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+  delegator_id UUID NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+  delegate_id UUID NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
 
   -- 위임 유형
   delegation_type delegation_type NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE admin_delegations (
 
   -- 승인
   requires_approval BOOLEAN DEFAULT TRUE,
-  approved_by TEXT REFERENCES admins(id),
+  approved_by UUID REFERENCES admins(id),
   approved_at TIMESTAMPTZ(6),
   rejection_reason TEXT,
 
@@ -45,7 +45,7 @@ CREATE TABLE admin_delegations (
 
   -- 취소
   revoked_at TIMESTAMPTZ(6),
-  revoked_by TEXT REFERENCES admins(id),
+  revoked_by UUID REFERENCES admins(id),
   revocation_reason TEXT,
 
   -- 메타
@@ -62,7 +62,7 @@ CREATE TABLE admin_delegations (
 CREATE TABLE admin_delegation_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
   delegation_id UUID NOT NULL REFERENCES admin_delegations(id) ON DELETE CASCADE,
-  delegate_id TEXT NOT NULL REFERENCES admins(id),
+  delegate_id UUID NOT NULL REFERENCES admins(id),
 
   -- 사용 내역
   action TEXT NOT NULL,

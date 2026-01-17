@@ -7,7 +7,7 @@
 -- 해외 파견 (Global Assignments)
 CREATE TABLE global_assignments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  admin_id TEXT NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+  admin_id UUID NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
 
   -- 파견 유형
   assignment_type assignment_type NOT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE global_assignments (
   spouse_work_support BOOLEAN DEFAULT FALSE,
 
   -- 승인
-  approved_by TEXT REFERENCES admins(id),
+  approved_by UUID REFERENCES admins(id),
   approved_at TIMESTAMPTZ(6),
 
   -- 메타
@@ -67,7 +67,7 @@ CREATE TABLE global_assignments (
 -- 비자/워크퍼밋 (Work Authorizations)
 CREATE TABLE work_authorizations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  admin_id TEXT NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+  admin_id UUID NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
   global_assignment_id UUID REFERENCES global_assignments(id),
 
   -- 국가

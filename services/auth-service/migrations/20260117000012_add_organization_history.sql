@@ -6,7 +6,7 @@
 
 CREATE TABLE admin_organization_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  admin_id TEXT NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+  admin_id UUID NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
 
   -- 변경 유형
   change_type TEXT NOT NULL,              -- HIRE, PROMOTION, TRANSFER, TITLE_CHANGE, TERMINATION, DEMOTION, LATERAL_MOVE
@@ -15,7 +15,7 @@ CREATE TABLE admin_organization_history (
   previous_job_grade_id UUID REFERENCES job_grades(id),
   previous_job_title TEXT,
   previous_org_unit_id UUID REFERENCES organization_units(id),
-  previous_manager_id TEXT REFERENCES admins(id),
+  previous_manager_id UUID REFERENCES admins(id),
   previous_legal_entity_id UUID REFERENCES legal_entities(id),
   previous_office_id UUID REFERENCES offices(id),
   previous_cost_center TEXT,
@@ -24,7 +24,7 @@ CREATE TABLE admin_organization_history (
   new_job_grade_id UUID REFERENCES job_grades(id),
   new_job_title TEXT,
   new_org_unit_id UUID REFERENCES organization_units(id),
-  new_manager_id TEXT REFERENCES admins(id),
+  new_manager_id UUID REFERENCES admins(id),
   new_legal_entity_id UUID REFERENCES legal_entities(id),
   new_office_id UUID REFERENCES offices(id),
   new_cost_center TEXT,
@@ -35,8 +35,8 @@ CREATE TABLE admin_organization_history (
   notes TEXT,
 
   -- 승인
-  requested_by TEXT REFERENCES admins(id),
-  approved_by TEXT REFERENCES admins(id),
+  requested_by UUID REFERENCES admins(id),
+  approved_by UUID REFERENCES admins(id),
   approved_at TIMESTAMPTZ(6),
 
   created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()

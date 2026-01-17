@@ -3,7 +3,7 @@
 -- Leave request records
 CREATE TABLE admin_leaves (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  admin_id TEXT NOT NULL,
+  admin_id UUID NOT NULL,
 
   -- Leave type
   leave_type leave_type NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE admin_leaves (
 -- Leave balance tracking
 CREATE TABLE admin_leave_balances (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  admin_id TEXT NOT NULL,
+  admin_id UUID NOT NULL,
   year INT NOT NULL,
 
   -- Annual Leave
