@@ -132,8 +132,8 @@ describe('BFF OAuth Flow Integration', () => {
 
   describe('OAuth Initiation with Provider Status Check', () => {
     it('should initiate OAuth for enabled provider', async () => {
-      // Mock provider status check
-      vi.spyOn(httpService, 'get').mockReturnValue(
+      // Mock provider status check - use mockImplementation for reusability
+      vi.spyOn(httpService, 'get').mockImplementation(() =>
         of({
           data: { provider: AuthProvider.GOOGLE, enabled: true },
           status: 200,
@@ -305,8 +305,8 @@ describe('BFF OAuth Flow Integration', () => {
 
   describe('OAuth State Management', () => {
     it('should include redirectUri in OAuth state', async () => {
-      // Mock provider enabled check
-      vi.spyOn(httpService, 'get').mockReturnValue(
+      // Mock provider enabled check - use mockImplementation for reusability
+      vi.spyOn(httpService, 'get').mockImplementation(() =>
         of({
           data: { enabled: true },
           status: 200,
@@ -337,8 +337,8 @@ describe('BFF OAuth Flow Integration', () => {
     });
 
     it('should generate unique state for each OAuth request', async () => {
-      // Mock provider enabled check
-      vi.spyOn(httpService, 'get').mockReturnValue(
+      // Mock provider enabled check - use mockImplementation for multiple calls
+      vi.spyOn(httpService, 'get').mockImplementation(() =>
         of({
           data: { enabled: true },
           status: 200,
@@ -370,8 +370,8 @@ describe('BFF OAuth Flow Integration', () => {
 
   describe('Provider-Specific Configuration', () => {
     it('should use correct scope for Google', async () => {
-      // Mock provider enabled check
-      vi.spyOn(httpService, 'get').mockReturnValue(
+      // Mock provider enabled check - use mockImplementation for reusability
+      vi.spyOn(httpService, 'get').mockImplementation(() =>
         of({
           data: { enabled: true },
           status: 200,
@@ -395,8 +395,8 @@ describe('BFF OAuth Flow Integration', () => {
     });
 
     it('should use response_mode=form_post for Apple', async () => {
-      // Mock provider enabled check
-      vi.spyOn(httpService, 'get').mockReturnValue(
+      // Mock provider enabled check - use mockImplementation for reusability
+      vi.spyOn(httpService, 'get').mockImplementation(() =>
         of({
           data: { enabled: true },
           status: 200,
@@ -420,22 +420,23 @@ describe('BFF OAuth Flow Integration', () => {
 
     it('should include response_type=code for all providers', async () => {
       const providers = ['google', 'kakao', 'naver', 'apple'];
+
+      // Mock provider enabled check once - use mockImplementation for multiple calls
+      vi.spyOn(httpService, 'get').mockImplementation(() =>
+        of({
+          data: { enabled: true },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as any,
+        }),
+      );
+
       const mockResponse = {
         redirect: vi.fn(),
       } as any;
 
       for (const provider of providers) {
-        // Mock provider enabled check for each provider
-        vi.spyOn(httpService, 'get').mockReturnValue(
-          of({
-            data: { enabled: true },
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: {} as any,
-          }),
-        );
-
         mockResponse.redirect.mockClear();
         await oauthController.startOAuth(provider, mockResponse);
 
