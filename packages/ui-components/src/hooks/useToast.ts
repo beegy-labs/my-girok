@@ -34,6 +34,5 @@ export function useToast() {
 
   return {
     showToast,
-    toast, // Export the raw toast API for advanced usage
   };
 }

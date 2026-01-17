@@ -24,7 +24,7 @@ import {
  * Uses TanStack Query for data fetching and caching
  */
 export default function OAuthSettingsPage() {
-  const { data: providers, isLoading, isError, error } = useOAuthProviders();
+  const { data: providers = [], isLoading, isError, error } = useOAuthProviders();
   const toggleProvider = useToggleOAuthProvider();
   const updateCredentials = useUpdateOAuthCredentials();
   const refreshProviders = useRefreshOAuthProviders();

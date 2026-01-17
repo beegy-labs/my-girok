@@ -15,18 +15,9 @@ export const oauthQueryKeys = {
  * Uses TanStack Query for automatic caching and refetching
  */
 export function useOAuthProviders() {
-  const { showToast } = useToast();
-
   return useQuery({
     queryKey: oauthQueryKeys.providers(),
     queryFn: () => oauthApi.getAllProviders(),
-    onError: (error: Error) => {
-      showToast({
-        type: 'error',
-        title: 'Failed to load providers',
-        message: error.message || 'Unable to fetch OAuth provider configurations',
-      });
-    },
   });
 }
 
@@ -34,18 +25,9 @@ export function useOAuthProviders() {
  * Hook to fetch a specific OAuth provider configuration
  */
 export function useOAuthProvider(provider: AuthProvider) {
-  const { showToast } = useToast();
-
   return useQuery({
     queryKey: oauthQueryKeys.provider(provider),
     queryFn: () => oauthApi.getProvider(provider),
-    onError: (error: Error) => {
-      showToast({
-        type: 'error',
-        title: 'Failed to load provider',
-        message: error.message || `Unable to fetch ${provider} configuration`,
-      });
-    },
   });
 }
 

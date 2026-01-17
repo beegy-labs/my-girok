@@ -79,11 +79,11 @@ describe('useToast', () => {
     });
   });
 
-  it('should expose raw toast API', () => {
+  it('should expose showToast function', () => {
     const { result } = renderHook(() => useToast());
 
-    expect(result.current.toast).toBeDefined();
-    expect(result.current.toast).toBe(toast);
+    expect(result.current.showToast).toBeDefined();
+    expect(typeof result.current.showToast).toBe('function');
   });
 
   it('should use default duration when not provided', () => {
