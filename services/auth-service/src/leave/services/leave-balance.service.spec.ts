@@ -5,7 +5,7 @@ import { PrismaService } from '../../database/prisma.service';
 
 describe('LeaveBalanceService', () => {
   let service: LeaveBalanceService;
-  let prisma: PrismaService;
+  let _prisma: PrismaService;
 
   const mockPrismaService = {
     adminLeaveBalance: {
@@ -30,7 +30,7 @@ describe('LeaveBalanceService', () => {
     }).compile();
 
     service = module.get<LeaveBalanceService>(LeaveBalanceService);
-    prisma = module.get<PrismaService>(PrismaService);
+    _prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

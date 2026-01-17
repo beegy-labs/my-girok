@@ -1,7 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { AdminId } from '../../common/decorators/admin-id.decorator';
+import { JwtAuthGuard, AdminId } from '@my-girok/nest-common';
 import { WorkScheduleService } from '../services/work-schedule.service';
 import {
   CreateWorkScheduleDto,

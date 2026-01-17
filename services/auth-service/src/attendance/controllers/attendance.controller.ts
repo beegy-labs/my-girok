@@ -1,8 +1,7 @@
 import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { AdminId } from '../../common/decorators/admin-id.decorator';
+import { JwtAuthGuard, AdminId } from '@my-girok/nest-common';
 import { AttendanceService } from '../services/attendance.service';
 import {
   ClockInDto,

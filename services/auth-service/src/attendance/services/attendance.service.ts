@@ -13,9 +13,8 @@ import {
   AdminAttendanceQueryDto,
   AttendanceResponseDto,
   AttendanceStatsDto,
-  AttendanceStatus,
-  WorkType,
 } from '../dto/attendance.dto';
+import { AttendanceStatus, WorkType } from '@my-girok/types';
 
 @Injectable()
 export class AttendanceService {
@@ -25,7 +24,7 @@ export class AttendanceService {
     adminId: string,
     dto: ClockInDto,
     ipAddress?: string,
-    userAgent?: string,
+    _userAgent?: string,
   ): Promise<AttendanceResponseDto> {
     const dateStr = this.formatDate(dto.date);
 
@@ -83,7 +82,7 @@ export class AttendanceService {
     adminId: string,
     dto: ClockOutDto,
     ipAddress?: string,
-    userAgent?: string,
+    _userAgent?: string,
   ): Promise<AttendanceResponseDto> {
     const dateStr = this.formatDate(dto.date);
 

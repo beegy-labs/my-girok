@@ -10,12 +10,7 @@ import {
   Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
-export enum ScheduleType {
-  STANDARD = 'STANDARD',
-  SHIFT = 'SHIFT',
-  FLEXIBLE = 'FLEXIBLE',
-}
+import { ScheduleType } from '@my-girok/types';
 
 export class CreateWorkScheduleDto {
   @ApiProperty()

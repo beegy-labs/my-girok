@@ -11,27 +11,7 @@ import {
   Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
-export enum AttendanceStatus {
-  PRESENT = 'PRESENT',
-  ABSENT = 'ABSENT',
-  LATE = 'LATE',
-  EARLY_LEAVE = 'EARLY_LEAVE',
-  HALF_DAY_AM = 'HALF_DAY_AM',
-  HALF_DAY_PM = 'HALF_DAY_PM',
-  REMOTE = 'REMOTE',
-  BUSINESS_TRIP = 'BUSINESS_TRIP',
-}
-
-export enum WorkType {
-  OFFICE = 'OFFICE',
-  REMOTE = 'REMOTE',
-  HYBRID = 'HYBRID',
-  FIELD = 'FIELD',
-  BUSINESS_TRIP = 'BUSINESS_TRIP',
-  CLIENT_SITE = 'CLIENT_SITE',
-  TRAINING = 'TRAINING',
-}
+import { AttendanceStatus, WorkType } from '@my-girok/types';
 
 export class ClockInDto {
   @ApiProperty({ example: '2026-01-17' })

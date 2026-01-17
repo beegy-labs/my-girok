@@ -6,8 +6,12 @@ import { AuthenticatedAdmin, isAuthenticatedAdmin } from '@my-girok/types';
  * Type-safe alternative to (req.user as any).id
  *
  * @example
+ * ```typescript
  * @Get('profile')
- * getProfile(@AdminId() adminId: string) { ... }
+ * async getProfile(@AdminId() adminId: string) {
+ *   return this.service.getProfile(adminId);
+ * }
+ * ```
  */
 export const AdminId = createParamDecorator((_data: unknown, ctx: ExecutionContext): string => {
   const request = ctx.switchToHttp().getRequest();

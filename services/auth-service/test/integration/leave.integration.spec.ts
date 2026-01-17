@@ -6,7 +6,7 @@ import { LeaveService } from '../../src/leave/services/leave.service';
 import { LeaveBalanceService } from '../../src/leave/services/leave-balance.service';
 import { LeaveController } from '../../src/leave/controllers/leave.controller';
 import { LeaveBalanceController } from '../../src/leave/controllers/leave-balance.controller';
-import { LeaveType, LeaveStatus } from '../../src/leave/dto/leave.dto';
+import { LeaveType, LeaveStatus } from '@my-girok/types';
 
 /**
  * Integration Tests: Leave Management
@@ -30,8 +30,8 @@ describe.skip('Leave Management Integration', () => {
   let prisma: PrismaService;
   let leaveService: LeaveService;
   let leaveBalanceService: LeaveBalanceService;
-  let leaveController: LeaveController;
-  let leaveBalanceController: LeaveBalanceController;
+  let _leaveController: LeaveController;
+  let _leaveBalanceController: LeaveBalanceController;
   const testAdminId = 'test-admin-leave-001';
   const firstApproverId = 'test-approver-001';
   const secondApproverId = 'test-approver-002';
@@ -48,8 +48,8 @@ describe.skip('Leave Management Integration', () => {
     prisma = moduleFixture.get<PrismaService>(PrismaService);
     leaveService = moduleFixture.get<LeaveService>(LeaveService);
     leaveBalanceService = moduleFixture.get<LeaveBalanceService>(LeaveBalanceService);
-    leaveController = moduleFixture.get<LeaveController>(LeaveController);
-    leaveBalanceController = moduleFixture.get<LeaveBalanceController>(LeaveBalanceController);
+    _leaveController = moduleFixture.get<LeaveController>(LeaveController);
+    _leaveBalanceController = moduleFixture.get<LeaveBalanceController>(LeaveBalanceController);
   });
 
   afterAll(async () => {
@@ -298,7 +298,7 @@ describe.skip('Leave Management Integration', () => {
       await leaveService.approve(submitted.id, firstApproverId, { approvalStatus: 'APPROVED' });
 
       // Check balance
-      const balance = await leaveBalanceService.getBalance(testAdminId, 2026);
+      const _balance = await leaveBalanceService.getBalance(testAdminId, 2026);
 
       expect(balance.annualUsed).toBe(3);
       expect(balance.annualRemaining).toBe(12);
@@ -343,7 +343,7 @@ describe.skip('Leave Management Integration', () => {
     });
 
     it('should adjust leave balance manually', async () => {
-      const balance = await leaveBalanceService.create({
+      const _balance = await leaveBalanceService.create({
         adminId: testAdminId,
         year: 2026,
         annualEntitled: 15,

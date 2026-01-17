@@ -1,34 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsDate, IsOptional, IsNumber, IsEnum, IsArray, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
-
-export enum LeaveType {
-  ANNUAL = 'ANNUAL',
-  SICK = 'SICK',
-  PARENTAL = 'PARENTAL',
-  MATERNITY = 'MATERNITY',
-  PATERNITY = 'PATERNITY',
-  BEREAVEMENT = 'BEREAVEMENT',
-  MARRIAGE = 'MARRIAGE',
-  UNPAID = 'UNPAID',
-  COMPENSATORY = 'COMPENSATORY',
-  PUBLIC_HOLIDAY = 'PUBLIC_HOLIDAY',
-  SABBATICAL = 'SABBATICAL',
-  JURY_DUTY = 'JURY_DUTY',
-  MILITARY = 'MILITARY',
-  STUDY = 'STUDY',
-  PERSONAL = 'PERSONAL',
-  EMERGENCY = 'EMERGENCY',
-}
-
-export enum LeaveStatus {
-  DRAFT = 'DRAFT',
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-  CANCELLED = 'CANCELLED',
-  COMPLETED = 'COMPLETED',
-}
+import { LeaveType, LeaveStatus } from '@my-girok/types';
 
 export class CreateLeaveDto {
   @ApiProperty({ enum: LeaveType })

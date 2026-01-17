@@ -2,11 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { WorkScheduleService } from './work-schedule.service';
 import { PrismaService } from '../../database/prisma.service';
-import { ScheduleType } from '../dto/work-schedule.dto';
+import { ScheduleType } from '@my-girok/types';
 
 describe('WorkScheduleService', () => {
   let service: WorkScheduleService;
-  let prisma: PrismaService;
+  let _prisma: PrismaService;
 
   const mockPrismaService = {
     adminWorkSchedule: {
@@ -32,7 +32,7 @@ describe('WorkScheduleService', () => {
     }).compile();
 
     service = module.get<WorkScheduleService>(WorkScheduleService);
-    prisma = module.get<PrismaService>(PrismaService);
+    _prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

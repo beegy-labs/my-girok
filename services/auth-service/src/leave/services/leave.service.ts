@@ -12,9 +12,8 @@ import {
   CancelLeaveDto,
   LeaveQueryDto,
   LeaveResponseDto,
-  LeaveStatus,
-  LeaveType,
 } from '../dto/leave.dto';
+import { LeaveStatus, LeaveType } from '@my-girok/types';
 
 @Injectable()
 export class LeaveService {

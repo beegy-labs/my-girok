@@ -6,7 +6,7 @@ import { AttendanceService } from '../../src/attendance/services/attendance.serv
 import { WorkScheduleService } from '../../src/attendance/services/work-schedule.service';
 import { AttendanceController } from '../../src/attendance/controllers/attendance.controller';
 import { WorkScheduleController } from '../../src/attendance/controllers/work-schedule.controller';
-import { AttendanceStatus, WorkType } from '../../src/attendance/dto/attendance.dto';
+import { AttendanceStatus, WorkType } from '@my-girok/types';
 
 /**
  * Integration Tests: Attendance Management
@@ -29,8 +29,8 @@ describe.skip('Attendance Management Integration', () => {
   let prisma: PrismaService;
   let attendanceService: AttendanceService;
   let workScheduleService: WorkScheduleService;
-  let attendanceController: AttendanceController;
-  let workScheduleController: WorkScheduleController;
+  let _attendanceController: AttendanceController;
+  let _workScheduleController: WorkScheduleController;
   const testAdminId = 'test-admin-attendance-001';
   const testManagerId = 'test-manager-001';
 
@@ -46,8 +46,8 @@ describe.skip('Attendance Management Integration', () => {
     prisma = moduleFixture.get<PrismaService>(PrismaService);
     attendanceService = moduleFixture.get<AttendanceService>(AttendanceService);
     workScheduleService = moduleFixture.get<WorkScheduleService>(WorkScheduleService);
-    attendanceController = moduleFixture.get<AttendanceController>(AttendanceController);
-    workScheduleController = moduleFixture.get<WorkScheduleController>(WorkScheduleController);
+    _attendanceController = moduleFixture.get<AttendanceController>(AttendanceController);
+    _workScheduleController = moduleFixture.get<WorkScheduleController>(WorkScheduleController);
   });
 
   afterAll(async () => {

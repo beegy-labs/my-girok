@@ -2,11 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
 import { PrismaService } from '../../database/prisma.service';
-import { AttendanceStatus, WorkType } from '../dto/attendance.dto';
+import { AttendanceStatus, WorkType } from '@my-girok/types';
 
 describe('AttendanceService', () => {
   let service: AttendanceService;
-  let prisma: PrismaService;
+  let _prisma: PrismaService;
 
   const mockPrismaService = {
     adminAttendance: {
@@ -33,7 +33,7 @@ describe('AttendanceService', () => {
     }).compile();
 
     service = module.get<AttendanceService>(AttendanceService);
-    prisma = module.get<PrismaService>(PrismaService);
+    _prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

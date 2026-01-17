@@ -2,11 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { LeaveService } from './leave.service';
 import { PrismaService } from '../../database/prisma.service';
-import { LeaveStatus, LeaveType } from '../dto/leave.dto';
+import { LeaveStatus, LeaveType } from '@my-girok/types';
 
 describe('LeaveService', () => {
   let service: LeaveService;
-  let prisma: PrismaService;
+  let _prisma: PrismaService;
 
   const mockPrismaService = {
     adminLeave: {
@@ -36,7 +36,7 @@ describe('LeaveService', () => {
     }).compile();
 
     service = module.get<LeaveService>(LeaveService);
-    prisma = module.get<PrismaService>(PrismaService);
+    _prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
