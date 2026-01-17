@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { WorkScheduleService } from './work-schedule.service';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../database/prisma.service';
 import { ScheduleType } from '../dto/work-schedule.dto';
 
 describe('WorkScheduleService', () => {

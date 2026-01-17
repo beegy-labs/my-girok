@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { LeaveBalanceService } from './leave-balance.service';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../database/prisma.service';
 
 describe('LeaveBalanceService', () => {
   let service: LeaveBalanceService;
@@ -170,7 +170,20 @@ describe('LeaveBalanceService', () => {
         admin_id: adminId,
         year,
         annual_entitled: '15',
+        annual_used: '0',
+        annual_pending: '0',
+        annual_remaining: '15',
         sick_entitled: '10',
+        sick_used: '0',
+        sick_remaining: '10',
+        compensatory_entitled: '0',
+        compensatory_used: '0',
+        compensatory_remaining: '0',
+        special_entitled: '0',
+        special_used: '0',
+        special_remaining: '0',
+        carryover_from_previous: '0',
+        adjustment: '0',
       });
 
       mockPrismaService.adminLeaveBalance.update.mockResolvedValue({

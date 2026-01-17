@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../database/prisma.service';
 import { AttendanceStatus, WorkType } from '../dto/attendance.dto';
 
 describe('AttendanceService', () => {
