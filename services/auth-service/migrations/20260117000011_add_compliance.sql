@@ -7,7 +7,7 @@
 -- 컴플라이언스 인증 (Attestations)
 CREATE TABLE admin_attestations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  admin_id TEXT NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+  admin_id UUID NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
   attestation_type attestation_type NOT NULL,
 
   -- 문서 버전
@@ -27,7 +27,7 @@ CREATE TABLE admin_attestations (
 
   -- 면제
   is_waived BOOLEAN DEFAULT FALSE,
-  waived_by TEXT REFERENCES admins(id),
+  waived_by UUID REFERENCES admins(id),
   waiver_reason TEXT,
   waiver_expiry DATE,
 
@@ -45,7 +45,7 @@ CREATE TABLE admin_attestations (
 -- 자격증 (Certifications)
 CREATE TABLE admin_certifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  admin_id TEXT NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+  admin_id UUID NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
 
   -- 자격증 정보
   name TEXT NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE admin_certifications (
   -- 검증
   is_verified BOOLEAN DEFAULT FALSE,
   verified_at TIMESTAMPTZ(6),
-  verified_by TEXT REFERENCES admins(id),
+  verified_by UUID REFERENCES admins(id),
   verification_url TEXT,
 
   -- 메타
@@ -76,7 +76,7 @@ CREATE TABLE admin_certifications (
 -- 교육 이력 (Training Records)
 CREATE TABLE admin_training_records (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-  admin_id TEXT NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+  admin_id UUID NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
 
   -- 교육 정보
   training_type training_type NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE admin_training_records (
 
   -- 면제
   is_waived BOOLEAN DEFAULT FALSE,
-  waived_by TEXT REFERENCES admins(id),
+  waived_by UUID REFERENCES admins(id),
   waiver_reason TEXT,
 
   -- 메타
