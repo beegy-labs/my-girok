@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
+import { AdminModule } from '../admin/admin.module';
 
 // Services
 import { JobGradeService } from './services/job-grade.service';
@@ -20,7 +21,7 @@ import { FloorController } from './controllers/floor.controller';
 import { PartnerCompanyController } from './controllers/partner-company.controller';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, AdminModule],
   controllers: [
     JobGradeController,
     OrgUnitController,
