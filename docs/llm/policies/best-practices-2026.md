@@ -1,6 +1,6 @@
 # Best Practices 2026
 
-**Review**: Monthly | **Updated**: 2026-01-02
+**Review**: Monthly | **Updated**: 2026-01-17
 
 ## Stack
 
@@ -123,3 +123,69 @@
 | Abstractions for one-time ops   |
 | Features beyond requested       |
 | Backward-compat for unused code |
+
+## Database Migration Strategy (2026 Decision)
+
+### Tool Selection: goose
+
+**Decision**: Use **goose** (MIT license) for all database migrations
+
+**Rationale**:
+
+- ✅ **Zero Cost**: MIT license, no per-seat fees
+- ✅ **Language Agnostic**: Works for Node.js, Go, Python services
+- ✅ **GitOps Compatible**: SQL files in platform-gitops repository
+- ✅ **True Open Source**: No licensing restrictions
+
+**Rejected Alternatives**:
+
+| Tool           | Why Rejected                                                |
+| -------------- | ----------------------------------------------------------- |
+| Atlas Pro      | $9/seat/month ($1,080+/year for team), K8s Operator paywall |
+| Liquibase      | FSL license (not true open source since v5.0, Sept 2025)    |
+| Flyway         | 100 schema limit, Teams edition discontinued (May 2025)     |
+| Prisma Migrate | Node.js only, not language-agnostic                         |
+
+### Dual-Tool Pattern
+
+```
+goose (migrations)  → PostgreSQL ← Prisma Client (types)
+     ↓                                    ↑
+platform-gitops              services/*/prisma/schema.prisma
+(SSOT)                       (manual sync required)
+```
+
+**Why Two Tools?**
+
+- **goose**: Schema migration execution (GitOps, polyglot)
+- **Prisma**: TypeScript type generation (DX, autocomplete)
+
+### Deployment Flow
+
+1. **Migration**: ArgoCD PreSync Hook runs Kubernetes Job with goose
+2. **Application**: ArgoCD Sync deploys service with Prisma Client
+3. **Type Safety**: Prisma schema manually synced with goose SQL
+
+### Key Principles
+
+- **Git = SSOT**: All migrations in `platform-gitops/migrations/`
+- **ArgoCD Deploys**: No manual migration runs in production
+- **Manual Sync**: Prisma schema updated manually after goose migration
+- **Code Review**: Checklist ensures goose ↔ Prisma alignment
+
+### License Cost Comparison (2026)
+
+| Tool          | License     | Annual Cost (10 devs) |
+| ------------- | ----------- | --------------------- |
+| goose         | MIT         | $0                    |
+| Atlas Pro     | Proprietary | $1,080                |
+| Liquibase Pro | Proprietary | $5,000+               |
+| Flyway Teams  | Proprietary | $9,600+               |
+
+**Decision**: Free tools only → goose selected
+
+### References
+
+- **Full Strategy**: `docs/llm/policies/database-migration-strategy.md`
+- **Quick Reference**: `.ai/database.md`
+- **ArgoCD Hooks**: `platform-gitops/clusters/home/migrations/`
