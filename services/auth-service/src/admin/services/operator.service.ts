@@ -68,7 +68,7 @@ export class OperatorService {
       SELECT asv.id
       FROM admin_services asv
       JOIN services s ON asv.service_id = s.id
-      WHERE asv.admin_id = ${adminId} AND s.slug = ${serviceSlug}
+      WHERE asv.adminId = ${adminId} AND s.slug = ${serviceSlug}
       LIMIT 1
     `;
 
@@ -277,7 +277,7 @@ export class OperatorService {
         o.last_login_at as "lastLoginAt", o.created_at as "createdAt"
       FROM operators o
       JOIN services s ON o.service_id = s.id
-      WHERE (o.admin_id = ${adminId} OR ${adminId}::TEXT IS NULL)
+      WHERE (o.adminId = ${adminId} OR ${adminId}::TEXT IS NULL)
         AND (s.slug = ${serviceSlug ?? null} OR ${serviceSlug ?? null}::TEXT IS NULL)
         AND (o.country_code = ${countryCode ?? null} OR ${countryCode ?? null}::TEXT IS NULL)
         AND (o.is_active = ${isActive ?? null} OR ${isActive ?? null}::BOOLEAN IS NULL)

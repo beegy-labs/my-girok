@@ -324,7 +324,7 @@ export class AdminAuthService {
         FROM admin_services asv
         JOIN services s ON asv.service_id = s.id
         JOIN roles r ON asv.role_id = r.id
-        WHERE asv.admin_id = ${adminId}::uuid
+        WHERE asv.adminId = ${adminId}::uuid
       `;
 
       // Batch fetch permissions for all unique roleIds to prevent N+1 queries

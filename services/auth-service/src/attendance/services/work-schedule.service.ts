@@ -14,40 +14,40 @@ export class WorkScheduleService {
     // Deactivate previous schedules for this admin
     await this.prisma.adminWorkSchedule.updateMany({
       where: {
-        admin_id: dto.adminId,
-        is_active: true,
+        adminId: dto.adminId,
+        isActive: true,
       },
       data: {
-        is_active: false,
-        end_date: new Date(dto.effectiveDate),
+        isActive: false,
+        endDate: new Date(dto.effectiveDate),
       },
     });
 
     const schedule = await this.prisma.adminWorkSchedule.create({
       data: {
-        admin_id: dto.adminId,
-        schedule_type: dto.scheduleType,
-        effective_date: dto.effectiveDate,
-        end_date: dto.endDate,
-        monday_start: dto.mondayStart,
-        monday_end: dto.mondayEnd,
-        tuesday_start: dto.tuesdayStart,
-        tuesday_end: dto.tuesdayEnd,
-        wednesday_start: dto.wednesdayStart,
-        wednesday_end: dto.wednesdayEnd,
-        thursday_start: dto.thursdayStart,
-        thursday_end: dto.thursdayEnd,
-        friday_start: dto.fridayStart,
-        friday_end: dto.fridayEnd,
-        saturday_start: dto.saturdayStart,
-        saturday_end: dto.saturdayEnd,
-        sunday_start: dto.sundayStart,
-        sunday_end: dto.sundayEnd,
-        weekly_hours: dto.weeklyHours,
-        core_hours_start: dto.coreHoursStart,
-        core_hours_end: dto.coreHoursEnd,
+        adminId: dto.adminId,
+        scheduleType: dto.scheduleType,
+        effectiveDate: dto.effectiveDate,
+        endDate: dto.endDate,
+        mondayStart: dto.mondayStart,
+        mondayEnd: dto.mondayEnd,
+        tuesdayStart: dto.tuesdayStart,
+        tuesdayEnd: dto.tuesdayEnd,
+        wednesdayStart: dto.wednesdayStart,
+        wednesdayEnd: dto.wednesdayEnd,
+        thursdayStart: dto.thursdayStart,
+        thursdayEnd: dto.thursdayEnd,
+        fridayStart: dto.fridayStart,
+        fridayEnd: dto.fridayEnd,
+        saturdayStart: dto.saturdayStart,
+        saturdayEnd: dto.saturdayEnd,
+        sundayStart: dto.sundayStart,
+        sundayEnd: dto.sundayEnd,
+        weeklyHours: dto.weeklyHours,
+        coreHoursStart: dto.coreHoursStart,
+        coreHoursEnd: dto.coreHoursEnd,
         timezone: dto.timezone,
-        is_active: true,
+        isActive: true,
       },
     });
 
@@ -56,8 +56,8 @@ export class WorkScheduleService {
 
   async findByAdmin(adminId: string): Promise<WorkScheduleResponseDto[]> {
     const schedules = await this.prisma.adminWorkSchedule.findMany({
-      where: { admin_id: adminId },
-      orderBy: { effective_date: 'desc' },
+      where: { adminId: adminId },
+      orderBy: { effectiveDate: 'desc' },
     });
 
     return schedules.map((s) => this.mapToResponse(s));
@@ -66,10 +66,10 @@ export class WorkScheduleService {
   async findActiveByAdmin(adminId: string): Promise<WorkScheduleResponseDto | null> {
     const schedule = await this.prisma.adminWorkSchedule.findFirst({
       where: {
-        admin_id: adminId,
-        is_active: true,
+        adminId: adminId,
+        isActive: true,
       },
-      orderBy: { effective_date: 'desc' },
+      orderBy: { effectiveDate: 'desc' },
     });
 
     return schedule ? this.mapToResponse(schedule) : null;
@@ -91,26 +91,26 @@ export class WorkScheduleService {
     const schedule = await this.prisma.adminWorkSchedule.update({
       where: { id },
       data: {
-        schedule_type: dto.scheduleType,
-        end_date: dto.endDate,
-        monday_start: dto.mondayStart,
-        monday_end: dto.mondayEnd,
-        tuesday_start: dto.tuesdayStart,
-        tuesday_end: dto.tuesdayEnd,
-        wednesday_start: dto.wednesdayStart,
-        wednesday_end: dto.wednesdayEnd,
-        thursday_start: dto.thursdayStart,
-        thursday_end: dto.thursdayEnd,
-        friday_start: dto.fridayStart,
-        friday_end: dto.fridayEnd,
-        saturday_start: dto.saturdayStart,
-        saturday_end: dto.saturdayEnd,
-        sunday_start: dto.sundayStart,
-        sunday_end: dto.sundayEnd,
-        weekly_hours: dto.weeklyHours,
-        core_hours_start: dto.coreHoursStart,
-        core_hours_end: dto.coreHoursEnd,
-        is_active: dto.isActive,
+        scheduleType: dto.scheduleType,
+        endDate: dto.endDate,
+        mondayStart: dto.mondayStart,
+        mondayEnd: dto.mondayEnd,
+        tuesdayStart: dto.tuesdayStart,
+        tuesdayEnd: dto.tuesdayEnd,
+        wednesdayStart: dto.wednesdayStart,
+        wednesdayEnd: dto.wednesdayEnd,
+        thursdayStart: dto.thursdayStart,
+        thursdayEnd: dto.thursdayEnd,
+        fridayStart: dto.fridayStart,
+        fridayEnd: dto.fridayEnd,
+        saturdayStart: dto.saturdayStart,
+        saturdayEnd: dto.saturdayEnd,
+        sundayStart: dto.sundayStart,
+        sundayEnd: dto.sundayEnd,
+        weeklyHours: dto.weeklyHours,
+        coreHoursStart: dto.coreHoursStart,
+        coreHoursEnd: dto.coreHoursEnd,
+        isActive: dto.isActive,
       },
     });
 
@@ -126,7 +126,7 @@ export class WorkScheduleService {
   private mapToResponse(schedule: any): WorkScheduleResponseDto {
     return {
       id: schedule.id,
-      adminId: schedule.admin_id,
+      adminId: schedule.adminId,
       scheduleType: schedule.schedule_type,
       effectiveDate: schedule.effective_date,
       endDate: schedule.end_date,

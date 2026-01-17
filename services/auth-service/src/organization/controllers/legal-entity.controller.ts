@@ -12,7 +12,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { AdminAuthGuard } from '../../admin/guards/admin-auth.guard';
 import { LegalEntityService } from '../services/legal-entity.service';
 import {
   CreateLegalEntityDto,
@@ -23,7 +23,7 @@ import {
 
 @ApiTags('Organization - Legal Entities')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(AdminAuthGuard)
 @Controller('organization/legal-entities')
 export class LegalEntityController {
   constructor(private readonly legalEntityService: LegalEntityService) {}

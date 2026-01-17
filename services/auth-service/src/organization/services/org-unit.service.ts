@@ -5,7 +5,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/auth-client';
+import { Prisma } from '../../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateOrgUnitDto,
@@ -25,7 +25,7 @@ export class OrgUnitService {
     this.logger.log(`Creating organization unit: ${dto.code}`);
 
     // Check if code already exists
-    const existing = await this.prisma.organizationUnit.findUnique({
+    const existing = await this.prisma.organization_units.findUnique({
       where: { code: dto.code },
     });
 
@@ -35,7 +35,7 @@ export class OrgUnitService {
 
     // Validate parent exists if parentId is provided
     if (dto.parentId) {
-      const parent = await this.prisma.organizationUnit.findUnique({
+      const parent = await this.prisma.organization_units.findUnique({
         where: { id: dto.parentId },
       });
 
@@ -44,14 +44,15 @@ export class OrgUnitService {
       }
     }
 
-    const orgUnit = await this.prisma.organizationUnit.create({
+    const orgUnit = await this.prisma.organization_units.create({
       data: {
         code: dto.code,
         name: dto.name,
-        org_type: dto.orgType,
+        unit_type: dto.orgType as any,
+        level: 0, // TODO: Calculate based on parent
+        path: '/', // TODO: Calculate based on parent
         parent_id: dto.parentId,
-        manager_admin_id: dto.managerAdminId,
-        description: dto.description,
+        head_admin_id: dto.managerAdminId,
         is_active: dto.isActive ?? true,
       },
     });
@@ -62,10 +63,10 @@ export class OrgUnitService {
   async findAll(query?: OrgUnitListQueryDto): Promise<OrgUnitResponseDto[]> {
     this.logger.log('Fetching all organization units');
 
-    const where: Prisma.OrganizationUnitWhereInput = {};
+    const where: Prisma.organization_unitsWhereInput = {};
 
     if (query?.orgType) {
-      where.org_type = query.orgType;
+      where.unit_type = query.orgType as any;
     }
 
     if (query?.parentId !== undefined) {
@@ -76,7 +77,7 @@ export class OrgUnitService {
       where.is_active = query.isActive;
     }
 
-    const orgUnits = await this.prisma.organizationUnit.findMany({
+    const orgUnits = await this.prisma.organization_units.findMany({
       where,
       orderBy: [{ name: 'asc' }],
     });
@@ -88,7 +89,7 @@ export class OrgUnitService {
     this.logger.log('Building organization tree');
 
     // Get all org units
-    const allOrgUnits = await this.prisma.organizationUnit.findMany({
+    const allOrgUnits = await this.prisma.organization_units.findMany({
       where: { is_active: true },
       orderBy: [{ name: 'asc' }],
     });
@@ -103,7 +104,7 @@ export class OrgUnitService {
   async findOne(id: string): Promise<OrgUnitResponseDto> {
     this.logger.log(`Fetching organization unit: ${id}`);
 
-    const orgUnit = await this.prisma.organizationUnit.findUnique({
+    const orgUnit = await this.prisma.organization_units.findUnique({
       where: { id },
     });
 
@@ -120,7 +121,7 @@ export class OrgUnitService {
     // Verify parent exists
     await this.findOne(id);
 
-    const children = await this.prisma.organizationUnit.findMany({
+    const children = await this.prisma.organization_units.findMany({
       where: { parent_id: id, is_active: true },
       orderBy: [{ name: 'asc' }],
     });
@@ -141,7 +142,7 @@ export class OrgUnitService {
         throw new BadRequestException('Organization unit cannot be its own parent');
       }
 
-      const parent = await this.prisma.organizationUnit.findUnique({
+      const parent = await this.prisma.organization_units.findUnique({
         where: { id: dto.parentId },
       });
 
@@ -153,14 +154,13 @@ export class OrgUnitService {
       await this.checkCircularReference(id, dto.parentId);
     }
 
-    const orgUnit = await this.prisma.organizationUnit.update({
+    const orgUnit = await this.prisma.organization_units.update({
       where: { id },
       data: {
         name: dto.name,
-        org_type: dto.orgType,
+        unit_type: dto.orgType as any,
         parent_id: dto.parentId,
-        manager_admin_id: dto.managerAdminId,
-        description: dto.description,
+        head_admin_id: dto.managerAdminId,
         is_active: dto.isActive,
       },
     });
@@ -175,7 +175,7 @@ export class OrgUnitService {
     await this.findOne(id);
 
     // Check if has children
-    const children = await this.prisma.organizationUnit.findMany({
+    const children = await this.prisma.organization_units.findMany({
       where: { parent_id: id },
     });
 
@@ -185,7 +185,7 @@ export class OrgUnitService {
       );
     }
 
-    await this.prisma.organizationUnit.delete({
+    await this.prisma.organization_units.delete({
       where: { id },
     });
 
@@ -218,7 +218,7 @@ export class OrgUnitService {
       visited.add(currentId);
 
       // Move up to the next parent
-      const parent = await this.prisma.organizationUnit.findUnique({
+      const parent = await this.prisma.organization_units.findUnique({
         where: { id: currentId },
         select: { parent_id: true },
       });

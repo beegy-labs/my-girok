@@ -22,21 +22,19 @@ import {
 } from '../dto';
 import { AdminProfileService } from './admin-profile.service';
 
-const adminWithRelations = Prisma.validator<Prisma.adminsArgs>()({
-  include: {
-    roles: true,
-    tenants: true,
-    admins: {
-      // manager
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        job_title: true,
-      },
+const adminInclude = {
+  roles: true,
+  tenants: true,
+  admins: {
+    // manager
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      job_title: true,
     },
   },
-});
+} satisfies Prisma.adminsInclude;
 
 @Injectable()
 export class AdminEnterpriseService {
@@ -85,7 +83,7 @@ export class AdminEnterpriseService {
         nhi_expiry_date: dto.nhiExpiryDate ? new Date(dto.nhiExpiryDate) : undefined,
         nhi_config: (dto.nhiConfig as Prisma.JsonValue) ?? Prisma.JsonNull,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
 
     this.logger.log(`NHI created: ${nhi.id} by admin ${createdBy}`);
@@ -116,7 +114,7 @@ export class AdminEnterpriseService {
           : undefined,
         nhi_config: (dto.nhiConfig as Prisma.JsonValue) ?? Prisma.JsonNull,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
 
     return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
@@ -169,7 +167,7 @@ export class AdminEnterpriseService {
         desk_code: dto.deskCode,
         remote_work_type: dto.remoteWorkType,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
@@ -189,7 +187,7 @@ export class AdminEnterpriseService {
         tax_residence_country: dto.taxResidenceCountry,
         payroll_country_code: dto.payrollCountryCode,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
@@ -209,7 +207,7 @@ export class AdminEnterpriseService {
         access_end_date: dto.accessEndDate ? new Date(dto.accessEndDate) : undefined,
         allowed_ip_ranges: dto.allowedIpRanges,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
@@ -233,7 +231,7 @@ export class AdminEnterpriseService {
           ? new Date(dto.backgroundCheckDate)
           : undefined,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
@@ -268,7 +266,7 @@ export class AdminEnterpriseService {
           },
         },
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
 
     this.logger.log(`Identity verified for admin ${adminId} by ${verifiedBy}`);
@@ -286,15 +284,15 @@ export class AdminEnterpriseService {
     const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data: {
-        skills: (dto.skills as Prisma.JsonValue) ?? Prisma.JsonNull,
-        certifications: (dto.certifications as Prisma.JsonValue) ?? Prisma.JsonNull,
-        education: (dto.education as Prisma.JsonValue) ?? Prisma.JsonNull,
-        work_history: (dto.workHistory as Prisma.JsonValue) ?? Prisma.JsonNull,
-        custom_attributes: (dto.customAttributes as Prisma.JsonValue) ?? Prisma.JsonNull,
-        preferences: (dto.preferences as Prisma.JsonValue) ?? Prisma.JsonNull,
-        metadata: (dto.metadata as Prisma.JsonValue) ?? Prisma.JsonNull,
+        skills: (dto.skills as unknown as Prisma.JsonValue) ?? Prisma.JsonNull,
+        certifications: (dto.certifications as unknown as Prisma.JsonValue) ?? Prisma.JsonNull,
+        education: (dto.education as unknown as Prisma.JsonValue) ?? Prisma.JsonNull,
+        work_history: (dto.workHistory as unknown as Prisma.JsonValue) ?? Prisma.JsonNull,
+        custom_attributes: (dto.customAttributes as unknown as Prisma.JsonValue) ?? Prisma.JsonNull,
+        preferences: (dto.preferences as unknown as Prisma.JsonValue) ?? Prisma.JsonNull,
+        metadata: (dto.metadata as unknown as Prisma.JsonValue) ?? Prisma.JsonNull,
       },
-      ...adminWithRelations,
+      include: adminInclude,
     });
     return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
   }
@@ -318,7 +316,7 @@ export class AdminEnterpriseService {
     const updatedAdmin = await this.prisma.admins.update({
       where: { id: adminId },
       data,
-      ...adminWithRelations,
+      include: adminInclude,
     });
 
     return this.adminProfileService.mapAdminToDetailResponse(updatedAdmin);
@@ -360,7 +358,7 @@ export class AdminEnterpriseService {
         skip,
         take: limit,
         orderBy: { [sortBy]: sortOrder },
-        ...adminWithRelations,
+        include: adminInclude,
       }),
       this.prisma.admins.count({ where }),
     ]);

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/auth-client';
+import { Prisma } from '../../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateBuildingDto,
@@ -17,15 +17,20 @@ export class BuildingService {
   async create(dto: CreateBuildingDto): Promise<BuildingResponseDto> {
     this.logger.log(`Creating building: ${dto.code}`);
 
-    const existing = await this.prisma.building.findUnique({
-      where: { code: dto.code },
+    const existing = await this.prisma.buildings.findUnique({
+      where: {
+        office_id_code: {
+          office_id: dto.officeId,
+          code: dto.code,
+        },
+      },
     });
 
     if (existing) {
-      throw new ConflictException(`Building with code ${dto.code} already exists`);
+      throw new ConflictException(`Building with code ${dto.code} already exists in this office`);
     }
 
-    const office = await this.prisma.office.findUnique({
+    const office = await this.prisma.offices.findUnique({
       where: { id: dto.officeId },
     });
 
@@ -33,15 +38,14 @@ export class BuildingService {
       throw new NotFoundException(`Office with ID ${dto.officeId} not found`);
     }
 
-    const building = await this.prisma.building.create({
+    const building = await this.prisma.buildings.create({
       data: {
         code: dto.code,
         name: dto.name,
         office_id: dto.officeId,
         address: dto.address,
-        total_floors: dto.totalFloors,
-        description: dto.description,
-        is_active: dto.isActive ?? true,
+        floor_count: dto.totalFloors,
+        is_accessible: dto.isActive ?? true,
       },
     });
 
@@ -51,17 +55,17 @@ export class BuildingService {
   async findAll(query?: BuildingListQueryDto): Promise<BuildingResponseDto[]> {
     this.logger.log('Fetching all buildings');
 
-    const where: Prisma.BuildingWhereInput = {};
+    const where: Prisma.buildingsWhereInput = {};
 
     if (query?.officeId) {
       where.office_id = query.officeId;
     }
 
     if (query?.isActive !== undefined) {
-      where.is_active = query.isActive;
+      where.is_accessible = query.isActive;
     }
 
-    const buildings = await this.prisma.building.findMany({
+    const buildings = await this.prisma.buildings.findMany({
       where,
       orderBy: [{ name: 'asc' }],
     });
@@ -72,7 +76,7 @@ export class BuildingService {
   async findOne(id: string): Promise<BuildingResponseDto> {
     this.logger.log(`Fetching building: ${id}`);
 
-    const building = await this.prisma.building.findUnique({
+    const building = await this.prisma.buildings.findUnique({
       where: { id },
     });
 
@@ -88,7 +92,7 @@ export class BuildingService {
 
     await this.findOne(id);
 
-    const floors = await this.prisma.floor.findMany({
+    const floors = await this.prisma.floors.findMany({
       where: { building_id: id, is_active: true },
       orderBy: [{ floor_number: 'asc' }],
     });
@@ -101,14 +105,13 @@ export class BuildingService {
 
     await this.findOne(id);
 
-    const building = await this.prisma.building.update({
+    const building = await this.prisma.buildings.update({
       where: { id },
       data: {
         name: dto.name,
         address: dto.address,
-        total_floors: dto.totalFloors,
-        description: dto.description,
-        is_active: dto.isActive,
+        floor_count: dto.totalFloors,
+        is_accessible: dto.isActive,
       },
     });
 
@@ -120,7 +123,7 @@ export class BuildingService {
 
     await this.findOne(id);
 
-    await this.prisma.building.delete({
+    await this.prisma.buildings.delete({
       where: { id },
     });
 
@@ -134,8 +137,7 @@ export class BuildingService {
       name: building.name,
       officeId: building.office_id,
       address: building.address,
-      totalFloors: building.total_floors,
-      description: building.description,
+      totalFloors: building.floor_count,
       isActive: building.is_active,
       createdAt: building.created_at,
       updatedAt: building.updated_at,

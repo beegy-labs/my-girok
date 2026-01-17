@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/auth-client';
+import { Prisma } from '../../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateLegalEntityDto,
@@ -17,7 +17,7 @@ export class LegalEntityService {
   async create(dto: CreateLegalEntityDto): Promise<LegalEntityResponseDto> {
     this.logger.log(`Creating legal entity: ${dto.code}`);
 
-    const existing = await this.prisma.legalEntity.findUnique({
+    const existing = await this.prisma.legal_entities.findUnique({
       where: { code: dto.code },
     });
 
@@ -25,15 +25,14 @@ export class LegalEntityService {
       throw new ConflictException(`Legal entity with code ${dto.code} already exists`);
     }
 
-    const legalEntity = await this.prisma.legalEntity.create({
+    const legalEntity = await this.prisma.legal_entities.create({
       data: {
         code: dto.code,
         name: dto.name,
         legal_name: dto.legalName,
         country_code: dto.countryCode,
         tax_id: dto.taxId,
-        registered_address: dto.registeredAddress,
-        description: dto.description,
+        currency_code: 'USD', // TODO: Add to DTO
         is_active: dto.isActive ?? true,
       },
     });
@@ -44,7 +43,7 @@ export class LegalEntityService {
   async findAll(query?: LegalEntityListQueryDto): Promise<LegalEntityResponseDto[]> {
     this.logger.log('Fetching all legal entities');
 
-    const where: Prisma.LegalEntityWhereInput = {};
+    const where: Prisma.legal_entitiesWhereInput = {};
 
     if (query?.countryCode) {
       where.country_code = query.countryCode;
@@ -54,7 +53,7 @@ export class LegalEntityService {
       where.is_active = query.isActive;
     }
 
-    const legalEntities = await this.prisma.legalEntity.findMany({
+    const legalEntities = await this.prisma.legal_entities.findMany({
       where,
       orderBy: [{ name: 'asc' }],
     });
@@ -65,7 +64,7 @@ export class LegalEntityService {
   async findOne(id: string): Promise<LegalEntityResponseDto> {
     this.logger.log(`Fetching legal entity: ${id}`);
 
-    const legalEntity = await this.prisma.legalEntity.findUnique({
+    const legalEntity = await this.prisma.legal_entities.findUnique({
       where: { id },
     });
 
@@ -81,14 +80,12 @@ export class LegalEntityService {
 
     await this.findOne(id);
 
-    const legalEntity = await this.prisma.legalEntity.update({
+    const legalEntity = await this.prisma.legal_entities.update({
       where: { id },
       data: {
         name: dto.name,
         legal_name: dto.legalName,
         tax_id: dto.taxId,
-        registered_address: dto.registeredAddress,
-        description: dto.description,
         is_active: dto.isActive,
       },
     });
@@ -101,7 +98,7 @@ export class LegalEntityService {
 
     await this.findOne(id);
 
-    await this.prisma.legalEntity.delete({
+    await this.prisma.legal_entities.delete({
       where: { id },
     });
 

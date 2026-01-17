@@ -13,22 +13,22 @@ export class LeaveBalanceService {
   async create(dto: CreateLeaveBalanceDto): Promise<LeaveBalanceResponseDto> {
     const balance = await this.prisma.adminLeaveBalance.create({
       data: {
-        admin_id: dto.adminId,
+        adminId: dto.adminId,
         year: dto.year,
-        annual_entitled: dto.annualEntitled,
-        annual_used: 0,
-        annual_pending: 0,
-        annual_remaining: dto.annualEntitled,
-        sick_entitled: dto.sickEntitled,
-        sick_used: 0,
-        sick_remaining: dto.sickEntitled,
-        compensatory_entitled: dto.compensatoryEntitled,
-        compensatory_used: 0,
-        compensatory_remaining: dto.compensatoryEntitled,
-        special_entitled: dto.specialEntitled,
-        special_used: 0,
-        special_remaining: dto.specialEntitled,
-        carryover_from_previous: dto.carryoverFromPrevious,
+        annualEntitled: dto.annualEntitled,
+        annualUsed: 0,
+        annualPending: 0,
+        annualRemaining: dto.annualEntitled,
+        sickEntitled: dto.sickEntitled,
+        sickUsed: 0,
+        sickRemaining: dto.sickEntitled,
+        compensatoryEntitled: dto.compensatoryEntitled,
+        compensatoryUsed: 0,
+        compensatoryRemaining: dto.compensatoryEntitled,
+        specialEntitled: dto.specialEntitled,
+        specialUsed: 0,
+        specialRemaining: dto.specialEntitled,
+        carryoverFromPrevious: dto.carryoverFromPrevious,
       },
     });
 
@@ -38,8 +38,8 @@ export class LeaveBalanceService {
   async getBalance(adminId: string, year: number): Promise<LeaveBalanceResponseDto> {
     const balance = await this.prisma.adminLeaveBalance.findUnique({
       where: {
-        admin_id_year: {
-          admin_id: adminId,
+        adminId_year: {
+          adminId: adminId,
           year,
         },
       },
@@ -70,18 +70,18 @@ export class LeaveBalanceService {
 
     const updated = await this.prisma.adminLeaveBalance.update({
       where: {
-        admin_id_year: {
-          admin_id: adminId,
+        adminId_year: {
+          adminId: adminId,
           year,
         },
       },
       data: {
-        annual_entitled: newAnnualEntitled,
-        annual_remaining: newAnnualRemaining,
+        annualEntitled: newAnnualEntitled,
+        annualRemaining: newAnnualRemaining,
         adjustment: dto.adjustment,
-        adjustment_reason: dto.adjustmentReason,
-        adjusted_by: adjustedBy,
-        last_calculated_at: new Date(),
+        adjustmentReason: dto.adjustmentReason,
+        adjustedBy: adjustedBy,
+        lastCalculatedAt: new Date(),
       },
     });
 
@@ -92,9 +92,9 @@ export class LeaveBalanceService {
     // Get all approved leaves for the year
     const leaves = await this.prisma.adminLeave.findMany({
       where: {
-        admin_id: adminId,
+        adminId: adminId,
         status: 'APPROVED',
-        start_date: {
+        startDate: {
           gte: new Date(`${year}-01-01`),
           lt: new Date(`${year + 1}-01-01`),
         },
@@ -103,8 +103,8 @@ export class LeaveBalanceService {
 
     const balance = await this.prisma.adminLeaveBalance.findUnique({
       where: {
-        admin_id_year: {
-          admin_id: adminId,
+        adminId_year: {
+          adminId: adminId,
           year,
         },
       },
@@ -120,8 +120,8 @@ export class LeaveBalanceService {
     let compensatoryUsed = 0;
 
     for (const leave of leaves) {
-      const days = parseFloat(leave.days_count || '0');
-      switch (leave.leave_type) {
+      const days = parseFloat(leave.daysCount?.toString() || '0');
+      switch (leave.leaveType) {
         case 'ANNUAL':
           annualUsed += days;
           break;
@@ -136,20 +136,20 @@ export class LeaveBalanceService {
 
     const updated = await this.prisma.adminLeaveBalance.update({
       where: {
-        admin_id_year: {
-          admin_id: adminId,
+        adminId_year: {
+          adminId: adminId,
           year,
         },
       },
       data: {
-        annual_used: annualUsed,
-        annual_remaining: parseFloat(balance.annual_entitled.toString()) - annualUsed,
-        sick_used: sickUsed,
-        sick_remaining: parseFloat(balance.sick_entitled.toString()) - sickUsed,
-        compensatory_used: compensatoryUsed,
-        compensatory_remaining:
-          parseFloat(balance.compensatory_entitled.toString()) - compensatoryUsed,
-        last_calculated_at: new Date(),
+        annualUsed: annualUsed,
+        annualRemaining: parseFloat(balance.annualEntitled.toString()) - annualUsed,
+        sickUsed: sickUsed,
+        sickRemaining: parseFloat(balance.sickEntitled.toString()) - sickUsed,
+        compensatoryUsed: compensatoryUsed,
+        compensatoryRemaining:
+          parseFloat(balance.compensatoryEntitled.toString()) - compensatoryUsed,
+        lastCalculatedAt: new Date(),
       },
     });
 
@@ -164,8 +164,8 @@ export class LeaveBalanceService {
     // Get previous year balance for carryover
     const previousBalance = await this.prisma.adminLeaveBalance.findUnique({
       where: {
-        admin_id_year: {
-          admin_id: adminId,
+        adminId_year: {
+          adminId: adminId,
           year: year - 1,
         },
       },
@@ -185,7 +185,7 @@ export class LeaveBalanceService {
 
     // Carryover from previous year (max 5 days)
     if (previousBalance) {
-      const previousRemaining = parseFloat(previousBalance.annual_remaining.toString());
+      const previousRemaining = parseFloat(previousBalance.annualRemaining.toString());
       carryover = Math.min(previousRemaining, 5);
     }
 
@@ -203,18 +203,18 @@ export class LeaveBalanceService {
   private mapToResponse(balance: any): LeaveBalanceResponseDto {
     return {
       id: balance.id,
-      adminId: balance.admin_id,
+      adminId: balance.adminId,
       year: balance.year,
-      annualEntitled: parseFloat(balance.annual_entitled || '0'),
-      annualUsed: parseFloat(balance.annual_used || '0'),
+      annualEntitled: parseFloat(balance.annualEntitled || '0'),
+      annualUsed: parseFloat(balance.annualUsed || '0'),
       annualPending: parseFloat(balance.annual_pending || '0'),
-      annualRemaining: parseFloat(balance.annual_remaining || '0'),
-      sickEntitled: parseFloat(balance.sick_entitled || '0'),
-      sickUsed: parseFloat(balance.sick_used || '0'),
-      sickRemaining: parseFloat(balance.sick_remaining || '0'),
-      compensatoryEntitled: parseFloat(balance.compensatory_entitled || '0'),
-      compensatoryUsed: parseFloat(balance.compensatory_used || '0'),
-      compensatoryRemaining: parseFloat(balance.compensatory_remaining || '0'),
+      annualRemaining: parseFloat(balance.annualRemaining || '0'),
+      sickEntitled: parseFloat(balance.sickEntitled || '0'),
+      sickUsed: parseFloat(balance.sickUsed || '0'),
+      sickRemaining: parseFloat(balance.sickRemaining || '0'),
+      compensatoryEntitled: parseFloat(balance.compensatoryEntitled || '0'),
+      compensatoryUsed: parseFloat(balance.compensatoryUsed || '0'),
+      compensatoryRemaining: parseFloat(balance.compensatoryRemaining || '0'),
       compensatoryExpiryDate: balance.compensatory_expiry_date,
       specialEntitled: parseFloat(balance.special_entitled || '0'),
       specialUsed: parseFloat(balance.special_used || '0'),

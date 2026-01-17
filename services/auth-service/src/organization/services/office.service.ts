@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/auth-client';
+import { Prisma, office_type } from '../../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateOfficeDto,
@@ -17,7 +17,7 @@ export class OfficeService {
   async create(dto: CreateOfficeDto): Promise<OfficeResponseDto> {
     this.logger.log(`Creating office: ${dto.code}`);
 
-    const existing = await this.prisma.office.findUnique({
+    const existing = await this.prisma.offices.findUnique({
       where: { code: dto.code },
     });
 
@@ -26,7 +26,7 @@ export class OfficeService {
     }
 
     // Verify legal entity exists
-    const legalEntity = await this.prisma.legalEntity.findUnique({
+    const legalEntity = await this.prisma.legal_entities.findUnique({
       where: { id: dto.legalEntityId },
     });
 
@@ -34,18 +34,17 @@ export class OfficeService {
       throw new NotFoundException(`Legal entity with ID ${dto.legalEntityId} not found`);
     }
 
-    const office = await this.prisma.office.create({
+    const office = await this.prisma.offices.create({
       data: {
         code: dto.code,
         name: dto.name,
-        office_type: dto.officeType,
+        office_type: dto.officeType as office_type,
         legal_entity_id: dto.legalEntityId,
         country_code: dto.countryCode,
         city: dto.city,
-        address: dto.address,
-        phone_number: dto.phoneNumber,
-        description: dto.description,
-        is_active: dto.isActive ?? true,
+        address_line1: dto.address,
+        timezone: 'UTC', // TODO: Add to DTO
+        phone: dto.phoneNumber,
       },
     });
 
@@ -55,10 +54,10 @@ export class OfficeService {
   async findAll(query?: OfficeListQueryDto): Promise<OfficeResponseDto[]> {
     this.logger.log('Fetching all offices');
 
-    const where: Prisma.OfficeWhereInput = {};
+    const where: Prisma.officesWhereInput = {};
 
     if (query?.officeType) {
-      where.office_type = query.officeType;
+      where.office_type = query.officeType as office_type;
     }
 
     if (query?.legalEntityId) {
@@ -73,7 +72,7 @@ export class OfficeService {
       where.is_active = query.isActive;
     }
 
-    const offices = await this.prisma.office.findMany({
+    const offices = await this.prisma.offices.findMany({
       where,
       orderBy: [{ name: 'asc' }],
     });
@@ -84,7 +83,7 @@ export class OfficeService {
   async findOne(id: string): Promise<OfficeResponseDto> {
     this.logger.log(`Fetching office: ${id}`);
 
-    const office = await this.prisma.office.findUnique({
+    const office = await this.prisma.offices.findUnique({
       where: { id },
     });
 
@@ -100,8 +99,8 @@ export class OfficeService {
 
     await this.findOne(id);
 
-    const buildings = await this.prisma.building.findMany({
-      where: { office_id: id, is_active: true },
+    const buildings = await this.prisma.buildings.findMany({
+      where: { office_id: id, is_accessible: true },
       orderBy: [{ name: 'asc' }],
     });
 
@@ -113,16 +112,14 @@ export class OfficeService {
 
     await this.findOne(id);
 
-    const office = await this.prisma.office.update({
+    const office = await this.prisma.offices.update({
       where: { id },
       data: {
         name: dto.name,
-        office_type: dto.officeType,
+        office_type: dto.officeType as office_type,
         city: dto.city,
-        address: dto.address,
-        phone_number: dto.phoneNumber,
-        description: dto.description,
-        is_active: dto.isActive,
+        address_line1: dto.address,
+        phone: dto.phoneNumber,
       },
     });
 
@@ -134,7 +131,7 @@ export class OfficeService {
 
     await this.findOne(id);
 
-    await this.prisma.office.delete({
+    await this.prisma.offices.delete({
       where: { id },
     });
 

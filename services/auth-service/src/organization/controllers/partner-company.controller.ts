@@ -12,7 +12,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { AdminAuthGuard } from '../../admin/guards/admin-auth.guard';
 import { PartnerCompanyService } from '../services/partner-company.service';
 import {
   CreatePartnerCompanyDto,
@@ -23,7 +23,7 @@ import {
 
 @ApiTags('Organization - Partner Companies')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(AdminAuthGuard)
 @Controller('organization/partner-companies')
 export class PartnerCompanyController {
   constructor(private readonly partnerCompanyService: PartnerCompanyService) {}
