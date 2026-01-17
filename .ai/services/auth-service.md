@@ -1,8 +1,8 @@
 # Auth Service
 
-> Admin & Operator authentication + MFA + Session + Legal consent + SCIM 2.0 Enterprise (Phase 2) | Port: 3002 | DB: girok_auth
+> Admin & Operator authentication + MFA + Session + Legal + SCIM 2.0 + HR Backend (Phase 3) | Port: 3002 | DB: girok_auth
 
-**Phase 2 Migration Applied**: Admin table extended with 83 enterprise fields (SCIM 2.0 Core + JML + NHI)
+**Phase 3 Migration Applied**: HR Backend (Attendance & Leave Management) - 6 new tables, 30+ endpoints
 
 | Owns                 | Delegates         |
 | -------------------- | ----------------- |
@@ -12,10 +12,12 @@
 | Session Management   | -                 |
 | Legal Documents      | -                 |
 | Consent Tracking     | -                 |
-| **OAuth Config**     | **NEW**           |
-| **Admin Profile**    | **Phase 2 (NEW)** |
-| **Admin Enterprise** | **Phase 2 (NEW)** |
-| **NHI Management**   | **Phase 2 (NEW)** |
+| OAuth Config         | Phase 1           |
+| Admin Profile        | Phase 2           |
+| Admin Enterprise     | Phase 2           |
+| NHI Management       | Phase 2           |
+| **Attendance**       | **Phase 3 (NEW)** |
+| **Leave Management** | **Phase 3 (NEW)** |
 
 ## Phase 2: Enterprise Admin Management
 
@@ -62,5 +64,29 @@
 - `POST /admin/enterprise/:id/nhi/rotate` - Rotate NHI credentials
 - `POST /admin/enterprise/:id/verify` - Verify identity
 - `GET /admin/enterprise/list` - List admins with filters
+
+## Phase 3: HR Backend (Attendance & Leave)
+
+### Attendance Management
+
+- Clock-in/out tracking with IP/location logging
+- Overtime request & approval workflow
+- Work schedule management (STANDARD/SHIFT/FLEXIBLE)
+- Attendance statistics & reporting (present, late, absent, remote)
+
+### Leave Management
+
+- Multi-level approval workflow (first → second → final)
+- Leave balance tracking with carryover (max 5 days)
+- Tenure bonus calculation (3/5/10 years)
+- Leave types: ANNUAL, SICK, PARENTAL, UNPAID, COMPENSATORY, STUDY, BEREAVEMENT
+
+### Key Endpoints
+
+**Attendance:** `POST /attendance/clock-in`, `POST /attendance/clock-out`, `GET /attendance/me/stats`, `PATCH /attendance/:id/approve-overtime`
+
+**Leave:** `POST /leaves`, `POST /leaves/:id/submit`, `POST /leaves/:id/approve`, `GET /leaves/pending-approvals`
+
+**Balance:** `GET /leave-balances/me`, `PATCH /leave-balances/:adminId/:year/adjust`, `POST /leave-balances/:adminId/:year/recalculate`
 
 **SSOT**: `docs/llm/services/auth-service.md`
