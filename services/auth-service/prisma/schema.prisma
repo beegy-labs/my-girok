@@ -1868,3 +1868,202 @@ enum work_type {
   CLIENT_SITE
   TRAINING
 }
+// ====================
+// Phase 3: HR Backend - Attendance & Leave Management
+// ====================
+
+// Attendance tracking records
+model AdminAttendance {
+  id                String            @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  adminId           String            @map("admin_id")
+  date              DateTime          @db.Date
+  scheduledStart    DateTime?         @map("scheduled_start") @db.Time(6)
+  scheduledEnd      DateTime?         @map("scheduled_end") @db.Time(6)
+  clockIn           DateTime?         @map("clock_in") @db.Timestamptz(6)
+  clockOut          DateTime?         @map("clock_out") @db.Timestamptz(6)
+  scheduledMinutes  Int?              @map("scheduled_minutes")
+  actualMinutes     Int?              @map("actual_minutes")
+  overtimeMinutes   Int               @default(0) @map("overtime_minutes")
+  breakMinutes      Int               @default(60) @map("break_minutes")
+  status            attendance_status @default(PRESENT)
+  lateMinutes       Int               @default(0) @map("late_minutes")
+  earlyLeaveMinutes Int               @default(0) @map("early_leave_minutes")
+  workType          work_type         @default(OFFICE) @map("work_type")
+  officeId          String?           @map("office_id")
+  remoteLocation    String?           @map("remote_location")
+  overtimeRequested Boolean           @default(false) @map("overtime_requested")
+  overtimeApproved  Boolean           @default(false) @map("overtime_approved")
+  overtimeApprovedBy String?          @map("overtime_approved_by")
+  overtimeApprovedAt DateTime?        @map("overtime_approved_at") @db.Timestamptz(6)
+  overtimeReason    String?           @map("overtime_reason")
+  clockInMethod     String?           @map("clock_in_method")
+  clockOutMethod    String?           @map("clock_out_method")
+  clockInIp         String?           @map("clock_in_ip")
+  clockOutIp        String?           @map("clock_out_ip")
+  clockInLocation   Json?             @map("clock_in_location")
+  clockOutLocation  Json?             @map("clock_out_location")
+  notes             String?
+  managerNotes      String?           @map("manager_notes")
+  isHoliday         Boolean           @default(false) @map("is_holiday")
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([adminId, date])
+  @@index([adminId], map: "idx_attendances_admin")
+  @@index([date], map: "idx_attendances_date")
+  @@index([adminId, date], map: "idx_attendances_admin_date")
+  @@index([status], map: "idx_attendances_status")
+  @@map("admin_attendances")
+}
+
+// Work schedule (Shift)
+model AdminWorkSchedule {
+  id             String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  adminId        String    @map("admin_id")
+  scheduleType   String?   @default("STANDARD") @map("schedule_type")
+  effectiveDate  DateTime  @map("effective_date") @db.Date
+  endDate        DateTime? @map("end_date") @db.Date
+  mondayStart    DateTime? @map("monday_start") @db.Time(6)
+  mondayEnd      DateTime? @map("monday_end") @db.Time(6)
+  tuesdayStart   DateTime? @map("tuesday_start") @db.Time(6)
+  tuesdayEnd     DateTime? @map("tuesday_end") @db.Time(6)
+  wednesdayStart DateTime? @map("wednesday_start") @db.Time(6)
+  wednesdayEnd   DateTime? @map("wednesday_end") @db.Time(6)
+  thursdayStart  DateTime? @map("thursday_start") @db.Time(6)
+  thursdayEnd    DateTime? @map("thursday_end") @db.Time(6)
+  fridayStart    DateTime? @map("friday_start") @db.Time(6)
+  fridayEnd      DateTime? @map("friday_end") @db.Time(6)
+  saturdayStart  DateTime? @map("saturday_start") @db.Time(6)
+  saturdayEnd    DateTime? @map("saturday_end") @db.Time(6)
+  sundayStart    DateTime? @map("sunday_start") @db.Time(6)
+  sundayEnd      DateTime? @map("sunday_end") @db.Time(6)
+  weeklyHours    Decimal   @default(40) @map("weekly_hours") @db.Decimal(4, 2)
+  coreHoursStart DateTime? @map("core_hours_start") @db.Time(6)
+  coreHoursEnd   DateTime? @map("core_hours_end") @db.Time(6)
+  timezone       String
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([adminId], map: "idx_work_schedules_admin")
+  @@map("admin_work_schedules")
+}
+
+// Leave request records
+model AdminLeave {
+  id                     String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  adminId                String        @map("admin_id")
+  leaveType              leave_type    @map("leave_type")
+  startDate              DateTime      @map("start_date") @db.Date
+  endDate                DateTime      @map("end_date") @db.Date
+  startHalf              String?       @map("start_half")
+  endHalf                String?       @map("end_half")
+  daysCount              Decimal       @map("days_count") @db.Decimal(4, 2)
+  status                 leave_status  @default(PENDING)
+  requestedAt            DateTime      @default(now()) @map("requested_at") @db.Timestamptz(6)
+  submittedAt            DateTime?     @map("submitted_at") @db.Timestamptz(6)
+  firstApproverId        String?       @map("first_approver_id")
+  firstApprovedAt        DateTime?     @map("first_approved_at") @db.Timestamptz(6)
+  firstApprovalStatus    String?       @map("first_approval_status")
+  secondApproverId       String?       @map("second_approver_id")
+  secondApprovedAt       DateTime?     @map("second_approved_at") @db.Timestamptz(6)
+  secondApprovalStatus   String?       @map("second_approval_status")
+  finalApprovedBy        String?       @map("final_approved_by")
+  finalApprovedAt        DateTime?     @map("final_approved_at") @db.Timestamptz(6)
+  rejectedBy             String?       @map("rejected_by")
+  rejectedAt             DateTime?     @map("rejected_at") @db.Timestamptz(6)
+  rejectionReason        String?       @map("rejection_reason")
+  cancelledAt            DateTime?     @map("cancelled_at") @db.Timestamptz(6)
+  cancellationReason     String?       @map("cancellation_reason")
+  reason                 String?
+  emergencyContact       String?       @map("emergency_contact")
+  handoverTo             String?       @map("handover_to")
+  handoverNotes          String?       @map("handover_notes")
+  attachmentUrls         String[]      @map("attachment_urls")
+  createdAt              DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([adminId], map: "idx_leaves_admin")
+  @@index([startDate, endDate], map: "idx_leaves_dates")
+  @@index([status], map: "idx_leaves_status")
+  @@map("admin_leaves")
+}
+
+// Leave balance tracking
+model AdminLeaveBalance {
+  id                       String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  adminId                  String    @map("admin_id")
+  year                     Int
+  annualEntitled           Decimal   @default(15) @map("annual_entitled") @db.Decimal(5, 2)
+  annualUsed               Decimal   @default(0) @map("annual_used") @db.Decimal(5, 2)
+  annualPending            Decimal   @default(0) @map("annual_pending") @db.Decimal(5, 2)
+  annualRemaining          Decimal   @default(15) @map("annual_remaining") @db.Decimal(5, 2)
+  sickEntitled             Decimal   @default(10) @map("sick_entitled") @db.Decimal(5, 2)
+  sickUsed                 Decimal   @default(0) @map("sick_used") @db.Decimal(5, 2)
+  sickRemaining            Decimal   @default(10) @map("sick_remaining") @db.Decimal(5, 2)
+  compensatoryEntitled     Decimal   @default(0) @map("compensatory_entitled") @db.Decimal(5, 2)
+  compensatoryUsed         Decimal   @default(0) @map("compensatory_used") @db.Decimal(5, 2)
+  compensatoryRemaining    Decimal   @default(0) @map("compensatory_remaining") @db.Decimal(5, 2)
+  compensatoryExpiryDate   DateTime? @map("compensatory_expiry_date") @db.Date
+  specialEntitled          Decimal   @default(0) @map("special_entitled") @db.Decimal(5, 2)
+  specialUsed              Decimal   @default(0) @map("special_used") @db.Decimal(5, 2)
+  specialRemaining         Decimal   @default(0) @map("special_remaining") @db.Decimal(5, 2)
+  carryoverFromPrevious    Decimal   @default(0) @map("carryover_from_previous") @db.Decimal(5, 2)
+  carryoverExpiryDate      DateTime? @map("carryover_expiry_date") @db.Date
+  adjustment               Decimal   @default(0) @db.Decimal(5, 2)
+  adjustmentReason         String?   @map("adjustment_reason")
+  adjustedBy               String?   @map("adjusted_by")
+  lastCalculatedAt         DateTime? @map("last_calculated_at") @db.Timestamptz(6)
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([adminId, year])
+  @@index([adminId, year], map: "idx_leave_balances_admin_year")
+  @@map("admin_leave_balances")
+}
+
+// Leave policies (by country)
+model LeavePolicy {
+  id                            String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  countryCode                   String?   @map("country_code")
+  legalEntityId                 String?   @map("legal_entity_id")
+  annualBaseDays                Decimal   @default(15) @map("annual_base_days") @db.Decimal(5, 2)
+  annualMaxDays                 Decimal   @default(25) @map("annual_max_days") @db.Decimal(5, 2)
+  annualAccrualType             String    @default("YEARLY") @map("annual_accrual_type")
+  annualCarryoverAllowed        Boolean   @default(true) @map("annual_carryover_allowed")
+  annualCarryoverMax            Decimal   @default(5) @map("annual_carryover_max") @db.Decimal(5, 2)
+  annualCarryoverExpiryMonths   Int       @default(3) @map("annual_carryover_expiry_months")
+  sickDays                      Decimal   @default(10) @map("sick_days") @db.Decimal(5, 2)
+  sickRequiresCertificateAfter  Int       @default(3) @map("sick_requires_certificate_after")
+  tenureBonusEnabled            Boolean   @default(true) @map("tenure_bonus_enabled")
+  tenureBonusYears              Int[]     @default([3, 5, 10]) @map("tenure_bonus_years")
+  tenureBonusDays               Decimal[] @default([1, 2, 3]) @map("tenure_bonus_days") @db.Decimal(5, 2)
+  probationLeaveAllowed         Boolean   @default(false) @map("probation_leave_allowed")
+  probationAccrualRate          Decimal   @default(0.5) @map("probation_accrual_rate") @db.Decimal(3, 2)
+  effectiveDate                 DateTime  @map("effective_date") @db.Date
+  endDate                       DateTime? @map("end_date") @db.Date
+  isActive                      Boolean   @default(true) @map("is_active")
+  createdAt                     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([countryCode], map: "idx_leave_policies_country")
+  @@map("leave_policies")
+}
+
+// Public holidays (by country)
+model PublicHoliday {
+  id               String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  countryCode      String   @map("country_code")
+  subdivisionCode  String?  @map("subdivision_code")
+  date             DateTime @db.Date
+  name             String
+  nameEn           String?  @map("name_en")
+  isNational       Boolean  @default(true) @map("is_national")
+  isFloating       Boolean  @default(false) @map("is_floating")
+  year             Int
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([countryCode, date])
+  @@index([countryCode, year], map: "idx_public_holidays_country_year")
+  @@map("public_holidays")
+}
