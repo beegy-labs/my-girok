@@ -8,14 +8,14 @@ describe('FloorService', () => {
   let service: FloorService;
 
   const mockPrismaService = {
-    floor: {
+    floors: {
       create: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
-    building: {
+    buildings: {
       findUnique: vi.fn(),
     },
   };
@@ -62,9 +62,9 @@ describe('FloorService', () => {
         floorNumber: 5,
       };
 
-      mockPrismaService.floor.findUnique.mockResolvedValue(null);
-      mockPrismaService.building.findUnique.mockResolvedValue({ id: 'building-id' });
-      mockPrismaService.floor.create.mockResolvedValue(mockFloor);
+      mockPrismaService.floors.findUnique.mockResolvedValue(null);
+      mockPrismaService.buildings.findUnique.mockResolvedValue({ id: 'building-id' });
+      mockPrismaService.floors.create.mockResolvedValue(mockFloor);
 
       const result = await service.create(dto);
 
@@ -80,7 +80,7 @@ describe('FloorService', () => {
         floorNumber: 5,
       };
 
-      mockPrismaService.floor.findUnique.mockResolvedValue(mockFloor);
+      mockPrismaService.floors.findUnique.mockResolvedValue(mockFloor);
 
       await expect(service.create(dto)).rejects.toThrow(ConflictException);
     });
@@ -93,8 +93,8 @@ describe('FloorService', () => {
         floorNumber: 5,
       };
 
-      mockPrismaService.floor.findUnique.mockResolvedValue(null);
-      mockPrismaService.building.findUnique.mockResolvedValue(null);
+      mockPrismaService.floors.findUnique.mockResolvedValue(null);
+      mockPrismaService.buildings.findUnique.mockResolvedValue(null);
 
       await expect(service.create(dto)).rejects.toThrow(NotFoundException);
     });
@@ -102,7 +102,7 @@ describe('FloorService', () => {
 
   describe('findAll', () => {
     it('should return all floors', async () => {
-      mockPrismaService.floor.findMany.mockResolvedValue([mockFloor]);
+      mockPrismaService.floors.findMany.mockResolvedValue([mockFloor]);
 
       const result = await service.findAll();
 
@@ -113,7 +113,7 @@ describe('FloorService', () => {
 
   describe('findOne', () => {
     it('should return a floor by ID', async () => {
-      mockPrismaService.floor.findUnique.mockResolvedValue(mockFloor);
+      mockPrismaService.floors.findUnique.mockResolvedValue(mockFloor);
 
       const result = await service.findOne(mockFloor.id);
 
@@ -121,7 +121,7 @@ describe('FloorService', () => {
     });
 
     it('should throw NotFoundException if not found', async () => {
-      mockPrismaService.floor.findUnique.mockResolvedValue(null);
+      mockPrismaService.floors.findUnique.mockResolvedValue(null);
 
       await expect(service.findOne('invalid-id')).rejects.toThrow(NotFoundException);
     });
