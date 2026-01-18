@@ -1,0 +1,218 @@
+// HR Service - Prisma Schema
+//
+// STATUS: Structure Backup Only (Do NOT apply to database)
+//
+// This schema is for documentation purposes only.
+// Actual migrations will be created with goose when implementing.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// ATTENDANCE
+// =============================================================================
+
+/// Clock in/out records
+/// Source: auth_db.attendance_records
+model AttendanceRecord {
+  id               String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid // References identity_db.accounts
+  clockInAt        DateTime  @map("clock_in_at") @db.Timestamptz
+  clockOutAt       DateTime? @map("clock_out_at") @db.Timestamptz
+  clockInIp        String?   @map("clock_in_ip") @db.Inet
+  clockOutIp       String?   @map("clock_out_ip") @db.Inet
+  clockInLocation  Json?     @map("clock_in_location") @db.JsonB
+  clockOutLocation Json?     @map("clock_out_location") @db.JsonB
+  workType         WorkType  @default(OFFICE) @map("work_type")
+  notes            String?
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("attendance_records")
+}
+
+enum WorkType {
+  OFFICE
+  REMOTE
+  HYBRID
+  FIELD
+}
+
+/// Work schedule definitions
+/// Source: auth_db.work_schedules
+model WorkSchedule {
+  id            String       @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId        String       @map("user_id") @db.Uuid
+  scheduleType  ScheduleType @default(STANDARD) @map("schedule_type")
+  startTime     String       @map("start_time") // "09:00"
+  endTime       String       @map("end_time") // "18:00"
+  breakMinutes  Int          @default(60) @map("break_minutes")
+  workDays      Int[]        @map("work_days") // [1,2,3,4,5] = Mon-Fri
+  effectiveFrom DateTime     @map("effective_from") @db.Date
+  effectiveTo   DateTime?    @map("effective_to") @db.Date
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("work_schedules")
+}
+
+enum ScheduleType {
+  STANDARD
+  SHIFT
+  FLEXIBLE
+}
+
+/// Overtime requests
+/// Source: auth_db.overtime_requests
+model OvertimeRequest {
+  id         String         @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId     String         @map("user_id") @db.Uuid
+  date       DateTime       @db.Date
+  hours      Decimal        @db.Decimal(4, 2)
+  reason     String
+  status     ApprovalStatus @default(PENDING)
+  approverId String?        @map("approver_id") @db.Uuid
+  approvedAt DateTime?      @map("approved_at") @db.Timestamptz
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("overtime_requests")
+}
+
+// =============================================================================
+// LEAVE
+// =============================================================================
+
+/// Leave requests
+/// Source: auth_db.leave_requests
+model LeaveRequest {
+  id        String         @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId    String         @map("user_id") @db.Uuid
+  leaveType LeaveType      @map("leave_type")
+  startDate DateTime       @map("start_date") @db.Date
+  endDate   DateTime       @map("end_date") @db.Date
+  days      Decimal        @db.Decimal(4, 1)
+  reason    String?
+  status    ApprovalStatus @default(DRAFT)
+
+  // Multi-level approval
+  firstApproverId  String?   @map("first_approver_id") @db.Uuid
+  firstApprovedAt  DateTime? @map("first_approved_at") @db.Timestamptz
+  secondApproverId String?   @map("second_approver_id") @db.Uuid
+  secondApprovedAt DateTime? @map("second_approved_at") @db.Timestamptz
+  finalApproverId  String?   @map("final_approver_id") @db.Uuid
+  finalApprovedAt  DateTime? @map("final_approved_at") @db.Timestamptz
+
+  rejectedById    String?   @map("rejected_by_id") @db.Uuid
+  rejectedAt      DateTime? @map("rejected_at") @db.Timestamptz
+  rejectionReason String?   @map("rejection_reason")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("leave_requests")
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  PARENTAL
+  UNPAID
+  COMPENSATORY
+  STUDY
+  BEREAVEMENT
+}
+
+enum ApprovalStatus {
+  DRAFT
+  PENDING
+  FIRST_APPROVED
+  SECOND_APPROVED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+/// Leave balances per user per year
+/// Source: auth_db.leave_balances
+model LeaveBalance {
+  id          String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  year        Int
+  leaveType   LeaveType @map("leave_type")
+  totalDays   Decimal   @map("total_days") @db.Decimal(4, 1)
+  usedDays    Decimal   @default(0) @map("used_days") @db.Decimal(4, 1)
+  carriedOver Decimal   @default(0) @map("carried_over") @db.Decimal(4, 1)
+  tenureBonus Decimal   @default(0) @map("tenure_bonus") @db.Decimal(4, 1)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([userId, year, leaveType])
+  @@map("leave_balances")
+}
+
+// =============================================================================
+// DELEGATION
+// =============================================================================
+
+/// Authority delegations
+/// Source: auth_db.delegations
+model Delegation {
+  id           String           @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  delegatorId  String           @map("delegator_id") @db.Uuid
+  delegateeId  String           @map("delegatee_id") @db.Uuid
+  permissions  String[] // Permission keys to delegate
+  startDate    DateTime         @map("start_date") @db.Timestamptz
+  endDate      DateTime         @map("end_date") @db.Timestamptz
+  status       DelegationStatus @default(PENDING)
+  reason       String?
+
+  // Constraints
+  allowedHoursStart String?  @map("allowed_hours_start") // "09:00"
+  allowedHoursEnd   String?  @map("allowed_hours_end") // "18:00"
+  allowedIps        String[] @map("allowed_ips")
+  maxActions        Int?     @map("max_actions")
+
+  approverId       String?   @map("approver_id") @db.Uuid
+  approvedAt       DateTime? @map("approved_at") @db.Timestamptz
+  revokedById      String?   @map("revoked_by_id") @db.Uuid
+  revokedAt        DateTime? @map("revoked_at") @db.Timestamptz
+  revocationReason String?   @map("revocation_reason")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  logs DelegationLog[]
+
+  @@map("delegations")
+}
+
+enum DelegationStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+/// Delegation audit logs
+/// Source: auth_db.delegation_logs
+model DelegationLog {
+  id            String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  delegationId  String   @map("delegation_id") @db.Uuid
+  action        String // Action performed
+  performedById String   @map("performed_by_id") @db.Uuid
+  ipAddress     String?  @map("ip_address") @db.Inet
+  userAgent     String?  @map("user_agent")
+  details       Json?    @db.JsonB
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  delegation Delegation @relation(fields: [delegationId], references: [id])
+
+  @@map("delegation_logs")
+}
