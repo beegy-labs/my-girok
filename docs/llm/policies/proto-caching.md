@@ -376,22 +376,211 @@ concurrency:
 
 **Context**: Open-source alternatives to Buf Schema Registry emerging in 2026.
 
-**Options**:
+#### Options Comparison
 
-1. **Confluent Schema Registry**: Supports Protobuf, self-hosted, Apache 2.0
-2. **Protodex**: CLI + SQLite registry, self-hosted
-3. **Buffrs**: Planning S3-based registry (not yet released)
+**1. Buffrs** ([GitHub](https://github.com/helsing-ai/buffrs))
 
-**Evaluation Criteria**:
+**What is it:**
 
-- Self-hosting complexity
-- Storage backend (prefer S3/blob storage)
-- API compatibility with Buf
-- Active maintenance
+- Modern protocol buffers package manager built in Rust
+- Open-sourced by Helsing AI (AI defense systems company)
+- Inspired by Cargo (Rust's package manager)
+- Apache 2.0 license
 
-**Recommendation**: Monitor Buffrs development, consider migration when S3-based registry is stable.
+**Key Features:**
 
-**Priority**: Low (current solution working well)
+- Self-hostable S3-based registry (`buffrs-registry`)
+- Lock files with reproducible builds
+- Cryptographic checksums (built-in)
+- Workspace support for monorepos
+- Local dependencies with path references
+- Artifactory integration
+- Semantic versioning
+
+**Status (2026-01):**
+
+- Early stage (~300 GitHub stars)
+- Active development
+- Documentation: [Buffrs Book](https://helsing-ai.github.io/buffrs/)
+- CLI: `cargo install buffrs`
+
+**Pros:**
+
+- Native package management (vs our hash-based workaround)
+- Lock file ensures reproducibility
+- Built-in checksums and versioning
+- Designed for scale (monorepos, workspaces)
+
+**Cons:**
+
+- Requires `buffrs-registry` deployment (K8s + S3/Minio)
+- Learning curve (new CLI tool)
+- Not yet widely adopted (unproven at scale)
+- Additional infrastructure overhead
+
+**Migration Complexity:** Medium-High
+
+- Deploy buffrs-registry to K8s
+- Configure S3/Minio backend
+- Replace Buf CLI with Buffrs CLI
+- Convert existing proto definitions to Buffrs packages
+- Update CI/CD workflows
+
+**2. Confluent Schema Registry**
+
+**What is it:**
+
+- RESTful API for storing and retrieving schemas
+- Supports Avro, JSON Schema, Protobuf
+- Apache 2.0 license (except client libs)
+
+**Status:** Mature, widely used in Kafka ecosystems
+
+**Pros:**
+
+- Production-proven
+- Multi-format support
+- Strong community
+
+**Cons:**
+
+- Kafka-centric design
+- JVM dependency (not lightweight)
+- Overkill for pure gRPC use case
+
+**Migration Complexity:** High
+
+**3. Protodex** ([GitHub](https://github.com/sirrobot01/protodex))
+
+**What is it:**
+
+- Self-hosted protobuf schema registry
+- CLI tool + registry server
+- SQLite database
+
+**Status:** Early stage, minimal adoption
+
+**Pros:**
+
+- Lightweight (SQLite)
+- Simple setup
+
+**Cons:**
+
+- Limited features
+- Small community
+- SQLite not ideal for distributed systems
+
+**Migration Complexity:** Low-Medium
+
+#### Evaluation Criteria
+
+| Criterion        | Buffrs      | Confluent  | Protodex  | Current (Gitea+Buf) |
+| ---------------- | ----------- | ---------- | --------- | ------------------- |
+| Self-hosting     | S3-based    | K8s + DB   | SQLite    | Gitea ✅            |
+| Storage backend  | S3/Minio    | PostgreSQL | SQLite    | Generic packages ✅ |
+| Versioning       | Semantic    | Schema ID  | Version   | Hash-based ✅       |
+| Lock files       | ✅          | ❌         | ❌        | ❌                  |
+| Checksums        | ✅ Built-in | ❌         | ❌        | ✅ Manual           |
+| Monorepo support | ✅ Native   | ⚠️         | ⚠️        | ✅ pnpm workspace   |
+| Maturity         | Early       | Mature     | Early     | Proven ✅           |
+| Complexity       | Medium      | High       | Low       | Low ✅              |
+| Cost             | $0 + time   | $0 + time  | $0 + time | $0 ✅               |
+
+#### Decision Framework
+
+**Migrate to Buffrs when ONE of these conditions is met:**
+
+1. ✅ **Ecosystem maturity**: Buffrs reaches 1000+ GitHub stars and/or CNCF Sandbox status
+2. ✅ **Enterprise adoption**: Major companies (Google, Netflix, Uber) publicly use Buffrs
+3. ✅ **Clear advantage**: Buffrs provides 2x+ performance or critical missing features
+4. ✅ **Current solution limits**: Gitea approach fails to scale or lacks required functionality
+5. ✅ **Buf deprecation**: Buf CLI/BSR announces end-of-life
+
+**Current recommendation (2026-01):**
+
+- **Monitor quarterly**: Check Buffrs GitHub activity, blog posts, adoption
+- **No immediate action**: Current Gitea + Buf solution is 2026 best practice compliant
+- **Re-evaluate**: 2027 Q2 (12-18 months from now)
+
+#### Monitoring Checklist
+
+**Every 3 months, check:**
+
+- [ ] Buffrs GitHub stars and commit activity
+- [ ] [Helsing Blog](https://blog.helsing.ai/) for roadmap updates
+- [ ] Production case studies or testimonials
+- [ ] CNCF project status (if submitted)
+- [ ] Comparison with Buf BSR feature parity
+
+**Triggers for immediate re-evaluation:**
+
+- Buf announces rate limit changes affecting us
+- Gitea generic packages encounter scaling issues
+- Team requests native lock file support
+- Buffrs announces 1.0 release
+
+#### Migration Roadmap (IF/WHEN needed)
+
+**Phase 1: Proof of Concept (1 week)**
+
+1. Deploy buffrs-registry locally (Docker Compose)
+2. Convert one proto package (e.g., `common/`)
+3. Test CLI workflow (`buffrs init`, `buffrs add`, `buffrs publish`)
+
+**Phase 2: Parallel Infrastructure (2 weeks)**
+
+1. Deploy buffrs-registry to K8s (staging)
+2. Configure S3/Minio backend
+3. Publish all proto packages to both registries
+
+**Phase 3: Migration (1 week)**
+
+1. Update CI/CD to use `buffrs` instead of `buf`
+2. Replace Gitea downloads with `buffrs install`
+3. Monitor for issues
+
+**Phase 4: Cleanup (1 week)**
+
+1. Deprecate Gitea proto packages
+2. Update documentation
+3. Archive old packages
+
+**Total estimated effort**: 5 weeks (1 engineer)
+
+**Risk**: Medium (new tooling, potential bugs)
+
+#### Current Strategy: "Watch but Don't Rush"
+
+**Why NOT migrate now:**
+
+1. **Current solution is best practice** (2026 standards)
+   - Hash-based versioning ✅
+   - Checksum verification ✅
+   - Fallback mechanism ✅
+   - Self-hosted ✅
+   - 59-67% performance gain ✅
+
+2. **Buffrs is unproven** at our scale
+   - Few public production deployments
+   - Limited community support
+   - No major enterprise endorsements
+
+3. **Migration ROI unclear**
+   - Current: $0/month, working perfectly
+   - Buffrs: Infrastructure overhead + learning curve
+   - No clear pain points to solve
+
+4. **Buf is still industry standard** (2026)
+   - Widely adopted
+   - Excellent documentation
+   - Active development
+
+**When to migrate:** When clear benefits outweigh switching costs
+
+**Priority**: Low (monitoring only)
+
+**Next review date**: 2027-06-01 (18 months)
 
 ## Security Considerations
 
