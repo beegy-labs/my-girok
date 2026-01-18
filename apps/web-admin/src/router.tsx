@@ -37,12 +37,10 @@ const UserActivityPage = lazy(() => import('./pages/users/UserActivityPage'));
 const AuthorizationPage = lazy(() => import('./pages/authorization/AuthorizationPage'));
 const SharedSessionPage = lazy(() => import('./pages/shared/SharedSessionPage'));
 
-// HR Pages
-const EmployeesPage = lazy(() => import('./pages/employees/EmployeesPage'));
-const EmployeeDetailPage = lazy(() => import('./pages/employees/EmployeeDetailPage'));
-const AttendancePage = lazy(() => import('./pages/attendance/AttendancePage'));
-const LeavePage = lazy(() => import('./pages/leave/LeavePage'));
-const DelegationsPage = lazy(() => import('./pages/delegations/DelegationsPage'));
+// HR Pages removed: Phase 1 of user model refactor (PR #585)
+// HR employees migrated from admins table to accounts table (identity_db)
+// HR management will be handled by dedicated hr-service, not web-admin
+// See: docs/llm/policies/data-migration.md
 
 // Page wrapper with Suspense and Error Boundary
 function PageWrapper() {
@@ -297,48 +295,6 @@ export const router = createBrowserRouter([
             element: (
               <PrivateRoute permission="authorization:manage">
                 <AuthorizationPage />
-              </PrivateRoute>
-            ),
-          },
-
-          // HR Management
-          {
-            path: 'hr/employees',
-            element: (
-              <PrivateRoute permission="admin:read">
-                <EmployeesPage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'hr/employees/:id',
-            element: (
-              <PrivateRoute permission="admin:read">
-                <EmployeeDetailPage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'hr/attendance',
-            element: (
-              <PrivateRoute permission="attendance:read">
-                <AttendancePage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'hr/leave',
-            element: (
-              <PrivateRoute permission="leave:read">
-                <LeavePage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'hr/delegations',
-            element: (
-              <PrivateRoute permission="delegation:read">
-                <DelegationsPage />
               </PrivateRoute>
             ),
           },

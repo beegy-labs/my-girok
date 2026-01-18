@@ -18,10 +18,6 @@ import {
   Video,
   UserCircle,
   Key,
-  Briefcase,
-  Clock,
-  Calendar,
-  UserCog,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -150,60 +146,19 @@ export const MENU_CONFIG: MenuItem[] = [
     ],
   },
   {
-    id: 'hr',
-    icon: Briefcase,
-    labelKey: 'menu.hr',
-    permission: 'admin:read',
-    order: 5,
-    parentId: null,
-    children: [
-      {
-        id: 'hr-employees',
-        path: '/hr/employees',
-        icon: Users,
-        labelKey: 'menu.employees',
-        order: 0,
-      },
-      {
-        id: 'hr-attendance',
-        path: '/hr/attendance',
-        icon: Clock,
-        labelKey: 'menu.attendance',
-        permission: 'attendance:read',
-        order: 1,
-      },
-      {
-        id: 'hr-leave',
-        path: '/hr/leave',
-        icon: Calendar,
-        labelKey: 'menu.leave',
-        permission: 'leave:read',
-        order: 2,
-      },
-      {
-        id: 'hr-delegations',
-        path: '/hr/delegations',
-        icon: UserCog,
-        labelKey: 'menu.delegations',
-        permission: 'delegation:read',
-        order: 3,
-      },
-    ],
-  },
-  {
     id: 'authorization',
     path: '/authorization',
     icon: Key,
     labelKey: 'menu.authorization',
     permission: 'authorization:manage',
-    order: 6,
+    order: 5,
     parentId: null,
   },
   {
     id: 'system',
     icon: Settings2,
     labelKey: 'menu.system',
-    order: 7,
+    order: 6,
     parentId: null,
     children: [
       {
