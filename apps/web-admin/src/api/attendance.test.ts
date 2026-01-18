@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { attendanceApi, workScheduleApi } from './attendance';
-import type { Attendance, AttendanceListResponse, AttendanceStats } from '@my-girok/types';
+import type { Attendance, AttendanceListResponse } from '@my-girok/types';
+import { AttendanceStatus, ScheduleType } from '@my-girok/types';
 
 // Mock apiClient
 const mockGet = vi.fn();
@@ -29,7 +30,7 @@ describe('attendanceApi', () => {
         adminId: 'admin-1',
         date: '2024-01-01',
         clockIn: '2024-01-01T09:00:00Z',
-        status: 'PRESENT',
+        status: AttendanceStatus.PRESENT,
         overtimeApproved: false,
         createdAt: '2024-01-01T09:00:00Z',
         updatedAt: '2024-01-01T09:00:00Z',
@@ -52,7 +53,7 @@ describe('attendanceApi', () => {
             id: '1',
             adminId: 'admin-1',
             date: '2024-01-01',
-            status: 'PRESENT',
+            status: AttendanceStatus.PRESENT,
             overtimeApproved: false,
             createdAt: '2024-01-01T09:00:00Z',
             updatedAt: '2024-01-01T09:00:00Z',
@@ -77,7 +78,7 @@ describe('attendanceApi', () => {
         id: '1',
         adminId: 'admin-1',
         date: '2024-01-01',
-        status: 'PRESENT',
+        status: AttendanceStatus.PRESENT,
         overtimeHours: 2,
         overtimeApproved: true,
         createdAt: '2024-01-01T09:00:00Z',
@@ -103,7 +104,7 @@ describe('workScheduleApi', () => {
     it('should create work schedule', async () => {
       const createDto = {
         adminId: 'admin-1',
-        scheduleType: 'FIXED' as const,
+        scheduleType: ScheduleType.STANDARD,
         startTime: '09:00',
         endTime: '18:00',
         workDays: [1, 2, 3, 4, 5],

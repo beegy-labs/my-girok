@@ -11,6 +11,10 @@ import type {
   EmployeeListResponse,
   UpdateEmployeeDto,
 } from '@my-girok/types';
+import { EmployeeSchema, EmployeeListResponseSchema } from '@my-girok/types';
+
+// Re-export types
+export type { Employee, EmployeeListFilter, EmployeeListResponse, UpdateEmployeeDto };
 
 /**
  * Employee Management API Client
@@ -21,7 +25,7 @@ export const employeeApi = {
    */
   getMyProfile: async (): Promise<Employee> => {
     const response = await apiClient.get(API_ENDPOINTS.EMPLOYEES.MY_PROFILE);
-    return response.data;
+    return EmployeeSchema.parse(response.data) as Employee;
   },
 
   /**
@@ -31,7 +35,7 @@ export const employeeApi = {
     const response = await apiClient.get(API_ENDPOINTS.EMPLOYEES.LIST, {
       params: filter,
     });
-    return response.data;
+    return EmployeeListResponseSchema.parse(response.data) as EmployeeListResponse;
   },
 
   /**
@@ -39,7 +43,7 @@ export const employeeApi = {
    */
   getById: async (id: string): Promise<Employee> => {
     const response = await apiClient.get(API_ENDPOINTS.EMPLOYEES.DETAIL(id));
-    return response.data;
+    return EmployeeSchema.parse(response.data) as Employee;
   },
 
   /**
@@ -47,7 +51,7 @@ export const employeeApi = {
    */
   update: async (id: string, data: UpdateEmployeeDto): Promise<Employee> => {
     const response = await apiClient.patch(API_ENDPOINTS.EMPLOYEES.UPDATE(id), data);
-    return response.data;
+    return EmployeeSchema.parse(response.data) as Employee;
   },
 
   /**
@@ -55,7 +59,7 @@ export const employeeApi = {
    */
   updateScimCore: async (id: string, data: Partial<UpdateEmployeeDto>): Promise<Employee> => {
     const response = await apiClient.patch(API_ENDPOINTS.EMPLOYEES.UPDATE_SCIM(id), data);
-    return response.data;
+    return EmployeeSchema.parse(response.data) as Employee;
   },
 
   /**
@@ -63,7 +67,7 @@ export const employeeApi = {
    */
   updateEmployeeInfo: async (id: string, data: Partial<UpdateEmployeeDto>): Promise<Employee> => {
     const response = await apiClient.patch(API_ENDPOINTS.EMPLOYEES.UPDATE_EMPLOYEE(id), data);
-    return response.data;
+    return EmployeeSchema.parse(response.data) as Employee;
   },
 
   /**
@@ -74,7 +78,7 @@ export const employeeApi = {
     data: Partial<UpdateEmployeeDto>,
   ): Promise<Employee> => {
     const response = await apiClient.patch(API_ENDPOINTS.EMPLOYEES.UPDATE_JOB(id), data);
-    return response.data;
+    return EmployeeSchema.parse(response.data) as Employee;
   },
 
   /**
@@ -82,6 +86,6 @@ export const employeeApi = {
    */
   updateContactInfo: async (id: string, data: Partial<UpdateEmployeeDto>): Promise<Employee> => {
     const response = await apiClient.patch(API_ENDPOINTS.EMPLOYEES.UPDATE_CONTACT(id), data);
-    return response.data;
+    return EmployeeSchema.parse(response.data) as Employee;
   },
 };

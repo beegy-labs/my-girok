@@ -3,6 +3,7 @@
  * Endpoints for managing employee leave requests and balances
  */
 
+import { z } from 'zod';
 import apiClient from './client';
 import { API_ENDPOINTS } from './endpoints';
 import type {
@@ -14,6 +15,22 @@ import type {
   ApproveLeaveRequestDto,
   AdjustLeaveBalanceDto,
 } from '@my-girok/types';
+import {
+  LeaveRequestSchema,
+  LeaveBalanceSchema,
+  LeaveRequestListResponseSchema,
+} from '@my-girok/types';
+
+// Re-export types
+export type {
+  LeaveRequest,
+  LeaveBalance,
+  LeaveRequestFilter,
+  LeaveRequestListResponse,
+  CreateLeaveRequestDto,
+  ApproveLeaveRequestDto,
+  AdjustLeaveBalanceDto,
+};
 
 /**
  * Leave Request API Client
@@ -24,7 +41,7 @@ export const leaveApi = {
    */
   create: async (data: CreateLeaveRequestDto): Promise<LeaveRequest> => {
     const response = await apiClient.post(API_ENDPOINTS.LEAVE.CREATE, data);
-    return response.data;
+    return LeaveRequestSchema.parse(response.data) as LeaveRequest;
   },
 
   /**
@@ -32,7 +49,7 @@ export const leaveApi = {
    */
   submit: async (id: string): Promise<LeaveRequest> => {
     const response = await apiClient.post(API_ENDPOINTS.LEAVE.SUBMIT(id));
-    return response.data;
+    return LeaveRequestSchema.parse(response.data) as LeaveRequest;
   },
 
   /**
@@ -40,7 +57,7 @@ export const leaveApi = {
    */
   approve: async (id: string, data: ApproveLeaveRequestDto): Promise<LeaveRequest> => {
     const response = await apiClient.post(API_ENDPOINTS.LEAVE.APPROVE(id), data);
-    return response.data;
+    return LeaveRequestSchema.parse(response.data) as LeaveRequest;
   },
 
   /**
@@ -48,7 +65,7 @@ export const leaveApi = {
    */
   cancel: async (id: string): Promise<LeaveRequest> => {
     const response = await apiClient.post(API_ENDPOINTS.LEAVE.CANCEL(id));
-    return response.data;
+    return LeaveRequestSchema.parse(response.data) as LeaveRequest;
   },
 
   /**
@@ -58,7 +75,7 @@ export const leaveApi = {
     const response = await apiClient.get(API_ENDPOINTS.LEAVE.MY_REQUESTS, {
       params: filter,
     });
-    return response.data;
+    return LeaveRequestListResponseSchema.parse(response.data) as LeaveRequestListResponse;
   },
 
   /**
@@ -66,7 +83,7 @@ export const leaveApi = {
    */
   getPendingApprovals: async (): Promise<LeaveRequest[]> => {
     const response = await apiClient.get(API_ENDPOINTS.LEAVE.PENDING_APPROVALS);
-    return response.data;
+    return z.array(LeaveRequestSchema).parse(response.data) as LeaveRequest[];
   },
 
   /**
@@ -74,7 +91,7 @@ export const leaveApi = {
    */
   getById: async (id: string): Promise<LeaveRequest> => {
     const response = await apiClient.get(API_ENDPOINTS.LEAVE.DETAIL(id));
-    return response.data;
+    return LeaveRequestSchema.parse(response.data) as LeaveRequest;
   },
 
   /**
@@ -84,7 +101,7 @@ export const leaveApi = {
     const response = await apiClient.get(API_ENDPOINTS.LEAVE.LIST, {
       params: filter,
     });
-    return response.data;
+    return LeaveRequestListResponseSchema.parse(response.data) as LeaveRequestListResponse;
   },
 };
 
@@ -101,7 +118,7 @@ export const leaveBalanceApi = {
       year,
       totalDays,
     });
-    return response.data;
+    return LeaveBalanceSchema.parse(response.data) as LeaveBalance;
   },
 
   /**
@@ -109,7 +126,7 @@ export const leaveBalanceApi = {
    */
   getMyBalance: async (): Promise<LeaveBalance> => {
     const response = await apiClient.get(API_ENDPOINTS.LEAVE_BALANCE.MY_BALANCE);
-    return response.data;
+    return LeaveBalanceSchema.parse(response.data) as LeaveBalance;
   },
 
   /**
@@ -117,7 +134,7 @@ export const leaveBalanceApi = {
    */
   getMyBalanceByYear: async (year: number): Promise<LeaveBalance> => {
     const response = await apiClient.get(API_ENDPOINTS.LEAVE_BALANCE.MY_BALANCE_YEAR(year));
-    return response.data;
+    return LeaveBalanceSchema.parse(response.data) as LeaveBalance;
   },
 
   /**
@@ -125,7 +142,7 @@ export const leaveBalanceApi = {
    */
   getAdminBalance: async (adminId: string, year: number): Promise<LeaveBalance> => {
     const response = await apiClient.get(API_ENDPOINTS.LEAVE_BALANCE.ADMIN_BALANCE(adminId, year));
-    return response.data;
+    return LeaveBalanceSchema.parse(response.data) as LeaveBalance;
   },
 
   /**
@@ -137,7 +154,7 @@ export const leaveBalanceApi = {
     data: AdjustLeaveBalanceDto,
   ): Promise<LeaveBalance> => {
     const response = await apiClient.patch(API_ENDPOINTS.LEAVE_BALANCE.ADJUST(adminId, year), data);
-    return response.data;
+    return LeaveBalanceSchema.parse(response.data) as LeaveBalance;
   },
 
   /**
@@ -145,7 +162,7 @@ export const leaveBalanceApi = {
    */
   recalculate: async (adminId: string, year: number): Promise<LeaveBalance> => {
     const response = await apiClient.post(API_ENDPOINTS.LEAVE_BALANCE.RECALCULATE(adminId, year));
-    return response.data;
+    return LeaveBalanceSchema.parse(response.data) as LeaveBalance;
   },
 
   /**
@@ -155,6 +172,6 @@ export const leaveBalanceApi = {
     const response = await apiClient.post(API_ENDPOINTS.LEAVE_BALANCE.INITIALIZE(adminId, year), {
       totalDays,
     });
-    return response.data;
+    return LeaveBalanceSchema.parse(response.data) as LeaveBalance;
   },
 };

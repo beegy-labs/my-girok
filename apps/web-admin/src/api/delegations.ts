@@ -3,6 +3,7 @@
  * Endpoints for managing employee delegations and access delegation
  */
 
+import { z } from 'zod';
 import apiClient from './client';
 import { API_ENDPOINTS } from './endpoints';
 import type {
@@ -14,6 +15,22 @@ import type {
   UpdateDelegationDto,
   ApproveDelegationDto,
 } from '@my-girok/types';
+import {
+  DelegationSchema,
+  DelegationLogSchema,
+  DelegationListResponseSchema,
+} from '@my-girok/types';
+
+// Re-export types
+export type {
+  Delegation,
+  DelegationLog,
+  DelegationFilter,
+  DelegationListResponse,
+  CreateDelegationDto,
+  UpdateDelegationDto,
+  ApproveDelegationDto,
+};
 
 /**
  * Delegation Management API Client
@@ -24,7 +41,7 @@ export const delegationApi = {
    */
   create: async (data: CreateDelegationDto): Promise<Delegation> => {
     const response = await apiClient.post(API_ENDPOINTS.DELEGATIONS.CREATE, data);
-    return response.data;
+    return DelegationSchema.parse(response.data) as Delegation;
   },
 
   /**
@@ -34,7 +51,7 @@ export const delegationApi = {
     const response = await apiClient.get(API_ENDPOINTS.DELEGATIONS.LIST, {
       params: filter,
     });
-    return response.data;
+    return DelegationListResponseSchema.parse(response.data) as DelegationListResponse;
   },
 
   /**
@@ -42,7 +59,7 @@ export const delegationApi = {
    */
   getMyDelegated: async (): Promise<Delegation[]> => {
     const response = await apiClient.get(API_ENDPOINTS.DELEGATIONS.MY_DELEGATED);
-    return response.data;
+    return z.array(DelegationSchema).parse(response.data) as Delegation[];
   },
 
   /**
@@ -50,7 +67,7 @@ export const delegationApi = {
    */
   getMyReceived: async (): Promise<Delegation[]> => {
     const response = await apiClient.get(API_ENDPOINTS.DELEGATIONS.MY_RECEIVED);
-    return response.data;
+    return z.array(DelegationSchema).parse(response.data) as Delegation[];
   },
 
   /**
@@ -58,7 +75,7 @@ export const delegationApi = {
    */
   getById: async (id: string): Promise<Delegation> => {
     const response = await apiClient.get(API_ENDPOINTS.DELEGATIONS.DETAIL(id));
-    return response.data;
+    return DelegationSchema.parse(response.data) as Delegation;
   },
 
   /**
@@ -66,7 +83,7 @@ export const delegationApi = {
    */
   update: async (id: string, data: UpdateDelegationDto): Promise<Delegation> => {
     const response = await apiClient.patch(API_ENDPOINTS.DELEGATIONS.UPDATE(id), data);
-    return response.data;
+    return DelegationSchema.parse(response.data) as Delegation;
   },
 
   /**
@@ -74,7 +91,7 @@ export const delegationApi = {
    */
   approve: async (id: string, data: ApproveDelegationDto): Promise<Delegation> => {
     const response = await apiClient.post(API_ENDPOINTS.DELEGATIONS.APPROVE(id), data);
-    return response.data;
+    return DelegationSchema.parse(response.data) as Delegation;
   },
 
   /**
@@ -82,7 +99,7 @@ export const delegationApi = {
    */
   revoke: async (id: string, reason?: string): Promise<Delegation> => {
     const response = await apiClient.post(API_ENDPOINTS.DELEGATIONS.REVOKE(id), { reason });
-    return response.data;
+    return DelegationSchema.parse(response.data) as Delegation;
   },
 
   /**
@@ -97,6 +114,6 @@ export const delegationApi = {
    */
   getLogs: async (id: string): Promise<DelegationLog[]> => {
     const response = await apiClient.get(API_ENDPOINTS.DELEGATIONS.LOGS(id));
-    return response.data;
+    return z.array(DelegationLogSchema).parse(response.data) as DelegationLog[];
   },
 };

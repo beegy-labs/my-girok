@@ -3,6 +3,7 @@
  * Endpoints for managing employee attendance and work schedules
  */
 
+import { z } from 'zod';
 import apiClient from './client';
 import { API_ENDPOINTS } from './endpoints';
 import type {
@@ -14,6 +15,23 @@ import type {
   CreateWorkScheduleDto,
   UpdateWorkScheduleDto,
 } from '@my-girok/types';
+import {
+  AttendanceSchema,
+  AttendanceStatsSchema,
+  AttendanceListResponseSchema,
+  WorkScheduleSchema,
+} from '@my-girok/types';
+
+// Re-export types
+export type {
+  Attendance,
+  AttendanceStats,
+  AttendanceFilter,
+  AttendanceListResponse,
+  WorkSchedule,
+  CreateWorkScheduleDto,
+  UpdateWorkScheduleDto,
+};
 
 /**
  * Attendance Management API Client
@@ -24,7 +42,7 @@ export const attendanceApi = {
    */
   clockIn: async (): Promise<Attendance> => {
     const response = await apiClient.post(API_ENDPOINTS.ATTENDANCE.CLOCK_IN);
-    return response.data;
+    return AttendanceSchema.parse(response.data) as Attendance;
   },
 
   /**
@@ -32,7 +50,7 @@ export const attendanceApi = {
    */
   clockOut: async (): Promise<Attendance> => {
     const response = await apiClient.post(API_ENDPOINTS.ATTENDANCE.CLOCK_OUT);
-    return response.data;
+    return AttendanceSchema.parse(response.data) as Attendance;
   },
 
   /**
@@ -42,7 +60,7 @@ export const attendanceApi = {
     const response = await apiClient.get(API_ENDPOINTS.ATTENDANCE.MY_RECORDS, {
       params: filter,
     });
-    return response.data;
+    return AttendanceListResponseSchema.parse(response.data) as AttendanceListResponse;
   },
 
   /**
@@ -52,7 +70,7 @@ export const attendanceApi = {
     const response = await apiClient.get(API_ENDPOINTS.ATTENDANCE.MY_STATS, {
       params: { startDate, endDate },
     });
-    return response.data;
+    return AttendanceStatsSchema.parse(response.data) as AttendanceStats;
   },
 
   /**
@@ -62,7 +80,7 @@ export const attendanceApi = {
     const response = await apiClient.get(API_ENDPOINTS.ATTENDANCE.LIST, {
       params: filter,
     });
-    return response.data;
+    return AttendanceListResponseSchema.parse(response.data) as AttendanceListResponse;
   },
 
   /**
@@ -70,7 +88,8 @@ export const attendanceApi = {
    */
   getByDate: async (date: string): Promise<Attendance[]> => {
     const response = await apiClient.get(API_ENDPOINTS.ATTENDANCE.BY_DATE(date));
-    return response.data;
+    const parsed = z.array(AttendanceSchema).parse(response.data);
+    return parsed as Attendance[];
   },
 
   /**
@@ -84,7 +103,7 @@ export const attendanceApi = {
     const response = await apiClient.get(API_ENDPOINTS.ATTENDANCE.ADMIN_STATS(adminId), {
       params: { startDate, endDate },
     });
-    return response.data;
+    return AttendanceStatsSchema.parse(response.data) as AttendanceStats;
   },
 
   /**
@@ -94,7 +113,7 @@ export const attendanceApi = {
     const response = await apiClient.patch(API_ENDPOINTS.ATTENDANCE.APPROVE_OVERTIME(id), {
       approved,
     });
-    return response.data;
+    return AttendanceSchema.parse(response.data) as Attendance;
   },
 };
 
@@ -107,7 +126,7 @@ export const workScheduleApi = {
    */
   create: async (data: CreateWorkScheduleDto): Promise<WorkSchedule> => {
     const response = await apiClient.post(API_ENDPOINTS.WORK_SCHEDULES.CREATE, data);
-    return response.data;
+    return WorkScheduleSchema.parse(response.data) as WorkSchedule;
   },
 
   /**
@@ -115,7 +134,7 @@ export const workScheduleApi = {
    */
   getMySchedules: async (): Promise<WorkSchedule[]> => {
     const response = await apiClient.get(API_ENDPOINTS.WORK_SCHEDULES.MY_SCHEDULES);
-    return response.data;
+    return z.array(WorkScheduleSchema).parse(response.data) as WorkSchedule[];
   },
 
   /**
@@ -123,7 +142,7 @@ export const workScheduleApi = {
    */
   getMyActiveSchedule: async (): Promise<WorkSchedule | null> => {
     const response = await apiClient.get(API_ENDPOINTS.WORK_SCHEDULES.MY_ACTIVE);
-    return response.data;
+    return response.data ? (WorkScheduleSchema.parse(response.data) as WorkSchedule) : null;
   },
 
   /**
@@ -131,7 +150,7 @@ export const workScheduleApi = {
    */
   getAdminSchedules: async (adminId: string): Promise<WorkSchedule[]> => {
     const response = await apiClient.get(API_ENDPOINTS.WORK_SCHEDULES.ADMIN_SCHEDULES(adminId));
-    return response.data;
+    return z.array(WorkScheduleSchema).parse(response.data) as WorkSchedule[];
   },
 
   /**
@@ -139,7 +158,7 @@ export const workScheduleApi = {
    */
   getById: async (id: string): Promise<WorkSchedule> => {
     const response = await apiClient.get(API_ENDPOINTS.WORK_SCHEDULES.DETAIL(id));
-    return response.data;
+    return WorkScheduleSchema.parse(response.data) as WorkSchedule;
   },
 
   /**
@@ -147,7 +166,7 @@ export const workScheduleApi = {
    */
   update: async (id: string, data: UpdateWorkScheduleDto): Promise<WorkSchedule> => {
     const response = await apiClient.patch(API_ENDPOINTS.WORK_SCHEDULES.UPDATE(id), data);
-    return response.data;
+    return WorkScheduleSchema.parse(response.data) as WorkSchedule;
   },
 
   /**

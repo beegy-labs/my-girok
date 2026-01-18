@@ -1,63 +1,34 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { ArrowLeft, User, Briefcase, Phone, Calendar, Loader2 } from 'lucide-react';
 import { Badge } from '@my-girok/ui-components';
-import { employeeApi, Employee } from '../../api/employees';
-import { useApiError } from '../../hooks/useApiError';
+import { employeeApi } from '../../api/employees';
 
-export default function EmployeeDetailPage() {
+/**
+ * Loading fallback component
+ */
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 size={32} className="animate-spin text-theme-primary" />
+    </div>
+  );
+}
+
+/**
+ * Employee detail data component using Suspense
+ */
+function EmployeeDetailData({ employeeId }: { employeeId: string }) {
   const { t } = useTranslation();
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [employee, setEmployee] = useState<Employee | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  const { executeWithErrorHandling, isLoading: loading } = useApiError({
-    context: 'EmployeeDetailPage.fetchEmployee',
-    retry: true,
+  const { data: employee } = useSuspenseQuery({
+    queryKey: ['employee', employeeId],
+    queryFn: () => employeeApi.getById(employeeId),
   });
-
-  useEffect(() => {
-    if (id) {
-      fetchEmployee();
-    }
-  }, [id]);
-
-  const fetchEmployee = async () => {
-    if (!id) return;
-
-    const data = await executeWithErrorHandling(async () => {
-      return await employeeApi.getById(id);
-    });
-
-    if (data) {
-      setEmployee(data);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 size={32} className="animate-spin text-theme-primary" />
-      </div>
-    );
-  }
-
-  if (!employee) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-theme-text-tertiary">
-        <User size={48} className="mb-4 opacity-50" />
-        <p>{t('hr.employees.notFound')}</p>
-        <Link
-          to="/hr/employees"
-          className="mt-4 px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90"
-        >
-          {t('hr.employees.backToEmployees')}
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -190,6 +161,35 @@ export default function EmployeeDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Employee detail page component
+ */
+export default function EmployeeDetailPage() {
+  const { t } = useTranslation();
+  const { id } = useParams<{ id: string }>();
+
+  if (!id) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-theme-text-tertiary">
+        <User size={48} className="mb-4 opacity-50" />
+        <p>{t('hr.employees.notFound')}</p>
+        <Link
+          to="/hr/employees"
+          className="mt-4 px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90"
+        >
+          {t('hr.employees.backToEmployees')}
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <EmployeeDetailData employeeId={id} />
+    </Suspense>
   );
 }
 

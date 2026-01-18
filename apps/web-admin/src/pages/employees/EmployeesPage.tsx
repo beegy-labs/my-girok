@@ -1,57 +1,187 @@
-import { useEffect, useState, useCallback } from 'react';
+import { Suspense, useState } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Users, Search, Filter, Loader2, Pencil } from 'lucide-react';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { Badge } from '@my-girok/ui-components';
-import { employeeApi, Employee, EmployeeListResponse } from '../../api/employees';
-import { useApiError } from '../../hooks/useApiError';
+import { employeeApi, type EmployeeListFilter } from '../../api/employees';
 
+/**
+ * Employee list data component (uses Suspense)
+ */
+function EmployeeListData({
+  filter,
+  onPageChange,
+}: {
+  filter: EmployeeListFilter;
+  onPageChange: (page: number) => void;
+}) {
+  const { t } = useTranslation();
+
+  const { data } = useSuspenseQuery({
+    queryKey: ['employees', filter],
+    queryFn: () => employeeApi.list(filter),
+  });
+
+  const { data: employees, total } = data;
+  const limit = filter.limit || 20;
+  const page = filter.page || 1;
+  const totalPages = Math.ceil(total / limit);
+
+  if (employees.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-theme-text-tertiary">
+        <Users size={48} className="mb-4 opacity-50" />
+        <p>{t('hr.employees.noEmployees')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="admin-table min-w-full">
+          <thead>
+            <tr>
+              <th>{t('hr.employees.name')}</th>
+              <th>{t('hr.employees.email')}</th>
+              <th>{t('hr.employees.employeeNumber')}</th>
+              <th>{t('hr.employees.department')}</th>
+              <th>{t('hr.employees.title')}</th>
+              <th>{t('common.status')}</th>
+              <th>{t('common.actions')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {employees.map((employee) => (
+              <tr key={employee.id}>
+                <td>
+                  <div className="font-medium text-theme-text-primary">
+                    {employee.displayName || employee.userName || '-'}
+                  </div>
+                  {employee.givenName && employee.familyName && (
+                    <div className="text-xs text-theme-text-tertiary">
+                      {employee.givenName} {employee.familyName}
+                    </div>
+                  )}
+                </td>
+                <td>
+                  <span className="text-sm text-theme-text-secondary">{employee.email}</span>
+                </td>
+                <td>
+                  <span className="text-sm font-mono">{employee.employeeNumber || '-'}</span>
+                </td>
+                <td>
+                  <span className="text-sm">{employee.department || '-'}</span>
+                </td>
+                <td>
+                  <span className="text-sm">{employee.title || '-'}</span>
+                </td>
+                <td>
+                  <Badge variant={employee.active ? 'success' : 'default'}>
+                    {employee.active ? t('common.active') : t('common.inactive')}
+                  </Badge>
+                </td>
+                <td>
+                  <Link
+                    to={`/hr/employees/${employee.id}`}
+                    className="inline-flex items-center gap-1 px-3 py-1 text-sm text-theme-primary hover:bg-theme-bg-hover rounded-lg transition-colors"
+                  >
+                    <Pencil size={14} />
+                    {t('common.view')}
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <EmployeePagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
+      )}
+    </>
+  );
+}
+
+/**
+ * Pagination component
+ */
+function EmployeePagination({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex items-center justify-between px-4 py-3 border-t border-theme-border-default">
+      <div className="text-sm text-theme-text-tertiary">
+        {t('common.page', { current: page, total: totalPages })}
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => onPageChange(Math.max(1, page - 1))}
+          disabled={page === 1}
+          className="px-3 py-1 text-sm border border-theme-border-default rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-theme-bg-hover"
+        >
+          {t('common.previous')}
+        </button>
+        <button
+          onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+          disabled={page === totalPages}
+          className="px-3 py-1 text-sm border border-theme-border-default rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-theme-bg-hover"
+        >
+          {t('common.next')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Loading fallback component
+ */
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 size={32} className="animate-spin text-theme-primary" />
+    </div>
+  );
+}
+
+/**
+ * Employees Page (main component)
+ */
 export default function EmployeesPage() {
   const { t } = useTranslation();
-  const [employees, setEmployees] = useState<Employee[]>([]);
 
-  // Filters
+  // Filters state
   const [search, setSearch] = useState('');
   const [department, setDepartment] = useState('');
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
-
-  // Pagination
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
+
   const limit = 20;
 
-  const { executeWithErrorHandling, isLoading: loading } = useApiError({
-    context: 'EmployeesPage.fetchEmployees',
-    retry: true,
-  });
-
-  const fetchEmployees = useCallback(async () => {
-    const response = await executeWithErrorHandling(async () => {
-      return await employeeApi.list({
-        page,
-        limit,
-        search: search || undefined,
-        department: department || undefined,
-        active: activeFilter,
-      });
-    });
-    if (response) {
-      setEmployees(response.data);
-      setTotal(response.total);
-    }
-  }, [page, search, department, activeFilter, executeWithErrorHandling]);
-
-  useEffect(() => {
-    fetchEmployees();
-  }, [fetchEmployees]);
+  // Build filter object
+  const filter: EmployeeListFilter = {
+    page,
+    limit,
+    search: search || undefined,
+    department: department || undefined,
+    active: activeFilter,
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
-    fetchEmployees();
   };
-
-  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="space-y-6">
@@ -124,110 +254,37 @@ export default function EmployeesPage() {
             <option value="false">{t('common.inactive')}</option>
           </select>
 
-          <div className="text-xs sm:text-sm text-theme-text-tertiary pt-2 border-t border-theme-border-default sm:pt-0 sm:border-t-0 sm:ml-auto">
-            {t('hr.employees.count', { count: total })}
-          </div>
+          <Suspense
+            fallback={<span className="text-xs sm:text-sm text-theme-text-tertiary">...</span>}
+          >
+            <EmployeeCount filter={filter} />
+          </Suspense>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table with Suspense */}
       <div className="bg-theme-bg-card border border-theme-border-default rounded-xl overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 size={32} className="animate-spin text-theme-primary" />
-          </div>
-        ) : employees.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-theme-text-tertiary">
-            <Users size={48} className="mb-4 opacity-50" />
-            <p>{t('hr.employees.noEmployees')}</p>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="admin-table min-w-full">
-                <thead>
-                  <tr>
-                    <th>{t('hr.employees.name')}</th>
-                    <th>{t('hr.employees.email')}</th>
-                    <th>{t('hr.employees.employeeNumber')}</th>
-                    <th>{t('hr.employees.department')}</th>
-                    <th>{t('hr.employees.title')}</th>
-                    <th>{t('common.status')}</th>
-                    <th>{t('common.actions')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employees.map((employee) => (
-                    <tr key={employee.id}>
-                      <td>
-                        <div className="font-medium text-theme-text-primary">
-                          {employee.displayName || employee.userName || '-'}
-                        </div>
-                        {employee.givenName && employee.familyName && (
-                          <div className="text-xs text-theme-text-tertiary">
-                            {employee.givenName} {employee.familyName}
-                          </div>
-                        )}
-                      </td>
-                      <td>
-                        <span className="text-sm text-theme-text-secondary">{employee.email}</span>
-                      </td>
-                      <td>
-                        <span className="text-sm font-mono">{employee.employeeNumber || '-'}</span>
-                      </td>
-                      <td>
-                        <span className="text-sm">{employee.department || '-'}</span>
-                      </td>
-                      <td>
-                        <span className="text-sm">{employee.title || '-'}</span>
-                      </td>
-                      <td>
-                        <Badge variant={employee.active ? 'success' : 'default'}>
-                          {employee.active ? t('common.active') : t('common.inactive')}
-                        </Badge>
-                      </td>
-                      <td>
-                        <Link
-                          to={`/hr/employees/${employee.id}`}
-                          className="inline-flex items-center gap-1 px-3 py-1 text-sm text-theme-primary hover:bg-theme-bg-hover rounded-lg transition-colors"
-                        >
-                          <Pencil size={14} />
-                          {t('common.view')}
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-theme-border-default">
-                <div className="text-sm text-theme-text-tertiary">
-                  {t('common.page', { current: page, total: totalPages })}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="px-3 py-1 text-sm border border-theme-border-default rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-theme-bg-hover"
-                  >
-                    {t('common.previous')}
-                  </button>
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="px-3 py-1 text-sm border border-theme-border-default rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-theme-bg-hover"
-                  >
-                    {t('common.next')}
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+        <Suspense fallback={<LoadingFallback />}>
+          <EmployeeListData filter={filter} onPageChange={setPage} />
+        </Suspense>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Employee count component (separate query for count display)
+ */
+function EmployeeCount({ filter }: { filter: EmployeeListFilter }) {
+  const { t } = useTranslation();
+  const { data } = useSuspenseQuery({
+    queryKey: ['employees', filter],
+    queryFn: () => employeeApi.list(filter),
+  });
+
+  return (
+    <div className="text-xs sm:text-sm text-theme-text-tertiary pt-2 border-t border-theme-border-default sm:pt-0 sm:border-t-0 sm:ml-auto">
+      {t('hr.employees.count', { count: data.total })}
     </div>
   );
 }

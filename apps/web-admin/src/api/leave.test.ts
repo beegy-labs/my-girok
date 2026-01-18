@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { leaveApi, leaveBalanceApi } from './leave';
 import type { LeaveRequest, LeaveBalance, LeaveRequestListResponse } from '@my-girok/types';
+import { LeaveType, LeaveStatus } from '@my-girok/types';
 
 // Mock apiClient
 const mockGet = vi.fn();
@@ -23,7 +24,7 @@ describe('leaveApi', () => {
   describe('create', () => {
     it('should create leave request', async () => {
       const createDto = {
-        leaveType: 'ANNUAL' as const,
+        leaveType: LeaveType.ANNUAL,
         startDate: '2024-01-15',
         endDate: '2024-01-17',
         days: 3,
@@ -34,7 +35,7 @@ describe('leaveApi', () => {
         id: '1',
         adminId: 'admin-1',
         ...createDto,
-        status: 'DRAFT',
+        status: LeaveStatus.DRAFT,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z',
       };
@@ -53,11 +54,11 @@ describe('leaveApi', () => {
       const mockRequest: LeaveRequest = {
         id: '1',
         adminId: 'admin-1',
-        leaveType: 'ANNUAL',
+        leaveType: LeaveType.ANNUAL,
         startDate: '2024-01-15',
         endDate: '2024-01-17',
         days: 3,
-        status: 'PENDING',
+        status: LeaveStatus.PENDING,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z',
       };
@@ -76,11 +77,11 @@ describe('leaveApi', () => {
       const mockRequest: LeaveRequest = {
         id: '1',
         adminId: 'admin-1',
-        leaveType: 'ANNUAL',
+        leaveType: LeaveType.ANNUAL,
         startDate: '2024-01-15',
         endDate: '2024-01-17',
         days: 3,
-        status: 'APPROVED',
+        status: LeaveStatus.APPROVED,
         approverId: 'manager-1',
         approverComment: 'Approved',
         approvedAt: '2024-01-02T00:00:00Z',
@@ -107,11 +108,11 @@ describe('leaveApi', () => {
           {
             id: '1',
             adminId: 'admin-1',
-            leaveType: 'ANNUAL',
+            leaveType: LeaveType.ANNUAL,
             startDate: '2024-01-15',
             endDate: '2024-01-17',
             days: 3,
-            status: 'PENDING',
+            status: LeaveStatus.PENDING,
             createdAt: '2024-01-01T00:00:00Z',
             updatedAt: '2024-01-01T00:00:00Z',
           },

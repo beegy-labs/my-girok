@@ -22,3 +22,9 @@ export * from './hr-employee.types.js';
 export * from './hr-attendance.types.js';
 export * from './hr-leave.types.js';
 export * from './hr-delegation.types.js';
+
+// Phase 6: HR Management Schemas (Zod)
+export * from './hr-employee.schemas.js';
+export * from './hr-attendance.schemas.js';
+export * from './hr-leave.schemas.js';
+export * from './hr-delegation.schemas.js';
