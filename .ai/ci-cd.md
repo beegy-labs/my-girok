@@ -1,35 +1,21 @@
 # CI/CD Quick Reference
 
-> GitHub Actions → Harbor → ArgoCD → Kubernetes | **Last Updated**: 2026-01-06
+> GitHub Actions → Gitea → ArgoCD → K8s | **Last Updated**: 2026-01-18
 
-## Pipeline
+| Component   | Tool                    | Detail             |
+| ----------- | ----------------------- | ------------------ |
+| CI          | GitHub Actions          | Self-hosted runner |
+| Registry    | Gitea (gitea.girok.dev) | Docker + Proto pkg |
+| Proto Cache | Generic Packages        | 59-67% faster ✅   |
+| CD          | ArgoCD                  | GitOps sync        |
 
-| Component | Tool                      |
-| --------- | ------------------------- |
-| CI        | GitHub Actions            |
-| Registry  | Harbor (harbor.girok.dev) |
-| CD        | ArgoCD                    |
+## Environments
 
-## Image Tags
+| Branch     | Tag              | Namespace        | Deploy |
+| ---------- | ---------------- | ---------------- | ------ |
+| develop    | `develop:<hash>` | my-girok-dev     | Auto   |
+| release/\* | `release:<hash>` | my-girok-staging | Manual |
+| main       | `latest`         | my-girok-prod    | Manual |
 
-| Branch     | Tag              |
-| ---------- | ---------------- |
-| develop    | `develop:<hash>` |
-| release/\* | `release:<hash>` |
-| main       | `latest`         |
-
-## Environment Mapping
-
-| Branch     | Namespace        | Deploy |
-| ---------- | ---------------- | ------ |
-| develop    | my-girok-dev     | Auto   |
-| release/\* | my-girok-staging | Manual |
-| main       | my-girok-prod    | Manual |
-
-## Local Build
-
-```bash
-docker build -t test/auth-service:local -f services/auth-service/Dockerfile .
-```
-
-**SSOT**: `docs/llm/ci-cd.md`
+**Proto**: `docs/llm/policies/proto-caching.md`
+**Workflows**: `docs/llm/policies/github-actions-workflows.md`

@@ -15,3 +15,4 @@ export * from './authorization.enums.js';
 // Phase 2: Admin Enterprise Types (SCIM 2.0 + JML + NHI)
 export * from './admin.enums.js';
 export * from './admin.types.js';
+export * from './admin-auth.types.js';
