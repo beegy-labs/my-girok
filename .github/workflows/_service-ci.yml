@@ -77,23 +77,85 @@ jobs:
 
       # Download pre-built proto files from Gitea (avoids buf rate limit)
       - name: Download proto files
+        id: download-proto
+        continue-on-error: true
         env:
           GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
         run: |
           # Calculate proto hash (same logic as build-proto.yml)
           HASH=$(find packages/proto -type f \( -name "*.proto" -o -name "buf.gen.yaml" -o -name "buf.yaml" \) -exec sha256sum {} \; | sort | sha256sum | cut -c1-12)
           echo "📦 Proto hash: ${HASH}"
+          echo "hash=${HASH}" >> $GITHUB_OUTPUT
 
           # Download from Gitea generic package
           mkdir -p packages/types/src/generated
+          START_TIME=$(date +%s)
+
           curl -f -L \
             -H "Authorization: token ${GITEA_TOKEN}" \
             "https://${{ env.REGISTRY }}/api/packages/beegy-labs/generic/proto-generated/${HASH}/proto-generated.tar.gz" \
             -o /tmp/proto-generated.tar.gz
 
+          # Download checksum
+          curl -f -L \
+            -H "Authorization: token ${GITEA_TOKEN}" \
+            "https://${{ env.REGISTRY }}/api/packages/beegy-labs/generic/proto-generated/${HASH}/proto-generated.sha256" \
+            -o /tmp/proto-generated.sha256
+
+          # Verify checksum
+          EXPECTED_CHECKSUM=$(cat /tmp/proto-generated.sha256)
+          ACTUAL_CHECKSUM=$(sha256sum /tmp/proto-generated.tar.gz | cut -d' ' -f1)
+
+          if [ "${EXPECTED_CHECKSUM}" != "${ACTUAL_CHECKSUM}" ]; then
+            echo "❌ Checksum mismatch!"
+            echo "   Expected: ${EXPECTED_CHECKSUM}"
+            echo "   Actual:   ${ACTUAL_CHECKSUM}"
+            exit 1
+          fi
+
+          echo "🔒 Checksum verified: ${ACTUAL_CHECKSUM}"
+
           # Extract
           tar -xzf /tmp/proto-generated.tar.gz -C packages/types/src/generated/
+
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          PACKAGE_SIZE=$(du -h /tmp/proto-generated.tar.gz | cut -f1)
+
           echo "✅ Downloaded and extracted proto files (${HASH})"
+          echo "⏱️  Download time: ${DURATION}s"
+          echo "📦 Package size: ${PACKAGE_SIZE}"
+
+          # Save metrics for summary
+          echo "duration=${DURATION}" >> $GITHUB_OUTPUT
+          echo "size=${PACKAGE_SIZE}" >> $GITHUB_OUTPUT
+
+      # Fallback: Generate proto locally if download fails
+      - name: Generate proto files (fallback)
+        if: steps.download-proto.outcome == 'failure'
+        run: |
+          echo "⚠️  Gitea download failed, generating proto locally as fallback"
+          pnpm install --frozen-lockfile --filter @my-girok/proto
+          pnpm --filter @my-girok/proto generate
+          echo "✅ Proto generated locally"
+
+      # Proto cache summary
+      - name: Proto cache summary
+        if: always()
+        run: |
+          echo "## Proto Cache Metrics 📊" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.download-proto.outcome }}" = "success" ]; then
+            echo "- **Source**: Gitea package registry (cache hit ✅)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Hash**: \`${{ steps.download-proto.outputs.hash }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Download time**: ${{ steps.download-proto.outputs.duration }}s" >> $GITHUB_STEP_SUMMARY
+            echo "- **Package size**: ${{ steps.download-proto.outputs.size }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Checksum verified**: ✅" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Source**: Local generation (fallback ⚠️)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Reason**: Gitea download failed" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - run: pnpm --filter @my-girok/types build
 

@@ -13,6 +13,11 @@ on:
       - '.github/workflows/build-proto.yml'
   workflow_dispatch:
 
+# Prevent duplicate builds
+concurrency:
+  group: proto-build
+  cancel-in-progress: false # Allow existing build to complete
+
 env:
   REGISTRY: gitea.girok.dev
 
@@ -70,7 +75,14 @@ jobs:
         run: |
           cd packages/types/src/generated
           tar -czf /tmp/proto-generated.tar.gz proto/
-          echo "📦 Packaged $(du -h /tmp/proto-generated.tar.gz | cut -f1) proto files"
+
+          # Calculate checksum for verification
+          sha256sum /tmp/proto-generated.tar.gz | cut -d' ' -f1 > /tmp/proto-generated.sha256
+
+          PACKAGE_SIZE=$(du -h /tmp/proto-generated.tar.gz | cut -f1)
+          CHECKSUM=$(cat /tmp/proto-generated.sha256)
+          echo "📦 Packaged ${PACKAGE_SIZE} proto files"
+          echo "🔒 SHA256: ${CHECKSUM}"
 
       # Upload to Gitea generic package registry
       - name: Upload to Gitea
@@ -79,15 +91,50 @@ jobs:
           GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
         run: |
           HASH="${{ steps.proto-hash.outputs.hash }}"
+
+          # Upload tarball
           curl -X PUT \
             -H "Authorization: token ${GITEA_TOKEN}" \
             --upload-file /tmp/proto-generated.tar.gz \
             "https://${{ env.REGISTRY }}/api/packages/beegy-labs/generic/proto-generated/${HASH}/proto-generated.tar.gz"
 
+          # Upload checksum
+          curl -X PUT \
+            -H "Authorization: token ${GITEA_TOKEN}" \
+            --upload-file /tmp/proto-generated.sha256 \
+            "https://${{ env.REGISTRY }}/api/packages/beegy-labs/generic/proto-generated/${HASH}/proto-generated.sha256"
+
           echo "✅ Uploaded proto package: ${HASH}"
           echo "📍 URL: https://${{ env.REGISTRY }}/beegy-labs/-/packages/generic/proto-generated/${HASH}"
 
-      # Output hash for dependent jobs
-      - name: Output hash
+      # Job summary
+      - name: Build summary
+        if: steps.check-package.outputs.exists != 'true'
         run: |
-          echo "proto_hash=${{ steps.proto-hash.outputs.hash }}" >> $GITHUB_OUTPUT
+          echo "## Proto Build Summary 📦" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Hash**: \`${{ steps.proto-hash.outputs.hash }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package size**: $(du -h /tmp/proto-generated.tar.gz | cut -f1)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Checksum**: \`$(cat /tmp/proto-generated.sha256)\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: https://${{ env.REGISTRY }}/beegy-labs/-/packages/generic/proto-generated/${{ steps.proto-hash.outputs.hash }}" >> $GITHUB_STEP_SUMMARY
+
+      # Cleanup old packages (keep last 20)
+      - name: Cleanup old packages
+        if: steps.check-package.outputs.exists != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          echo "🗑️  Cleaning up old proto packages (keeping last 20)..."
+
+          # Get all versions, sort by creation date, keep last 20, delete rest
+          curl -s -H "Authorization: token ${GITEA_TOKEN}" \
+            "https://${{ env.REGISTRY }}/api/packages/beegy-labs/generic/proto-generated" | \
+            jq -r '.[] | "\(.created_at)|\(.version)"' | sort -r | tail -n +21 | \
+            while IFS='|' read -r created version; do
+              echo "  Deleting ${version} (created: ${created})"
+              curl -sX DELETE \
+                -H "Authorization: token ${GITEA_TOKEN}" \
+                "https://${{ env.REGISTRY }}/api/packages/beegy-labs/generic/proto-generated/${version}"
+            done
+
+          echo "✅ Cleanup complete"
