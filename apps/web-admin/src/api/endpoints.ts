@@ -125,6 +125,139 @@ export const API_ENDPOINTS = {
     /** Consent statistics */
     CONSENT_STATS: '/legal/consent-stats',
   },
+
+  /**
+   * Employee/Admin Management Endpoints (HR)
+   */
+  EMPLOYEES: {
+    /** Get my profile */
+    MY_PROFILE: '/admin/profile/me',
+    /** List/Search employees */
+    LIST: '/admin/enterprise/list',
+    /** Get employee detail */
+    DETAIL: (id: string) => `/admin/profile/${id}`,
+    /** Update employee profile */
+    UPDATE: (id: string) => `/admin/profile/${id}`,
+    /** Update SCIM Core */
+    UPDATE_SCIM: (id: string) => `/admin/profile/${id}/scim`,
+    /** Update Employee Info */
+    UPDATE_EMPLOYEE: (id: string) => `/admin/profile/${id}/employee`,
+    /** Update Job & Organization */
+    UPDATE_JOB: (id: string) => `/admin/profile/${id}/job`,
+    /** Update Contact Info */
+    UPDATE_CONTACT: (id: string) => `/admin/profile/${id}/contact`,
+  },
+
+  /**
+   * Attendance Management Endpoints
+   */
+  ATTENDANCE: {
+    /** Clock in */
+    CLOCK_IN: '/attendance/clock-in',
+    /** Clock out */
+    CLOCK_OUT: '/attendance/clock-out',
+    /** Get my attendance records */
+    MY_RECORDS: '/attendance/me',
+    /** Get my attendance statistics */
+    MY_STATS: '/attendance/me/stats',
+    /** List all attendance records */
+    LIST: '/attendance',
+    /** Get attendance by date */
+    BY_DATE: (date: string) => `/attendance/date/${date}`,
+    /** Get admin attendance statistics */
+    ADMIN_STATS: (adminId: string) => `/attendance/admin/${adminId}/stats`,
+    /** Approve overtime */
+    APPROVE_OVERTIME: (id: string) => `/attendance/${id}/approve-overtime`,
+  },
+
+  /**
+   * Work Schedule Endpoints
+   */
+  WORK_SCHEDULES: {
+    /** Create work schedule */
+    CREATE: '/work-schedules',
+    /** Get my work schedules */
+    MY_SCHEDULES: '/work-schedules/me',
+    /** Get my active work schedule */
+    MY_ACTIVE: '/work-schedules/me/active',
+    /** Get admin work schedules */
+    ADMIN_SCHEDULES: (adminId: string) => `/work-schedules/admin/${adminId}`,
+    /** Get work schedule by ID */
+    DETAIL: (id: string) => `/work-schedules/${id}`,
+    /** Update work schedule */
+    UPDATE: (id: string) => `/work-schedules/${id}`,
+    /** Delete work schedule */
+    DELETE: (id: string) => `/work-schedules/${id}`,
+  },
+
+  /**
+   * Leave Management Endpoints
+   */
+  LEAVE: {
+    /** Create leave request */
+    CREATE: '/leaves',
+    /** Submit leave request */
+    SUBMIT: (id: string) => `/leaves/${id}/submit`,
+    /** Approve/reject leave request */
+    APPROVE: (id: string) => `/leaves/${id}/approve`,
+    /** Cancel leave request */
+    CANCEL: (id: string) => `/leaves/${id}/cancel`,
+    /** Get my leave requests */
+    MY_REQUESTS: '/leaves/me',
+    /** Get pending approvals */
+    PENDING_APPROVALS: '/leaves/pending-approvals',
+    /** Get leave request by ID */
+    DETAIL: (id: string) => `/leaves/${id}`,
+    /** List all leave requests */
+    LIST: '/leaves',
+  },
+
+  /**
+   * Leave Balance Endpoints
+   */
+  LEAVE_BALANCE: {
+    /** Create leave balance */
+    CREATE: '/leave-balances',
+    /** Get my current balance */
+    MY_BALANCE: '/leave-balances/me',
+    /** Get my balance for year */
+    MY_BALANCE_YEAR: (year: number) => `/leave-balances/me/${year}`,
+    /** Get admin balance */
+    ADMIN_BALANCE: (adminId: string, year: number) => `/leave-balances/${adminId}/${year}`,
+    /** Adjust leave balance */
+    ADJUST: (adminId: string, year: number) => `/leave-balances/${adminId}/${year}/adjust`,
+    /** Recalculate balance */
+    RECALCULATE: (adminId: string, year: number) =>
+      `/leave-balances/${adminId}/${year}/recalculate`,
+    /** Initialize balance for new year */
+    INITIALIZE: (adminId: string, year: number) => `/leave-balances/${adminId}/${year}/initialize`,
+  },
+
+  /**
+   * Delegation Management Endpoints
+   */
+  DELEGATIONS: {
+    /** Create delegation */
+    CREATE: '/delegations',
+    /** List delegations */
+    LIST: '/delegations',
+    /** Get delegations I delegated */
+    MY_DELEGATED: '/delegations/me/delegated',
+    /** Get delegations I received */
+    MY_RECEIVED: '/delegations/me/received',
+    /** Get delegation by ID */
+    DETAIL: (id: string) => `/delegations/${id}`,
+    /** Update delegation */
+    UPDATE: (id: string) => `/delegations/${id}`,
+    /** Approve/reject delegation */
+    APPROVE: (id: string) => `/delegations/${id}/approve`,
+    /** Revoke delegation */
+    REVOKE: (id: string) => `/delegations/${id}/revoke`,
+    /** Delete delegation */
+    DELETE: (id: string) => `/delegations/${id}`,
+    /** Get delegation logs */
+    LOGS: (id: string) => `/delegations/${id}/logs`,
+  },
 } as const;
 
 /**

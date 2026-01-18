@@ -1,6 +1,6 @@
 # 2026 Best Practices
 
-> Monthly review checklist | **Last Updated**: 2026-01-06
+> Monthly review checklist | **Last Updated**: 2026-01-18
 
 ## Database
 
@@ -12,11 +12,28 @@
 
 ## React 19+
 
-| Do                   | Don't               |
-| -------------------- | ------------------- |
-| React Compiler       | Manual memo/useMemo |
-| `use()` for async    | useEffect fetch     |
-| Design tokens (SSOT) | Inline styles       |
+| Do                      | Don't                 |
+| ----------------------- | --------------------- |
+| React Compiler          | Manual memo/useMemo   |
+| `use()` for async       | useEffect fetch       |
+| Server Components (RSC) | Client-only rendering |
+| Design tokens (SSOT)    | Inline styles         |
+
+## State Management
+
+| Do                       | Don't                          |
+| ------------------------ | ------------------------------ |
+| Zustand (small/mid apps) | Redux everywhere               |
+| Context API (simple)     | Prop drilling                  |
+| Jotai (atomic state)     | Complex state for simple cases |
+
+## TypeScript
+
+| Do                     | Don't               |
+| ---------------------- | ------------------- |
+| Zod for API validation | Trust external data |
+| `unknown` over `any`   | `any` type abuse    |
+| Strict mode enabled    | Loose type checking |
 
 ## Backend
 
