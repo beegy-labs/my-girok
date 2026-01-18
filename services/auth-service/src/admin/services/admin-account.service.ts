@@ -23,44 +23,6 @@ import {
   InvitationType,
 } from '../dto/admin-account.dto';
 
-interface AdminRow {
-  id: string;
-  email: string;
-  name: string;
-  scope: string;
-  tenant_id: string | null;
-  is_active: boolean;
-  last_login_at: Date | null;
-  created_at: Date;
-  role_id: string;
-  role_name: string;
-  role_display_name: string;
-  role_level: number;
-}
-
-interface AdminWithTenantRow extends AdminRow {
-  tenant_name?: string;
-  tenant_slug?: string;
-  tenant_type?: string;
-}
-
-interface RoleRow {
-  id: string;
-  name: string;
-  display_name: string;
-  scope: string;
-  level: number;
-}
-
-interface PermissionRow {
-  id: string;
-  resource: string;
-  action: string;
-  display_name: string;
-  description: string | null;
-  category: string;
-}
-
 @Injectable()
 export class AdminAccountService {
   constructor(private readonly prisma: PrismaService) {}
@@ -70,38 +32,50 @@ export class AdminAccountService {
    */
   @Transactional({ isolationLevel: 'ReadCommitted', timeout: 30000, maxRetries: 3 })
   async create(currentAdminId: string, dto: CreateAdminDto): Promise<AdminResponse> {
-    // 1. Check email uniqueness
-    const existing = await this.prisma.$queryRaw<{ id: string }[]>`
-      SELECT id FROM admins WHERE email = ${dto.email} AND deleted_at IS NULL LIMIT 1
-    `;
-    if (existing.length > 0) {
+    // 1. Check email uniqueness using Prisma Client
+    const existing = await this.prisma.admins.findFirst({
+      where: {
+        email: dto.email,
+        deleted_at: null,
+      },
+      select: { id: true },
+    });
+    if (existing) {
       throw new ConflictException('Email already registered');
     }
 
-    // 2. Validate role exists and matches scope
-    const roles = await this.prisma.$queryRaw<RoleRow[]>`
-      SELECT id, name, display_name, scope, level
-      FROM roles
-      WHERE id = ${dto.roleId}::uuid AND deleted_at IS NULL
-      LIMIT 1
-    `;
-    if (roles.length === 0) {
+    // 2. Validate role exists and matches scope using Prisma Client
+    const role = await this.prisma.roles.findFirst({
+      where: {
+        id: dto.roleId,
+      },
+      select: {
+        id: true,
+        name: true,
+        display_name: true,
+        scope: true,
+        level: true,
+      },
+    });
+    if (!role) {
       throw new NotFoundException('Role not found');
     }
-    const role = roles[0];
     if (role.scope !== (dto.scope ?? AdminScope.SYSTEM)) {
       throw new BadRequestException('Role scope mismatch');
     }
 
-    // 3. Validate tenant if TENANT scope
+    // 3. Validate tenant if TENANT scope using Prisma Client
     if (dto.scope === AdminScope.TENANT) {
       if (!dto.tenantId) {
         throw new BadRequestException('tenantId is required for TENANT scope');
       }
-      const tenants = await this.prisma.$queryRaw<{ id: string }[]>`
-        SELECT id FROM tenants WHERE id = ${dto.tenantId}::uuid AND deleted_at IS NULL LIMIT 1
-      `;
-      if (tenants.length === 0) {
+      const tenant = await this.prisma.tenants.findFirst({
+        where: {
+          id: dto.tenantId,
+        },
+        select: { id: true },
+      });
+      if (!tenant) {
         throw new NotFoundException('Tenant not found');
       }
     }
@@ -112,27 +86,22 @@ export class AdminAccountService {
     // 5. Generate UUIDv7
     const adminId = ID.generate();
 
-    // 6. Insert admin
-    await this.prisma.$executeRaw`
-      INSERT INTO admins (
-        id, email, name, password, scope, tenant_id, role_id,
-        is_active, identity_type, created_at, updated_at
-      ) VALUES (
-        ${adminId}::uuid,
-        ${dto.email},
-        ${dto.name},
-        ${passwordHash},
-        ${dto.scope ?? AdminScope.SYSTEM}::admin_scope,
-        ${dto.tenantId ?? null}::uuid,
-        ${dto.roleId}::uuid,
-        true,
-        'HUMAN'::identity_type,
-        NOW(),
-        NOW()
-      )
-    `;
+    // 6. Insert admin using Prisma Client
+    await this.prisma.admins.create({
+      data: {
+        id: adminId,
+        email: dto.email,
+        name: dto.name,
+        password: passwordHash,
+        scope: dto.scope ?? AdminScope.SYSTEM,
+        tenant_id: dto.tenantId ?? null,
+        role_id: dto.roleId,
+        is_active: true,
+        identity_type: 'HUMAN',
+      },
+    });
 
-    // 7. Log audit
+    // 7. Log audit (Raw SQL: audit_logs table not in Prisma schema)
     const auditId = ID.generate();
     await this.prisma.$executeRaw`
       INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, details, created_at)
@@ -152,18 +121,23 @@ export class AdminAccountService {
 
   /**
    * Invite an admin via email or direct creation
+   * NOTE: admin_invitations table uses Raw SQL as it's not in Prisma schema
    */
   @Transactional({ isolationLevel: 'ReadCommitted', timeout: 30000, maxRetries: 3 })
   async invite(currentAdminId: string, dto: InviteAdminDto): Promise<InvitationResponse> {
-    // Check email uniqueness
-    const existing = await this.prisma.$queryRaw<{ id: string }[]>`
-      SELECT id FROM admins WHERE email = ${dto.email} AND deleted_at IS NULL LIMIT 1
-    `;
-    if (existing.length > 0) {
+    // Check email uniqueness using Prisma Client
+    const existing = await this.prisma.admins.findFirst({
+      where: {
+        email: dto.email,
+        deleted_at: null,
+      },
+      select: { id: true },
+    });
+    if (existing) {
       throw new ConflictException('Email already registered');
     }
 
-    // Check for existing pending invitation
+    // Check for existing pending invitation (Raw SQL: admin_invitations table not in Prisma schema)
     const existingInvite = await this.prisma.$queryRaw<{ id: string }[]>`
       SELECT id FROM admin_invitations
       WHERE email = ${dto.email} AND status = 'PENDING' AND expires_at > NOW()
@@ -173,11 +147,12 @@ export class AdminAccountService {
       throw new ConflictException('Pending invitation already exists');
     }
 
-    // Validate role
-    const roles = await this.prisma.$queryRaw<RoleRow[]>`
-      SELECT id, scope FROM roles WHERE id = ${dto.roleId}::uuid AND deleted_at IS NULL LIMIT 1
-    `;
-    if (roles.length === 0) {
+    // Validate role using Prisma Client
+    const role = await this.prisma.roles.findFirst({
+      where: { id: dto.roleId },
+      select: { id: true, scope: true },
+    });
+    if (!role) {
       throw new NotFoundException('Role not found');
     }
 
@@ -253,63 +228,59 @@ export class AdminAccountService {
     const { scope, roleId, isActive, search, page = 1, limit = 20 } = query;
     const offset = (page - 1) * limit;
 
-    // Build WHERE conditions
-    const conditions: string[] = ['a.deleted_at IS NULL'];
-    const params: (string | boolean | number)[] = [];
-    let paramIndex = 1;
+    // Build Prisma where conditions
+    const where: any = {
+      deleted_at: null,
+    };
 
-    if (scope) {
-      conditions.push(`a.scope = $${paramIndex}::admin_scope`);
-      params.push(scope);
-      paramIndex++;
-    }
-    if (roleId) {
-      conditions.push(`a.role_id = $${paramIndex}::uuid`);
-      params.push(roleId);
-      paramIndex++;
-    }
-    if (isActive !== undefined) {
-      conditions.push(`a.is_active = $${paramIndex}`);
-      params.push(isActive);
-      paramIndex++;
-    }
+    if (scope) where.scope = scope;
+    if (roleId) where.role_id = roleId;
+    if (isActive !== undefined) where.is_active = isActive;
     if (search) {
-      conditions.push(`(a.email ILIKE $${paramIndex} OR a.name ILIKE $${paramIndex})`);
-      params.push(`%${search}%`);
-      paramIndex++;
+      where.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
+      ];
     }
 
-    const whereClause = conditions.join(' AND ');
+    // Count total using Prisma Client
+    const total = await this.prisma.admins.count({ where });
 
-    // Count total
-    const countQuery = `SELECT COUNT(*)::int as count FROM admins a WHERE ${whereClause}`;
-    const countResult = await this.prisma.$queryRawUnsafe<[{ count: number }]>(
-      countQuery,
-      ...params,
-    );
-    const total = countResult[0].count;
-
-    // Fetch admins with role
-    const dataQuery = `
-      SELECT
-        a.id, a.email, a.name, a.scope, a.tenant_id, a.is_active,
-        a.last_login_at, a.created_at,
-        r.id as role_id, r.name as role_name, r.display_name as role_display_name, r.level as role_level
-      FROM admins a
-      JOIN roles r ON a.role_id = r.id
-      WHERE ${whereClause}
-      ORDER BY a.created_at DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
-    const admins = await this.prisma.$queryRawUnsafe<AdminRow[]>(
-      dataQuery,
-      ...params,
-      limit,
-      offset,
-    );
+    // Fetch admins with role using Prisma Client
+    const admins = await this.prisma.admins.findMany({
+      where,
+      include: {
+        roles: {
+          select: {
+            id: true,
+            name: true,
+            display_name: true,
+            level: true,
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+      skip: offset,
+      take: limit,
+    });
 
     return {
-      admins: admins.map((admin) => this.mapToResponse(admin)),
+      admins: admins.map((admin) => ({
+        id: admin.id,
+        email: admin.email,
+        name: admin.name,
+        scope: admin.scope as 'SYSTEM' | 'TENANT',
+        tenantId: admin.tenant_id,
+        role: {
+          id: admin.roles.id,
+          name: admin.roles.name,
+          displayName: admin.roles.display_name,
+          level: admin.roles.level,
+        },
+        isActive: admin.is_active,
+        lastLoginAt: admin.last_login_at,
+        createdAt: admin.created_at,
+      })),
       total,
       page,
       limit,
@@ -322,22 +293,18 @@ export class AdminAccountService {
   async getRoles(query: AdminRoleListQueryDto): Promise<AdminRoleListResponse> {
     const { scope } = query;
 
-    let roles: RoleRow[];
-    if (scope) {
-      roles = await this.prisma.$queryRaw<RoleRow[]>`
-        SELECT id, name, display_name, scope, level
-        FROM roles
-        WHERE scope = ${scope}::admin_scope AND deleted_at IS NULL
-        ORDER BY level ASC, name ASC
-      `;
-    } else {
-      roles = await this.prisma.$queryRaw<RoleRow[]>`
-        SELECT id, name, display_name, scope, level
-        FROM roles
-        WHERE deleted_at IS NULL
-        ORDER BY level ASC, name ASC
-      `;
-    }
+    // Use Prisma Client for type-safe role queries
+    const roles = await this.prisma.roles.findMany({
+      where: scope ? { scope } : {},
+      select: {
+        id: true,
+        name: true,
+        display_name: true,
+        scope: true,
+        level: true,
+      },
+      orderBy: [{ level: 'asc' }, { name: 'asc' }],
+    });
 
     return {
       roles: roles.map((r) => ({
@@ -355,35 +322,73 @@ export class AdminAccountService {
    * Get admin by ID with full details
    */
   async findById(id: string): Promise<AdminDetailResponse> {
-    const admins = await this.prisma.$queryRaw<AdminWithTenantRow[]>`
-      SELECT
-        a.id, a.email, a.name, a.scope, a.tenant_id, a.is_active,
-        a.last_login_at, a.created_at,
-        r.id as role_id, r.name as role_name, r.display_name as role_display_name, r.level as role_level,
-        t.name as tenant_name, t.slug as tenant_slug, t.type as tenant_type
-      FROM admins a
-      JOIN roles r ON a.role_id = r.id
-      LEFT JOIN tenants t ON a.tenant_id = t.id
-      WHERE a.id = ${id}::uuid AND a.deleted_at IS NULL
-      LIMIT 1
-    `;
+    // Use Prisma Client with relations
+    const admin = await this.prisma.admins.findFirst({
+      where: {
+        id,
+        deleted_at: null,
+      },
+      include: {
+        roles: {
+          include: {
+            role_permissions: {
+              include: {
+                permissions: true,
+              },
+              orderBy: [
+                { permissions: { category: 'asc' } },
+                { permissions: { resource: 'asc' } },
+                { permissions: { action: 'asc' } },
+              ],
+            },
+          },
+        },
+        tenants: true,
+      },
+    });
 
-    if (admins.length === 0) {
+    if (!admin) {
       throw new NotFoundException('Admin not found');
     }
 
-    const admin = admins[0];
+    // Transform Prisma result to response format
+    const permissions = admin.roles.role_permissions.map((rp) => ({
+      id: rp.permissions.id,
+      resource: rp.permissions.resource,
+      action: rp.permissions.action,
+      displayName: rp.permissions.display_name,
+      description: rp.permissions.description,
+      category: rp.permissions.category,
+    }));
 
-    // Fetch permissions via role
-    const permissions = await this.prisma.$queryRaw<PermissionRow[]>`
-      SELECT p.id, p.resource, p.action, p.display_name, p.description, p.category
-      FROM permissions p
-      JOIN role_permissions rp ON p.id = rp.permission_id
-      WHERE rp.role_id = ${admin.role_id}::uuid
-      ORDER BY p.category, p.resource, p.action
-    `;
+    const response: AdminDetailResponse = {
+      id: admin.id,
+      email: admin.email,
+      name: admin.name,
+      scope: admin.scope as 'SYSTEM' | 'TENANT',
+      tenantId: admin.tenant_id,
+      role: {
+        id: admin.roles.id,
+        name: admin.roles.name,
+        displayName: admin.roles.display_name,
+        level: admin.roles.level,
+      },
+      isActive: admin.is_active,
+      lastLoginAt: admin.last_login_at,
+      createdAt: admin.created_at,
+      permissions,
+    };
 
-    return this.mapToDetailResponse(admin, permissions);
+    if (admin.tenants) {
+      response.tenant = {
+        id: admin.tenants.id,
+        name: admin.tenants.name,
+        slug: admin.tenants.slug,
+        type: admin.tenants.type,
+      };
+    }
+
+    return response;
   }
 
   /**
@@ -394,27 +399,19 @@ export class AdminAccountService {
     // Check exists
     await this.findById(id);
 
-    // Build update
-    const updates: string[] = ['updated_at = NOW()'];
-    const params: (string | boolean)[] = [];
-    let paramIndex = 1;
+    // Build update data object for Prisma
+    const updateData: { name?: string; is_active?: boolean } = {};
+    if (dto.name !== undefined) updateData.name = dto.name;
+    if (dto.isActive !== undefined) updateData.is_active = dto.isActive;
 
-    if (dto.name !== undefined) {
-      updates.push(`name = $${paramIndex}`);
-      params.push(dto.name);
-      paramIndex++;
-    }
-    if (dto.isActive !== undefined) {
-      updates.push(`is_active = $${paramIndex}`);
-      params.push(dto.isActive);
-      paramIndex++;
-    }
+    if (Object.keys(updateData).length > 0) {
+      // Use Prisma Client for type-safe updates
+      await this.prisma.admins.update({
+        where: { id },
+        data: updateData,
+      });
 
-    if (params.length > 0) {
-      const updateQuery = `UPDATE admins SET ${updates.join(', ')} WHERE id = $${paramIndex}::uuid`;
-      await this.prisma.$executeRawUnsafe(updateQuery, ...params, id);
-
-      // Log audit
+      // Log audit (Raw SQL: audit_logs table not in Prisma schema)
       const auditId = ID.generate();
       await this.prisma.$executeRaw`
         INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, details, created_at)
@@ -449,18 +446,24 @@ export class AdminAccountService {
       throw new BadRequestException('Cannot deactivate yourself');
     }
 
-    await this.prisma.$executeRaw`
-      UPDATE admins SET is_active = false, updated_at = NOW()
-      WHERE id = ${id}::uuid
-    `;
+    // Use Prisma Client for type-safe update
+    await this.prisma.admins.update({
+      where: { id },
+      data: { is_active: false },
+    });
 
-    // Revoke all active sessions
-    await this.prisma.$executeRaw`
-      UPDATE sessions SET revoked_at = NOW()
-      WHERE admin_id = ${id}::uuid AND revoked_at IS NULL
-    `;
+    // Revoke all active sessions using Prisma Client
+    await this.prisma.adminSession.updateMany({
+      where: {
+        adminId: id,
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: new Date(),
+      },
+    });
 
-    // Log audit
+    // Log audit (Raw SQL: audit_logs table not in Prisma schema)
     const auditId = ID.generate();
     await this.prisma.$executeRaw`
       INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, created_at)
@@ -486,12 +489,13 @@ export class AdminAccountService {
       throw new BadRequestException('Admin is already active');
     }
 
-    await this.prisma.$executeRaw`
-      UPDATE admins SET is_active = true, updated_at = NOW()
-      WHERE id = ${id}::uuid
-    `;
+    // Use Prisma Client for type-safe update
+    await this.prisma.admins.update({
+      where: { id },
+      data: { is_active: true },
+    });
 
-    // Log audit
+    // Log audit (Raw SQL: audit_logs table not in Prisma schema)
     const auditId = ID.generate();
     await this.prisma.$executeRaw`
       INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, created_at)
@@ -515,23 +519,25 @@ export class AdminAccountService {
   async assignRole(currentAdminId: string, id: string, roleId: string): Promise<AdminResponse> {
     const admin = await this.findById(id);
 
-    // Validate role exists and matches admin scope
-    const roles = await this.prisma.$queryRaw<RoleRow[]>`
-      SELECT id, scope FROM roles WHERE id = ${roleId}::uuid AND deleted_at IS NULL LIMIT 1
-    `;
-    if (roles.length === 0) {
+    // Validate role exists and matches admin scope using Prisma Client
+    const role = await this.prisma.roles.findFirst({
+      where: { id: roleId },
+      select: { id: true, scope: true },
+    });
+    if (!role) {
       throw new NotFoundException('Role not found');
     }
-    if (roles[0].scope !== admin.scope) {
+    if (role.scope !== admin.scope) {
       throw new BadRequestException('Role scope must match admin scope');
     }
 
-    await this.prisma.$executeRaw`
-      UPDATE admins SET role_id = ${roleId}::uuid, updated_at = NOW()
-      WHERE id = ${id}::uuid
-    `;
+    // Use Prisma Client for type-safe update
+    await this.prisma.admins.update({
+      where: { id },
+      data: { role_id: roleId },
+    });
 
-    // Log audit
+    // Log audit (Raw SQL: audit_logs table not in Prisma schema)
     const auditId = ID.generate();
     await this.prisma.$executeRaw`
       INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, details, created_at)
@@ -547,58 +553,5 @@ export class AdminAccountService {
     `;
 
     return this.findById(id);
-  }
-
-  /**
-   * Map database row to AdminResponse
-   */
-  private mapToResponse(row: AdminRow): AdminResponse {
-    return {
-      id: row.id,
-      email: row.email,
-      name: row.name,
-      scope: row.scope as AdminScope,
-      tenantId: row.tenant_id,
-      role: {
-        id: row.role_id,
-        name: row.role_name,
-        displayName: row.role_display_name,
-        level: row.role_level,
-      },
-      isActive: row.is_active,
-      lastLoginAt: row.last_login_at,
-      createdAt: row.created_at,
-    };
-  }
-
-  /**
-   * Map database row to AdminDetailResponse
-   */
-  private mapToDetailResponse(
-    row: AdminWithTenantRow,
-    permissions: PermissionRow[],
-  ): AdminDetailResponse {
-    const response: AdminDetailResponse = {
-      ...this.mapToResponse(row),
-      permissions: permissions.map((p) => ({
-        id: p.id,
-        resource: p.resource,
-        action: p.action,
-        displayName: p.display_name,
-        description: p.description,
-        category: p.category,
-      })),
-    };
-
-    if (row.tenant_id && row.tenant_name) {
-      response.tenant = {
-        id: row.tenant_id,
-        name: row.tenant_name,
-        slug: row.tenant_slug ?? '',
-        type: row.tenant_type ?? '',
-      };
-    }
-
-    return response;
   }
 }
