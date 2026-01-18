@@ -49,7 +49,7 @@ jobs:
           HASH="${{ steps.proto-hash.outputs.hash }}"
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "Authorization: token ${GITEA_TOKEN}" \
-            "${{ env.REGISTRY }}/api/v1/packages/beegy-labs/generic/proto-generated/${HASH}")
+            "https://${{ env.REGISTRY }}/api/v1/packages/beegy-labs/generic/proto-generated/${HASH}")
 
           if [ "$RESPONSE" = "200" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
@@ -82,10 +82,10 @@ jobs:
           curl -X PUT \
             -H "Authorization: token ${GITEA_TOKEN}" \
             --upload-file /tmp/proto-generated.tar.gz \
-            "${{ env.REGISTRY }}/api/v1/packages/beegy-labs/generic/proto-generated/${HASH}/proto-generated.tar.gz"
+            "https://${{ env.REGISTRY }}/api/v1/packages/beegy-labs/generic/proto-generated/${HASH}/proto-generated.tar.gz"
 
           echo "✅ Uploaded proto package: ${HASH}"
-          echo "📍 URL: ${{ env.REGISTRY }}/beegy-labs/-/packages/generic/proto-generated/${HASH}"
+          echo "📍 URL: https://${{ env.REGISTRY }}/beegy-labs/-/packages/generic/proto-generated/${HASH}"
 
       # Output hash for dependent jobs
       - name: Output hash

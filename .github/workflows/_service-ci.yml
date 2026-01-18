@@ -88,7 +88,7 @@ jobs:
           mkdir -p packages/types/src/generated
           curl -f -L \
             -H "Authorization: token ${GITEA_TOKEN}" \
-            "${{ env.REGISTRY }}/api/v1/packages/beegy-labs/generic/proto-generated/${HASH}/proto-generated.tar.gz" \
+            "https://${{ env.REGISTRY }}/api/v1/packages/beegy-labs/generic/proto-generated/${HASH}/proto-generated.tar.gz" \
             -o /tmp/proto-generated.tar.gz
 
           # Extract
