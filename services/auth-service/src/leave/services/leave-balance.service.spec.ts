@@ -52,17 +52,17 @@ describe('LeaveBalanceService', () => {
 
       mockPrismaService.adminLeaveBalance.create.mockResolvedValue({
         id: 'balance-1',
-        admin_id: dto.adminId,
+        adminId: dto.adminId,
         year: dto.year,
-        annual_entitled: '15',
-        annual_used: '0',
-        annual_pending: '0',
-        annual_remaining: '15',
-        sick_entitled: '10',
-        sick_used: '0',
-        sick_remaining: '10',
-        created_at: new Date(),
-        updated_at: new Date(),
+        annualEntitled: '15',
+        annualUsed: '0',
+        annualPending: '0',
+        annualRemaining: '15',
+        sickEntitled: '10',
+        sickUsed: '0',
+        sickRemaining: '10',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.create(dto);
@@ -80,13 +80,13 @@ describe('LeaveBalanceService', () => {
 
       mockPrismaService.adminLeaveBalance.findUnique.mockResolvedValue({
         id: 'balance-1',
-        admin_id: adminId,
+        adminId: adminId,
         year,
-        annual_entitled: '15',
-        annual_used: '3',
-        annual_remaining: '12',
-        created_at: new Date(),
-        updated_at: new Date(),
+        annualEntitled: '15',
+        annualUsed: '3',
+        annualRemaining: '12',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.getBalance(adminId, year);
@@ -115,23 +115,23 @@ describe('LeaveBalanceService', () => {
 
       mockPrismaService.adminLeaveBalance.findUnique.mockResolvedValue({
         id: 'balance-1',
-        admin_id: adminId,
+        adminId: adminId,
         year,
-        annual_entitled: '15',
-        annual_remaining: '12',
+        annualEntitled: '15',
+        annualRemaining: '12',
       });
 
       mockPrismaService.adminLeaveBalance.update.mockResolvedValue({
         id: 'balance-1',
-        admin_id: adminId,
+        adminId: adminId,
         year,
-        annual_entitled: '17',
-        annual_remaining: '14',
+        annualEntitled: '17',
+        annualRemaining: '14',
         adjustment: '2',
-        adjustment_reason: dto.adjustmentReason,
-        adjusted_by: adjustedBy,
-        created_at: new Date(),
-        updated_at: new Date(),
+        adjustmentReason: dto.adjustmentReason,
+        adjustedBy: adjustedBy,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.adjust(adminId, year, adjustedBy, dto);
@@ -149,55 +149,55 @@ describe('LeaveBalanceService', () => {
 
       mockPrismaService.adminLeave.findMany.mockResolvedValue([
         {
-          leave_type: 'ANNUAL',
-          days_count: '2',
+          leaveType: 'ANNUAL',
+          daysCount: '2',
           status: 'APPROVED',
         },
         {
-          leave_type: 'ANNUAL',
-          days_count: '1',
+          leaveType: 'ANNUAL',
+          daysCount: '1',
           status: 'APPROVED',
         },
         {
-          leave_type: 'SICK',
-          days_count: '1',
+          leaveType: 'SICK',
+          daysCount: '1',
           status: 'APPROVED',
         },
       ]);
 
       mockPrismaService.adminLeaveBalance.findUnique.mockResolvedValue({
         id: 'balance-1',
-        admin_id: adminId,
+        adminId: adminId,
         year,
-        annual_entitled: '15',
-        annual_used: '0',
-        annual_pending: '0',
-        annual_remaining: '15',
-        sick_entitled: '10',
-        sick_used: '0',
-        sick_remaining: '10',
-        compensatory_entitled: '0',
-        compensatory_used: '0',
-        compensatory_remaining: '0',
-        special_entitled: '0',
-        special_used: '0',
-        special_remaining: '0',
-        carryover_from_previous: '0',
+        annualEntitled: '15',
+        annualUsed: '0',
+        annualPending: '0',
+        annualRemaining: '15',
+        sickEntitled: '10',
+        sickUsed: '0',
+        sickRemaining: '10',
+        compensatoryEntitled: '0',
+        compensatoryUsed: '0',
+        compensatoryRemaining: '0',
+        specialEntitled: '0',
+        specialUsed: '0',
+        specialRemaining: '0',
+        carryoverFromPrevious: '0',
         adjustment: '0',
       });
 
       mockPrismaService.adminLeaveBalance.update.mockResolvedValue({
         id: 'balance-1',
-        admin_id: adminId,
+        adminId: adminId,
         year,
-        annual_entitled: '15',
-        annual_used: '3',
-        annual_remaining: '12',
-        sick_entitled: '10',
-        sick_used: '1',
-        sick_remaining: '9',
-        created_at: new Date(),
-        updated_at: new Date(),
+        annualEntitled: '15',
+        annualUsed: '3',
+        annualRemaining: '12',
+        sickEntitled: '10',
+        sickUsed: '1',
+        sickRemaining: '9',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.recalculate(adminId, year);
@@ -215,19 +215,19 @@ describe('LeaveBalanceService', () => {
 
       mockPrismaService.adminLeaveBalance.findUnique.mockResolvedValue({
         id: 'balance-2025',
-        admin_id: adminId,
+        adminId: adminId,
         year: 2025,
-        annual_remaining: '3',
+        annualRemaining: '3',
       });
 
       mockPrismaService.adminLeaveBalance.create.mockResolvedValue({
         id: 'balance-2026',
-        admin_id: adminId,
+        adminId: adminId,
         year,
-        annual_entitled: '17', // 15 base + 2 for 5 years
-        carryover_from_previous: '3',
-        created_at: new Date(),
-        updated_at: new Date(),
+        annualEntitled: '17', // 15 base + 2 for 5 years
+        carryoverFromPrevious: '3',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.initializeForNewYear(adminId, year, tenureYears);
@@ -246,12 +246,12 @@ describe('LeaveBalanceService', () => {
 
       mockPrismaService.adminLeaveBalance.create.mockResolvedValue({
         id: 'balance-2026',
-        admin_id: adminId,
+        adminId: adminId,
         year,
-        annual_entitled: '15',
-        carryover_from_previous: '0',
-        created_at: new Date(),
-        updated_at: new Date(),
+        annualEntitled: '15',
+        carryoverFromPrevious: '0',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.initializeForNewYear(adminId, year, tenureYears);
@@ -268,11 +268,11 @@ describe('LeaveBalanceService', () => {
 
       mockPrismaService.adminLeaveBalance.findUnique.mockResolvedValue({
         id: 'balance-1',
-        admin_id: adminId,
+        adminId: adminId,
         year: currentYear,
-        annual_entitled: '15',
-        created_at: new Date(),
-        updated_at: new Date(),
+        annualEntitled: '15',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.getCurrentBalance(adminId);
