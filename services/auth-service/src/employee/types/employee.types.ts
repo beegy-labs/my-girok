@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { AdminPayload } from '../../admin/types/admin.types';
+import { AdminPayload } from '@my-girok/types';
 
 /**
  * Request with employee attached

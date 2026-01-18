@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { AdminPayload } from '../../admin/types/admin.types';
+import { AdminPayload } from '@my-girok/types';
 
 /**
  * Employee Auth Guard

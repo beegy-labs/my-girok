@@ -3,8 +3,8 @@ import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { AdminPayload } from '@my-girok/types';
 import { EmployeeAuthGuard } from './employee-auth.guard';
-import { AdminPayload } from '../../admin/types/admin.types';
 
 describe('EmployeeAuthGuard', () => {
   let guard: EmployeeAuthGuard;
