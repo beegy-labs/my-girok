@@ -28,10 +28,10 @@ export class AdminAccountService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Create a new admin account
+   * Private helper: Create admin account without transaction wrapper
+   * Used by both create() and invite() to avoid nested transactions
    */
-  @Transactional({ isolationLevel: 'ReadCommitted', timeout: 30000, maxRetries: 3 })
-  async create(currentAdminId: string, dto: CreateAdminDto): Promise<AdminResponse> {
+  private async _createAdminUnsafe(currentAdminId: string, dto: CreateAdminDto): Promise<string> {
     // 1. Check email uniqueness using Prisma Client
     const existing = await this.prisma.admins.findFirst({
       where: {
@@ -116,6 +116,15 @@ export class AdminAccountService {
       )
     `;
 
+    return adminId;
+  }
+
+  /**
+   * Create a new admin account
+   */
+  @Transactional({ isolationLevel: 'ReadCommitted', timeout: 30000, maxRetries: 3 })
+  async create(currentAdminId: string, dto: CreateAdminDto): Promise<AdminResponse> {
+    const adminId = await this._createAdminUnsafe(currentAdminId, dto);
     return this.findById(adminId);
   }
 
@@ -180,7 +189,8 @@ export class AdminAccountService {
 
     // If DIRECT type, create admin with temp password immediately
     if (dto.type === InvitationType.DIRECT && dto.tempPassword) {
-      await this.create(currentAdminId, {
+      // Use helper method to avoid nested transactions
+      await this._createAdminUnsafe(currentAdminId, {
         email: dto.email,
         name: dto.name,
         tempPassword: dto.tempPassword,
