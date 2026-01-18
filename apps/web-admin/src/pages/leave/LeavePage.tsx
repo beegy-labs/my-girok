@@ -1,9 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Calendar, Filter, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Badge } from '@my-girok/ui-components';
 import { leaveApi, LeaveRequest, ApproveLeaveRequestDto } from '../../api/leave';
 import { useApiError } from '../../hooks/useApiError';
 
 export default function LeavePage() {
+  const { t } = useTranslation();
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -58,11 +61,11 @@ export default function LeavePage() {
           <div className="flex items-center gap-2">
             <Calendar size={24} className="text-theme-primary" />
             <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">
-              Leave Requests
+              {t('hr.leave.title')}
             </h1>
           </div>
           <p className="text-sm sm:text-base text-theme-text-secondary mt-1">
-            Manage employee leave requests and approvals
+            {t('hr.leave.description')}
           </p>
         </div>
       </div>
@@ -93,12 +96,12 @@ export default function LeavePage() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="w-full sm:w-auto px-3 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
           >
-            <option value="">All Statuses</option>
-            <option value="DRAFT">Draft</option>
-            <option value="PENDING">Pending</option>
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-            <option value="CANCELLED">Cancelled</option>
+            <option value="">{t('hr.leave.allStatuses')}</option>
+            <option value="DRAFT">{t('hr.leave.status.DRAFT')}</option>
+            <option value="PENDING">{t('hr.leave.status.PENDING')}</option>
+            <option value="APPROVED">{t('hr.leave.status.APPROVED')}</option>
+            <option value="REJECTED">{t('hr.leave.status.REJECTED')}</option>
+            <option value="CANCELLED">{t('hr.leave.status.CANCELLED')}</option>
           </select>
 
           <select
@@ -106,18 +109,18 @@ export default function LeavePage() {
             onChange={(e) => setLeaveTypeFilter(e.target.value)}
             className="w-full sm:w-auto px-3 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
           >
-            <option value="">All Types</option>
-            <option value="ANNUAL">Annual</option>
-            <option value="SICK">Sick</option>
-            <option value="PERSONAL">Personal</option>
-            <option value="MATERNITY">Maternity</option>
-            <option value="PATERNITY">Paternity</option>
-            <option value="UNPAID">Unpaid</option>
-            <option value="OTHER">Other</option>
+            <option value="">{t('hr.leave.allTypes')}</option>
+            <option value="ANNUAL">{t('hr.leave.types.ANNUAL')}</option>
+            <option value="SICK">{t('hr.leave.types.SICK')}</option>
+            <option value="PERSONAL">{t('hr.leave.types.PERSONAL')}</option>
+            <option value="MATERNITY">{t('hr.leave.types.MATERNITY')}</option>
+            <option value="PATERNITY">{t('hr.leave.types.PATERNITY')}</option>
+            <option value="UNPAID">{t('hr.leave.types.UNPAID')}</option>
+            <option value="OTHER">{t('hr.leave.types.OTHER')}</option>
           </select>
 
           <div className="text-xs sm:text-sm text-theme-text-tertiary pt-2 border-t border-theme-border-default sm:pt-0 sm:border-t-0 sm:ml-auto">
-            {total} requests
+            {t('hr.leave.count', { count: total })}
           </div>
         </div>
       </div>
@@ -131,7 +134,7 @@ export default function LeavePage() {
         ) : leaveRequests.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-theme-text-tertiary">
             <Calendar size={48} className="mb-4 opacity-50" />
-            <p>No leave requests found</p>
+            <p>{t('hr.leave.noRequests')}</p>
           </div>
         ) : (
           <>
@@ -139,14 +142,14 @@ export default function LeavePage() {
               <table className="admin-table min-w-full">
                 <thead>
                   <tr>
-                    <th>Employee</th>
-                    <th>Leave Type</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Days</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>{t('hr.leave.employee')}</th>
+                    <th>{t('hr.leave.leaveType')}</th>
+                    <th>{t('hr.leave.startDate')}</th>
+                    <th>{t('hr.leave.endDate')}</th>
+                    <th>{t('hr.leave.days')}</th>
+                    <th>{t('hr.leave.reason')}</th>
+                    <th>{t('common.status')}</th>
+                    <th>{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -156,7 +159,19 @@ export default function LeavePage() {
                         <span className="text-sm font-medium">{request.adminId}</span>
                       </td>
                       <td>
-                        <LeaveTypeBadge type={request.leaveType} />
+                        <Badge
+                          variant={
+                            request.leaveType === 'SICK'
+                              ? 'error'
+                              : request.leaveType === 'ANNUAL'
+                                ? 'info'
+                                : request.leaveType === 'UNPAID'
+                                  ? 'default'
+                                  : 'accent'
+                          }
+                        >
+                          {t(`hr.leave.types.${request.leaveType}`)}
+                        </Badge>
                       </td>
                       <td>
                         <span className="text-sm text-theme-text-secondary">
@@ -175,7 +190,19 @@ export default function LeavePage() {
                         </span>
                       </td>
                       <td>
-                        <StatusBadge status={request.status} />
+                        <Badge
+                          variant={
+                            request.status === 'APPROVED'
+                              ? 'success'
+                              : request.status === 'PENDING'
+                                ? 'warning'
+                                : request.status === 'REJECTED'
+                                  ? 'error'
+                                  : 'default'
+                          }
+                        >
+                          {t(`hr.leave.status.${request.status}`)}
+                        </Badge>
                       </td>
                       <td>
                         {request.status === 'PENDING' && (
@@ -183,14 +210,14 @@ export default function LeavePage() {
                             <button
                               onClick={() => handleApprove(request.id, true)}
                               className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
-                              title="Approve"
+                              title={t('hr.leave.approve')}
                             >
                               <CheckCircle size={16} />
                             </button>
                             <button
                               onClick={() => handleApprove(request.id, false, 'Rejected')}
                               className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                              title="Reject"
+                              title={t('hr.leave.reject')}
                             >
                               <XCircle size={16} />
                             </button>
@@ -207,7 +234,7 @@ export default function LeavePage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-theme-border-default">
                 <div className="text-sm text-theme-text-tertiary">
-                  Page {page} of {totalPages}
+                  {t('common.page', { current: page, total: totalPages })}
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -215,14 +242,14 @@ export default function LeavePage() {
                     disabled={page === 1}
                     className="px-3 py-1 text-sm border border-theme-border-default rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-theme-bg-hover"
                   >
-                    Previous
+                    {t('common.previous')}
                   </button>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
                     className="px-3 py-1 text-sm border border-theme-border-default rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-theme-bg-hover"
                   >
-                    Next
+                    {t('common.next')}
                   </button>
                 </div>
               </div>
@@ -231,43 +258,5 @@ export default function LeavePage() {
         )}
       </div>
     </div>
-  );
-}
-
-function LeaveTypeBadge({ type }: { type: string }) {
-  const styles: Record<string, string> = {
-    ANNUAL: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    SICK: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    PERSONAL: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-    MATERNITY: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
-    PATERNITY: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',
-    UNPAID: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
-    OTHER: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${styles[type] || 'bg-gray-100 text-gray-800'}`}
-    >
-      {type}
-    </span>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    DRAFT: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
-    PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    APPROVED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    CANCELLED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-100 text-gray-800'}`}
-    >
-      {status}
-    </span>
   );
 }

@@ -1,9 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Clock, Filter, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Badge } from '@my-girok/ui-components';
 import { attendanceApi, Attendance } from '../../api/attendance';
 import { useApiError } from '../../hooks/useApiError';
 
 export default function AttendancePage() {
+  const { t } = useTranslation();
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -54,10 +57,12 @@ export default function AttendancePage() {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <Clock size={24} className="text-theme-primary" />
-            <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">Attendance</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">
+              {t('hr.attendance.title')}
+            </h1>
           </div>
           <p className="text-sm sm:text-base text-theme-text-secondary mt-1">
-            View and manage employee attendance records
+            {t('hr.attendance.description')}
           </p>
         </div>
       </div>
@@ -86,16 +91,16 @@ export default function AttendancePage() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="w-full sm:w-auto px-3 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
           >
-            <option value="">All Statuses</option>
-            <option value="PRESENT">Present</option>
-            <option value="ABSENT">Absent</option>
-            <option value="LATE">Late</option>
-            <option value="HALF_DAY">Half Day</option>
-            <option value="ON_LEAVE">On Leave</option>
+            <option value="">{t('hr.attendance.allStatuses')}</option>
+            <option value="PRESENT">{t('hr.attendance.status.PRESENT')}</option>
+            <option value="ABSENT">{t('hr.attendance.status.ABSENT')}</option>
+            <option value="LATE">{t('hr.attendance.status.LATE')}</option>
+            <option value="HALF_DAY">{t('hr.attendance.status.HALF_DAY')}</option>
+            <option value="ON_LEAVE">{t('hr.attendance.status.ON_LEAVE')}</option>
           </select>
 
           <div className="text-xs sm:text-sm text-theme-text-tertiary pt-2 border-t border-theme-border-default sm:pt-0 sm:border-t-0 sm:ml-auto">
-            {total} records
+            {t('hr.attendance.count', { count: total })}
           </div>
         </div>
       </div>
@@ -109,7 +114,7 @@ export default function AttendancePage() {
         ) : attendances.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-theme-text-tertiary">
             <Clock size={48} className="mb-4 opacity-50" />
-            <p>No attendance records found</p>
+            <p>{t('hr.attendance.noRecords')}</p>
           </div>
         ) : (
           <>
@@ -117,14 +122,14 @@ export default function AttendancePage() {
               <table className="admin-table min-w-full">
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Employee</th>
-                    <th>Clock In</th>
-                    <th>Clock Out</th>
-                    <th>Work Hours</th>
-                    <th>Overtime</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>{t('hr.attendance.date')}</th>
+                    <th>{t('hr.attendance.employee')}</th>
+                    <th>{t('hr.attendance.clockIn')}</th>
+                    <th>{t('hr.attendance.clockOut')}</th>
+                    <th>{t('hr.attendance.workHours')}</th>
+                    <th>{t('hr.attendance.overtime')}</th>
+                    <th>{t('common.status')}</th>
+                    <th>{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -164,13 +169,29 @@ export default function AttendancePage() {
                             <span
                               className={`text-xs ${attendance.overtimeApproved ? 'text-green-600' : 'text-yellow-600'}`}
                             >
-                              {attendance.overtimeApproved ? '✓ Approved' : '⏳ Pending'}
+                              {attendance.overtimeApproved
+                                ? `✓ ${t('hr.attendance.approved')}`
+                                : `⏳ ${t('hr.attendance.pending')}`}
                             </span>
                           )}
                         </div>
                       </td>
                       <td>
-                        <StatusBadge status={attendance.status} />
+                        <Badge
+                          variant={
+                            attendance.status === 'PRESENT'
+                              ? 'success'
+                              : attendance.status === 'ABSENT'
+                                ? 'error'
+                                : attendance.status === 'LATE'
+                                  ? 'warning'
+                                  : attendance.status === 'HALF_DAY'
+                                    ? 'info'
+                                    : 'accent'
+                          }
+                        >
+                          {t(`hr.attendance.status.${attendance.status}`)}
+                        </Badge>
                       </td>
                       <td>
                         {attendance.overtimeHours &&
@@ -180,14 +201,14 @@ export default function AttendancePage() {
                               <button
                                 onClick={() => handleApproveOvertime(attendance.id, true)}
                                 className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
-                                title="Approve Overtime"
+                                title={t('hr.attendance.approveOvertime')}
                               >
                                 <CheckCircle size={16} />
                               </button>
                               <button
                                 onClick={() => handleApproveOvertime(attendance.id, false)}
                                 className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                                title="Reject Overtime"
+                                title={t('hr.attendance.rejectOvertime')}
                               >
                                 <XCircle size={16} />
                               </button>
@@ -204,7 +225,7 @@ export default function AttendancePage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-theme-border-default">
                 <div className="text-sm text-theme-text-tertiary">
-                  Page {page} of {totalPages}
+                  {t('common.page', { current: page, total: totalPages })}
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -212,14 +233,14 @@ export default function AttendancePage() {
                     disabled={page === 1}
                     className="px-3 py-1 text-sm border border-theme-border-default rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-theme-bg-hover"
                   >
-                    Previous
+                    {t('common.previous')}
                   </button>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
                     className="px-3 py-1 text-sm border border-theme-border-default rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-theme-bg-hover"
                   >
-                    Next
+                    {t('common.next')}
                   </button>
                 </div>
               </div>
@@ -228,23 +249,5 @@ export default function AttendancePage() {
         )}
       </div>
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    PRESENT: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    ABSENT: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    LATE: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    HALF_DAY: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    ON_LEAVE: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-100 text-gray-800'}`}
-    >
-      {status.replace('_', ' ')}
-    </span>
   );
 }

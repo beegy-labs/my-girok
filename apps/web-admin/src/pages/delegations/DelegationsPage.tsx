@@ -1,9 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UserCog, Filter, Loader2, Ban } from 'lucide-react';
+import { Badge } from '@my-girok/ui-components';
 import { delegationApi, Delegation } from '../../api/delegations';
 import { useApiError } from '../../hooks/useApiError';
 
 export default function DelegationsPage() {
+  const { t } = useTranslation();
   const [delegations, setDelegations] = useState<Delegation[]>([]);
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -35,7 +38,7 @@ export default function DelegationsPage() {
   }, [fetchDelegations]);
 
   const handleRevoke = async (id: string) => {
-    if (!confirm('Are you sure you want to revoke this delegation?')) return;
+    if (!confirm(t('hr.delegations.revokeConfirm'))) return;
 
     await executeWithErrorHandling(async () => {
       await delegationApi.revoke(id, 'Revoked by admin');
@@ -52,10 +55,12 @@ export default function DelegationsPage() {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <UserCog size={24} className="text-theme-primary" />
-            <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">Delegations</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">
+              {t('hr.delegations.title')}
+            </h1>
           </div>
           <p className="text-sm sm:text-base text-theme-text-secondary mt-1">
-            Manage employee access delegations and permissions
+            {t('hr.delegations.description')}
           </p>
         </div>
       </div>
@@ -70,15 +75,15 @@ export default function DelegationsPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="w-full sm:w-auto px-3 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
           >
-            <option value="">All Statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="ACTIVE">Active</option>
-            <option value="REVOKED">Revoked</option>
-            <option value="EXPIRED">Expired</option>
+            <option value="">{t('hr.delegations.allStatuses')}</option>
+            <option value="PENDING">{t('hr.delegations.status.PENDING')}</option>
+            <option value="ACTIVE">{t('hr.delegations.status.ACTIVE')}</option>
+            <option value="REVOKED">{t('hr.delegations.status.REVOKED')}</option>
+            <option value="EXPIRED">{t('hr.delegations.status.EXPIRED')}</option>
           </select>
 
           <div className="text-xs sm:text-sm text-theme-text-tertiary pt-2 border-t border-theme-border-default sm:pt-0 sm:border-t-0 sm:ml-auto">
-            {total} delegations
+            {t('hr.delegations.count', { count: total })}
           </div>
         </div>
       </div>
@@ -92,7 +97,7 @@ export default function DelegationsPage() {
         ) : delegations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-theme-text-tertiary">
             <UserCog size={48} className="mb-4 opacity-50" />
-            <p>No delegations found</p>
+            <p>{t('hr.delegations.noDelegations')}</p>
           </div>
         ) : (
           <>
@@ -100,14 +105,14 @@ export default function DelegationsPage() {
               <table className="admin-table min-w-full">
                 <thead>
                   <tr>
-                    <th>Delegator</th>
-                    <th>Delegatee</th>
-                    <th>Scope</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>{t('hr.delegations.delegator')}</th>
+                    <th>{t('hr.delegations.delegatee')}</th>
+                    <th>{t('hr.delegations.scope')}</th>
+                    <th>{t('hr.delegations.startDate')}</th>
+                    <th>{t('hr.delegations.endDate')}</th>
+                    <th>{t('hr.delegations.reason')}</th>
+                    <th>{t('common.status')}</th>
+                    <th>{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -120,7 +125,9 @@ export default function DelegationsPage() {
                         <span className="text-sm font-medium">{delegation.delegateeId}</span>
                       </td>
                       <td>
-                        <ScopeBadge scope={delegation.scope} />
+                        <Badge variant={delegation.scope === 'ALL' ? 'accent' : 'info'}>
+                          {t(`hr.delegations.scopes.${delegation.scope}`)}
+                        </Badge>
                         {delegation.permissions && delegation.permissions.length > 0 && (
                           <div className="text-xs text-theme-text-tertiary mt-1">
                             {delegation.permissions.slice(0, 3).join(', ')}
@@ -145,7 +152,19 @@ export default function DelegationsPage() {
                         </span>
                       </td>
                       <td>
-                        <StatusBadge status={delegation.status} />
+                        <Badge
+                          variant={
+                            delegation.status === 'ACTIVE'
+                              ? 'success'
+                              : delegation.status === 'PENDING'
+                                ? 'warning'
+                                : delegation.status === 'REVOKED'
+                                  ? 'error'
+                                  : 'default'
+                          }
+                        >
+                          {t(`hr.delegations.status.${delegation.status}`)}
+                        </Badge>
                       </td>
                       <td>
                         {delegation.status === 'ACTIVE' && (
@@ -154,7 +173,7 @@ export default function DelegationsPage() {
                             className="inline-flex items-center gap-1 px-2 py-1 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                           >
                             <Ban size={14} />
-                            Revoke
+                            {t('hr.delegations.revoke')}
                           </button>
                         )}
                       </td>
@@ -168,7 +187,7 @@ export default function DelegationsPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-theme-border-default">
                 <div className="text-sm text-theme-text-tertiary">
-                  Page {page} of {totalPages}
+                  {t('common.page', { current: page, total: totalPages })}
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -176,14 +195,14 @@ export default function DelegationsPage() {
                     disabled={page === 1}
                     className="px-3 py-1 text-sm border border-theme-border-default rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-theme-bg-hover"
                   >
-                    Previous
+                    {t('common.previous')}
                   </button>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
                     className="px-3 py-1 text-sm border border-theme-border-default rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-theme-bg-hover"
                   >
-                    Next
+                    {t('common.next')}
                   </button>
                 </div>
               </div>
@@ -192,37 +211,5 @@ export default function DelegationsPage() {
         )}
       </div>
     </div>
-  );
-}
-
-function ScopeBadge({ scope }: { scope: string }) {
-  const styles: Record<string, string> = {
-    ALL: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-    SPECIFIC_PERMISSIONS: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${styles[scope] || 'bg-gray-100 text-gray-800'}`}
-    >
-      {scope.replace('_', ' ')}
-    </span>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    REVOKED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    EXPIRED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-100 text-gray-800'}`}
-    >
-      {status}
-    </span>
   );
 }

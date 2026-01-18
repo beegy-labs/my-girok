@@ -1,10 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Users, Search, Filter, Loader2, Pencil } from 'lucide-react';
+import { Badge } from '@my-girok/ui-components';
 import { employeeApi, Employee, EmployeeListResponse } from '../../api/employees';
 import { useApiError } from '../../hooks/useApiError';
 
 export default function EmployeesPage() {
+  const { t } = useTranslation();
   const [employees, setEmployees] = useState<Employee[]>([]);
 
   // Filters
@@ -57,10 +60,12 @@ export default function EmployeesPage() {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <Users size={24} className="text-theme-primary" />
-            <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">Employees</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">
+              {t('hr.employees.title')}
+            </h1>
           </div>
           <p className="text-sm sm:text-base text-theme-text-secondary mt-1">
-            Manage employee profiles, job information, and organizational data
+            {t('hr.employees.description')}
           </p>
         </div>
       </div>
@@ -83,7 +88,7 @@ export default function EmployeesPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name or email..."
+                placeholder={t('hr.employees.searchPlaceholder')}
                 className="w-full sm:w-64 pl-10 pr-4 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
               />
             </div>
@@ -91,7 +96,7 @@ export default function EmployeesPage() {
               type="submit"
               className="px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg text-sm hover:opacity-90"
             >
-              Search
+              {t('common.search')}
             </button>
           </form>
 
@@ -102,7 +107,7 @@ export default function EmployeesPage() {
               setDepartment(e.target.value);
               setPage(1);
             }}
-            placeholder="Filter by department..."
+            placeholder={t('hr.employees.filterDepartment')}
             className="w-full sm:w-auto px-3 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
           />
 
@@ -114,13 +119,13 @@ export default function EmployeesPage() {
             }}
             className="w-full sm:w-auto px-3 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
           >
-            <option value="">All Statuses</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
+            <option value="">{t('hr.employees.allStatuses')}</option>
+            <option value="true">{t('common.active')}</option>
+            <option value="false">{t('common.inactive')}</option>
           </select>
 
           <div className="text-xs sm:text-sm text-theme-text-tertiary pt-2 border-t border-theme-border-default sm:pt-0 sm:border-t-0 sm:ml-auto">
-            {total} employees
+            {t('hr.employees.count', { count: total })}
           </div>
         </div>
       </div>
@@ -134,7 +139,7 @@ export default function EmployeesPage() {
         ) : employees.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-theme-text-tertiary">
             <Users size={48} className="mb-4 opacity-50" />
-            <p>No employees found</p>
+            <p>{t('hr.employees.noEmployees')}</p>
           </div>
         ) : (
           <>
@@ -142,13 +147,13 @@ export default function EmployeesPage() {
               <table className="admin-table min-w-full">
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Employee #</th>
-                    <th>Department</th>
-                    <th>Title</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>{t('hr.employees.name')}</th>
+                    <th>{t('hr.employees.email')}</th>
+                    <th>{t('hr.employees.employeeNumber')}</th>
+                    <th>{t('hr.employees.department')}</th>
+                    <th>{t('hr.employees.title')}</th>
+                    <th>{t('common.status')}</th>
+                    <th>{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -177,15 +182,9 @@ export default function EmployeesPage() {
                         <span className="text-sm">{employee.title || '-'}</span>
                       </td>
                       <td>
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            employee.active
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                              : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-                          }`}
-                        >
-                          {employee.active ? 'Active' : 'Inactive'}
-                        </span>
+                        <Badge variant={employee.active ? 'success' : 'default'}>
+                          {employee.active ? t('common.active') : t('common.inactive')}
+                        </Badge>
                       </td>
                       <td>
                         <Link
@@ -193,7 +192,7 @@ export default function EmployeesPage() {
                           className="inline-flex items-center gap-1 px-3 py-1 text-sm text-theme-primary hover:bg-theme-bg-hover rounded-lg transition-colors"
                         >
                           <Pencil size={14} />
-                          View
+                          {t('common.view')}
                         </Link>
                       </td>
                     </tr>
@@ -206,7 +205,7 @@ export default function EmployeesPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-theme-border-default">
                 <div className="text-sm text-theme-text-tertiary">
-                  Page {page} of {totalPages}
+                  {t('common.page', { current: page, total: totalPages })}
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -214,14 +213,14 @@ export default function EmployeesPage() {
                     disabled={page === 1}
                     className="px-3 py-1 text-sm border border-theme-border-default rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-theme-bg-hover"
                   >
-                    Previous
+                    {t('common.previous')}
                   </button>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
                     className="px-3 py-1 text-sm border border-theme-border-default rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-theme-bg-hover"
                   >
-                    Next
+                    {t('common.next')}
                   </button>
                 </div>
               </div>
