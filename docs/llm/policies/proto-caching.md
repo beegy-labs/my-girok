@@ -249,13 +249,23 @@ on:
 
 **Gitea storage limits**: 10GB per repository (more than sufficient)
 
-## Improvement Opportunities
+## Implemented Improvements (2026-01-18)
+
+### Summary
+
+| #   | Improvement           | Status         | Priority |
+| --- | --------------------- | -------------- | -------- |
+| 1   | Checksum verification | ✅ Implemented | Medium   |
+| 2   | Fallback mechanism    | ❌ Rejected    | N/A      |
+| 3   | Retention policy      | ✅ Implemented | Low      |
+| 4   | Cache monitoring      | ✅ Implemented | Low      |
+| 5   | Concurrency control   | ✅ Implemented | Low      |
 
 ### 1. Checksum Verification (Security) 🔒
 
-**Current State**: Downloads package based on hash in URL, but doesn't verify integrity after download.
+**Status**: ✅ **Implemented**
 
-**Recommendation**: Add SHA256 checksum verification:
+**Implementation**: SHA256 checksum file uploaded/downloaded alongside tarball:
 
 ```bash
 # In build-proto.yml: Generate and store checksum
@@ -272,29 +282,44 @@ fi
 
 **Priority**: Medium (defense-in-depth security)
 
-### 2. Fallback Mechanism (Resilience) 🛡️
+### 2. ~~Fallback Mechanism (Resilience)~~ ❌ **REJECTED**
 
-**Current State**: If Gitea is down, all service CI jobs fail.
+**Initial Proposal**: Add fallback to generate proto locally if Gitea download fails.
 
-**Recommendation**: Add fallback to generate proto locally:
+**Why REJECTED**:
+
+1. **Fallback doesn't solve the problem**: Local generation uses `buf generate`, which hits the same Buf rate limit we're trying to avoid
+2. **Hides the real issue**: Proto package missing from Gitea should be a clear failure, not masked by fallback
+3. **False sense of security**: Fallback only works if Buf rate limit is NOT active (the exact problem we're solving)
+4. **Adds complexity without benefit**: More code, same failure mode
+
+**Real-world failure scenario**:
+
+```
+Gitea download fails → Fallback triggers → pnpm generate → buf generate → Rate limit ❌
+```
+
+**Better approach**: **Fail fast with clear instructions**
 
 ```yaml
 - name: Download proto files
-  id: download
-  continue-on-error: true
   run: |
-    # Download from Gitea
-    curl -f -L ... || exit 1
-
-- name: Generate proto files (fallback)
-  if: steps.download.outcome == 'failure'
-  run: |
-    echo "⚠️  Gitea download failed, generating proto locally"
-    pnpm --filter @my-girok/proto generate
+    if ! curl -f ... proto-generated.tar.gz; then
+      echo "❌ Proto package not found in Gitea"
+      echo "🔧 To fix: Manually trigger 'Build Proto' workflow"
+      echo "⚠️  Fallback NOT available (Buf rate limit)"
+      exit 1
+    fi
 ```
 
-**Trade-off**: Increases CI complexity, but improves resilience
-**Priority**: Low (Gitea uptime is high, rare scenario)
+**Benefits**:
+
+- Clear error message guides developers to solution
+- Forces proper fix (build proto package first)
+- Doesn't hide rate limit issues
+
+**Status**: ~~Implemented and removed~~ (2026-01-18)
+**Priority**: N/A (rejected approach)
 
 ### 3. Retention Policy (Storage Management) 🗄️
 
