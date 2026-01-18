@@ -1,6 +1,3 @@
-import apiClient from './client';
-
-// Import types from shared package (SSOT)
 import type {
   AdminAccount,
   AdminAccountDetail,
@@ -13,20 +10,7 @@ import type {
   InviteAdminRequest,
   InvitationResponse,
 } from '@my-girok/types';
-
-// Re-export types for convenience
-export type {
-  AdminAccount,
-  AdminAccountDetail,
-  AdminListResponse,
-  AdminListQuery,
-  AdminRoleListResponse,
-  AdminRoleListQuery,
-  CreateAdminRequest,
-  UpdateAdminRequest,
-  InviteAdminRequest,
-  InvitationResponse,
-};
+import apiClient from './client';
 
 export const adminAccountsApi = {
   list: async (query?: AdminListQuery): Promise<AdminListResponse> => {

@@ -2,11 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
-import {
-  adminAccountsApi,
-  type CreateAdminRequest,
-  type UpdateAdminRequest,
-} from '../../../api/adminAccounts';
+import type { CreateAdminRequest, UpdateAdminRequest } from '@my-girok/types';
+import { adminAccountsApi } from '../../../api/adminAccounts';
 import { useApiError } from '../../../hooks/useApiError';
 import { toast } from 'sonner';
 

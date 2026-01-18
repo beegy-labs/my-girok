@@ -12,11 +12,8 @@ import {
   UserX,
   MoreHorizontal,
 } from 'lucide-react';
-import {
-  adminAccountsApi,
-  type AdminAccount,
-  type AdminListQuery,
-} from '../../../api/adminAccounts';
+import type { AdminAccount, AdminListQuery } from '@my-girok/types';
+import { adminAccountsApi } from '../../../api/adminAccounts';
 import { useAdminAuthStore } from '../../../stores/adminAuthStore';
 import { useApiError } from '../../../hooks/useApiError';
 

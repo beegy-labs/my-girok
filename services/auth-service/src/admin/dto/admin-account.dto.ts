@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
-// Import types from shared package (SSOT)
+// Import types and enums from shared package (SSOT)
 import type {
   AdminAccount,
   AdminAccountDetail,
@@ -20,6 +20,7 @@ import type {
   AdminRoleListResponse,
   InvitationResponse,
 } from '@my-girok/types';
+import { AdminScope, InvitationType } from '@my-girok/types';
 
 // Re-export types for convenience
 export type {
@@ -30,20 +31,12 @@ export type {
   InvitationResponse,
 };
 
+// Re-export enums for convenience
+export { AdminScope, InvitationType };
+
 // Type aliases for backward compatibility
 export type AdminResponse = AdminAccount;
 export type AdminDetailResponse = AdminAccountDetail;
-
-// Local enums for validation (matching types package)
-export enum AdminScope {
-  SYSTEM = 'SYSTEM',
-  TENANT = 'TENANT',
-}
-
-export enum InvitationType {
-  EMAIL = 'EMAIL',
-  DIRECT = 'DIRECT',
-}
 
 export class CreateAdminDto {
   @IsEmail()

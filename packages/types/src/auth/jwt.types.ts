@@ -9,8 +9,11 @@ export type AccountMode = 'SERVICE' | 'UNIFIED';
 // User service status in JWT
 export type UserServiceStatus = 'ACTIVE' | 'SUSPENDED' | 'WITHDRAWN';
 
-// Admin scope types
-export type AdminScope = 'SYSTEM' | 'TENANT';
+// Admin scope enum
+export enum AdminScope {
+  SYSTEM = 'SYSTEM',
+  TENANT = 'TENANT',
+}
 
 // ============================================
 // Base JWT Payload

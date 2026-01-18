@@ -15,4 +15,5 @@ export enum SystemAdminPermission {
 }
 
 // Re-export existing enums to avoid duplication
+export { AdminScope } from '../auth/jwt.types.js';
 export { InvitationType, InvitationStatus } from './operator.types.js';

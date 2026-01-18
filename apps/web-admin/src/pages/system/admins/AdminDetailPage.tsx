@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Edit, Shield, Loader2 } from 'lucide-react';
-import { adminAccountsApi, type AdminAccountDetail } from '../../../api/adminAccounts';
+import type { AdminAccountDetail } from '@my-girok/types';
+import { adminAccountsApi } from '../../../api/adminAccounts';
 import { useAdminAuthStore } from '../../../stores/adminAuthStore';
 import { useApiError } from '../../../hooks/useApiError';
 
