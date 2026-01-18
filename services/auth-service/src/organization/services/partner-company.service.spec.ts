@@ -9,14 +9,14 @@ describe('PartnerCompanyService', () => {
   let service: PartnerCompanyService;
 
   const mockPrismaService = {
-    partnerCompany: {
+    partner_companies: {
       create: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
-    partnerServiceAgreement: {
+    partner_service_agreements: {
       findMany: vi.fn(),
     },
   };
@@ -65,8 +65,8 @@ describe('PartnerCompanyService', () => {
         partnerType: PartnerType.VENDOR,
       };
 
-      mockPrismaService.partnerCompany.findUnique.mockResolvedValue(null);
-      mockPrismaService.partnerCompany.create.mockResolvedValue(mockPartnerCompany);
+      mockPrismaService.partner_companies.findUnique.mockResolvedValue(null);
+      mockPrismaService.partner_companies.create.mockResolvedValue(mockPartnerCompany);
 
       const result = await service.create(dto);
 
@@ -81,7 +81,7 @@ describe('PartnerCompanyService', () => {
         partnerType: PartnerType.VENDOR,
       };
 
-      mockPrismaService.partnerCompany.findUnique.mockResolvedValue(mockPartnerCompany);
+      mockPrismaService.partner_companies.findUnique.mockResolvedValue(mockPartnerCompany);
 
       await expect(service.create(dto)).rejects.toThrow(ConflictException);
     });
@@ -89,7 +89,7 @@ describe('PartnerCompanyService', () => {
 
   describe('findAll', () => {
     it('should return all partner companies', async () => {
-      mockPrismaService.partnerCompany.findMany.mockResolvedValue([mockPartnerCompany]);
+      mockPrismaService.partner_companies.findMany.mockResolvedValue([mockPartnerCompany]);
 
       const result = await service.findAll();
 
@@ -98,12 +98,12 @@ describe('PartnerCompanyService', () => {
     });
 
     it('should filter by partner type', async () => {
-      mockPrismaService.partnerCompany.findMany.mockResolvedValue([mockPartnerCompany]);
+      mockPrismaService.partner_companies.findMany.mockResolvedValue([mockPartnerCompany]);
 
       const result = await service.findAll({ partnerType: PartnerType.VENDOR });
 
       expect(result).toHaveLength(1);
-      expect(mockPrismaService.partnerCompany.findMany).toHaveBeenCalledWith({
+      expect(mockPrismaService.partner_companies.findMany).toHaveBeenCalledWith({
         where: { partner_type: PartnerType.VENDOR },
         orderBy: [{ name: 'asc' }],
       });
@@ -112,7 +112,7 @@ describe('PartnerCompanyService', () => {
 
   describe('findOne', () => {
     it('should return a partner company by ID', async () => {
-      mockPrismaService.partnerCompany.findUnique.mockResolvedValue(mockPartnerCompany);
+      mockPrismaService.partner_companies.findUnique.mockResolvedValue(mockPartnerCompany);
 
       const result = await service.findOne(mockPartnerCompany.id);
 
@@ -120,7 +120,7 @@ describe('PartnerCompanyService', () => {
     });
 
     it('should throw NotFoundException if not found', async () => {
-      mockPrismaService.partnerCompany.findUnique.mockResolvedValue(null);
+      mockPrismaService.partner_companies.findUnique.mockResolvedValue(null);
 
       await expect(service.findOne('invalid-id')).rejects.toThrow(NotFoundException);
     });
@@ -137,8 +137,8 @@ describe('PartnerCompanyService', () => {
         ...updateDto,
       };
 
-      mockPrismaService.partnerCompany.findUnique.mockResolvedValue(mockPartnerCompany);
-      mockPrismaService.partnerCompany.update.mockResolvedValue(updatedPartnerCompany);
+      mockPrismaService.partner_companies.findUnique.mockResolvedValue(mockPartnerCompany);
+      mockPrismaService.partner_companies.update.mockResolvedValue(updatedPartnerCompany);
 
       const result = await service.update(mockPartnerCompany.id, updateDto);
 
@@ -148,12 +148,12 @@ describe('PartnerCompanyService', () => {
 
   describe('remove', () => {
     it('should delete a partner company successfully', async () => {
-      mockPrismaService.partnerCompany.findUnique.mockResolvedValue(mockPartnerCompany);
-      mockPrismaService.partnerCompany.delete.mockResolvedValue(mockPartnerCompany);
+      mockPrismaService.partner_companies.findUnique.mockResolvedValue(mockPartnerCompany);
+      mockPrismaService.partner_companies.delete.mockResolvedValue(mockPartnerCompany);
 
       await service.remove(mockPartnerCompany.id);
 
-      expect(mockPrismaService.partnerCompany.delete).toHaveBeenCalledWith({
+      expect(mockPrismaService.partner_companies.delete).toHaveBeenCalledWith({
         where: { id: mockPartnerCompany.id },
       });
     });

@@ -69,13 +69,13 @@ describe('WorkScheduleService', () => {
 
       mockPrismaService.adminWorkSchedule.create.mockResolvedValue({
         id: 'schedule-1',
-        admin_id: dto.adminId,
-        schedule_type: dto.scheduleType,
-        effective_date: dto.effectiveDate,
-        weekly_hours: '40',
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date(),
+        adminId: dto.adminId,
+        scheduleType: dto.scheduleType,
+        effectiveDate: dto.effectiveDate,
+        weeklyHours: '40',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.create(dto);
@@ -94,13 +94,13 @@ describe('WorkScheduleService', () => {
       mockPrismaService.adminWorkSchedule.findMany.mockResolvedValue([
         {
           id: 'schedule-1',
-          admin_id: adminId,
-          schedule_type: ScheduleType.STANDARD,
-          effective_date: new Date('2026-01-01'),
-          weekly_hours: '40',
-          is_active: true,
-          created_at: new Date(),
-          updated_at: new Date(),
+          adminId: adminId,
+          scheduleType: ScheduleType.STANDARD,
+          effectiveDate: new Date('2026-01-01'),
+          weeklyHours: '40',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ]);
 
@@ -117,12 +117,12 @@ describe('WorkScheduleService', () => {
 
       mockPrismaService.adminWorkSchedule.findFirst.mockResolvedValue({
         id: 'schedule-1',
-        admin_id: adminId,
-        schedule_type: ScheduleType.STANDARD,
-        is_active: true,
-        weekly_hours: '40',
-        created_at: new Date(),
-        updated_at: new Date(),
+        adminId: adminId,
+        scheduleType: ScheduleType.STANDARD,
+        isActive: true,
+        weeklyHours: '40',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.findActiveByAdmin(adminId);
@@ -151,12 +151,12 @@ describe('WorkScheduleService', () => {
 
       mockPrismaService.adminWorkSchedule.update.mockResolvedValue({
         id: scheduleId,
-        admin_id: 'admin-123',
-        weekly_hours: '35',
+        adminId: 'admin-123',
+        weeklyHours: '35',
         friday_start: '09:00',
         friday_end: '14:00',
-        created_at: new Date(),
-        updated_at: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.update(scheduleId, dto);
@@ -188,10 +188,10 @@ describe('WorkScheduleService', () => {
 
       mockPrismaService.adminWorkSchedule.findUnique.mockResolvedValue({
         id: scheduleId,
-        admin_id: 'admin-123',
-        weekly_hours: '40',
-        created_at: new Date(),
-        updated_at: new Date(),
+        adminId: 'admin-123',
+        weeklyHours: '40',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.findOne(scheduleId);

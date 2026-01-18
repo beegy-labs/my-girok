@@ -74,14 +74,27 @@ jobs:
             ${{ runner.os }}-pnpm-${{ inputs.service_name }}-
             ${{ runner.os }}-pnpm-
       - run: pnpm install --frozen-lockfile --prefer-offline
+
+      # Generate proto files first (match Dockerfile build order)
+      - name: Generate protobuf files
+        run: pnpm --filter @my-girok/proto generate
+
       - run: pnpm --filter @my-girok/types build
+
       - name: Generate Prisma client
         if: inputs.needs_prisma
         run: pnpm --filter ${{ inputs.pnpm_filter }} prisma:generate
+
       - run: pnpm --filter @my-girok/nest-common build
+
+      # Build service to ensure compiled code is valid
+      - name: Build service
+        working-directory: ${{ inputs.service_path }}
+        run: pnpm build
+
       - name: Test and lint
         working-directory: ${{ inputs.service_path }}
-        run: pnpm test && pnpm lint
+        run: pnpm test && pnpm lint:check
 
   build:
     name: Build

@@ -85,6 +85,9 @@ COPY --chown=node:node --from=builder /app/services/auth-service/migrations ./se
 # Copy proto files for gRPC
 COPY --chown=node:node --from=builder /app/packages/proto ./packages/proto
 
+# CRITICAL: Copy Prisma client from builder stage (fixes dual-generation issue)
+COPY --chown=node:node --from=builder /app/services/auth-service/node_modules/.prisma ./services/auth-service/node_modules/.prisma
+
 # Install production dependencies (skip lifecycle scripts like husky)
 ENV NODE_ENV=production
 RUN --mount=type=cache,id=pnpm-prod,target=/root/.local/share/pnpm/store \
@@ -92,8 +95,8 @@ RUN --mount=type=cache,id=pnpm-prod,target=/root/.local/share/pnpm/store \
 
 WORKDIR /app/services/auth-service
 
-# Generate Prisma Client
-RUN pnpm prisma:generate
+# DO NOT regenerate Prisma client - use the one from builder stage
+# The compiled dist/ files reference the builder's Prisma client
 
 # Create temp directory with proper permissions
 RUN mkdir -p /tmp && chown -R node:node /tmp

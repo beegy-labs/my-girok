@@ -61,15 +61,15 @@ describe('LeaveService', () => {
       mockPrismaService.adminLeave.findFirst.mockResolvedValue(null);
       mockPrismaService.adminLeave.create.mockResolvedValue({
         id: 'leave-1',
-        admin_id: adminId,
-        leave_type: dto.leaveType,
-        start_date: dto.startDate,
-        end_date: dto.endDate,
-        days_count: '3',
+        adminId: adminId,
+        leaveType: dto.leaveType,
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        daysCount: '3',
         status: LeaveStatus.DRAFT,
-        requested_at: new Date(),
-        created_at: new Date(),
-        updated_at: new Date(),
+        requestedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.create(adminId, dto);
@@ -90,10 +90,10 @@ describe('LeaveService', () => {
 
       mockPrismaService.adminLeave.findFirst.mockResolvedValue({
         id: 'existing-leave',
-        admin_id: adminId,
+        adminId: adminId,
         status: LeaveStatus.APPROVED,
-        start_date: new Date('2026-02-02'),
-        end_date: new Date('2026-02-04'),
+        startDate: new Date('2026-02-02'),
+        endDate: new Date('2026-02-04'),
       });
 
       await expect(service.create(adminId, dto)).rejects.toThrow(BadRequestException);
@@ -110,18 +110,18 @@ describe('LeaveService', () => {
 
       mockPrismaService.adminLeave.findUnique.mockResolvedValue({
         id: leaveId,
-        admin_id: adminId,
+        adminId: adminId,
         status: LeaveStatus.DRAFT,
       });
 
       mockPrismaService.adminLeave.update.mockResolvedValue({
         id: leaveId,
-        admin_id: adminId,
+        adminId: adminId,
         status: LeaveStatus.PENDING,
-        submitted_at: new Date(),
-        first_approver_id: dto.firstApproverId,
-        created_at: new Date(),
-        updated_at: new Date(),
+        submittedAt: new Date(),
+        firstApproverId: dto.firstApproverId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.submit(leaveId, adminId, dto);
@@ -141,7 +141,7 @@ describe('LeaveService', () => {
     it('should throw ForbiddenException if not owner', async () => {
       mockPrismaService.adminLeave.findUnique.mockResolvedValue({
         id: 'leave-1',
-        admin_id: 'another-admin',
+        adminId: 'another-admin',
         status: LeaveStatus.DRAFT,
       });
 
@@ -151,7 +151,7 @@ describe('LeaveService', () => {
     it('should throw BadRequestException if already submitted', async () => {
       mockPrismaService.adminLeave.findUnique.mockResolvedValue({
         id: 'leave-1',
-        admin_id: 'admin-123',
+        adminId: 'admin-123',
         status: LeaveStatus.PENDING,
       });
 
@@ -169,41 +169,41 @@ describe('LeaveService', () => {
 
       mockPrismaService.adminLeave.findUnique.mockResolvedValue({
         id: leaveId,
-        admin_id: 'admin-123',
+        adminId: 'admin-123',
         status: LeaveStatus.PENDING,
-        first_approver_id: approverId,
-        first_approved_at: null,
-        second_approver_id: null,
-        leave_type: LeaveType.ANNUAL,
-        days_count: '3',
-        start_date: new Date('2026-02-01'),
+        firstApproverId: approverId,
+        firstApprovedAt: null,
+        secondApproverId: null,
+        leaveType: LeaveType.ANNUAL,
+        daysCount: '3',
+        startDate: new Date('2026-02-01'),
       });
 
       mockPrismaService.adminLeave.update.mockResolvedValue({
         id: leaveId,
-        admin_id: 'admin-123',
+        adminId: 'admin-123',
         status: LeaveStatus.APPROVED,
-        first_approver_id: approverId,
-        first_approved_at: new Date(),
-        first_approval_status: 'APPROVED',
-        final_approved_by: approverId,
-        final_approved_at: new Date(),
-        leave_type: LeaveType.ANNUAL,
-        days_count: '3',
-        created_at: new Date(),
-        updated_at: new Date(),
+        firstApproverId: approverId,
+        firstApprovedAt: new Date(),
+        firstApprovalStatus: 'APPROVED',
+        finalApprovedBy: approverId,
+        finalApprovedAt: new Date(),
+        leaveType: LeaveType.ANNUAL,
+        daysCount: '3',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       mockPrismaService.adminLeaveBalance.findUnique.mockResolvedValue({
         id: 'balance-1',
-        admin_id: 'admin-123',
+        adminId: 'admin-123',
         year: 2026,
-        annual_entitled: '15',
-        annual_used: '0',
-        annual_remaining: '15',
-        sick_entitled: '10',
-        sick_used: '0',
-        sick_remaining: '10',
+        annualEntitled: '15',
+        annualUsed: '0',
+        annualRemaining: '15',
+        sickEntitled: '10',
+        sickUsed: '0',
+        sickRemaining: '10',
       });
 
       mockPrismaService.adminLeaveBalance.update.mockResolvedValue({});
@@ -225,18 +225,18 @@ describe('LeaveService', () => {
       mockPrismaService.adminLeave.findUnique.mockResolvedValue({
         id: leaveId,
         status: LeaveStatus.PENDING,
-        first_approver_id: approverId,
-        first_approved_at: null,
+        firstApproverId: approverId,
+        firstApprovedAt: null,
       });
 
       mockPrismaService.adminLeave.update.mockResolvedValue({
         id: leaveId,
         status: LeaveStatus.REJECTED,
-        rejected_by: approverId,
-        rejected_at: new Date(),
-        rejection_reason: dto.rejectionReason,
-        created_at: new Date(),
-        updated_at: new Date(),
+        rejectedBy: approverId,
+        rejectedAt: new Date(),
+        rejectionReason: dto.rejectionReason,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.approve(leaveId, approverId, dto);
@@ -249,8 +249,8 @@ describe('LeaveService', () => {
       mockPrismaService.adminLeave.findUnique.mockResolvedValue({
         id: 'leave-1',
         status: LeaveStatus.PENDING,
-        first_approver_id: 'manager-123',
-        first_approved_at: null,
+        firstApproverId: 'manager-123',
+        firstApprovedAt: null,
       });
 
       await expect(
@@ -269,18 +269,18 @@ describe('LeaveService', () => {
 
       mockPrismaService.adminLeave.findUnique.mockResolvedValue({
         id: leaveId,
-        admin_id: adminId,
+        adminId: adminId,
         status: LeaveStatus.PENDING,
       });
 
       mockPrismaService.adminLeave.update.mockResolvedValue({
         id: leaveId,
-        admin_id: adminId,
+        adminId: adminId,
         status: LeaveStatus.CANCELLED,
-        cancelled_at: new Date(),
-        cancellation_reason: dto.cancellationReason,
-        created_at: new Date(),
-        updated_at: new Date(),
+        cancelledAt: new Date(),
+        cancellationReason: dto.cancellationReason,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.cancel(leaveId, adminId, dto);
@@ -295,26 +295,26 @@ describe('LeaveService', () => {
 
       mockPrismaService.adminLeave.findUnique.mockResolvedValue({
         id: leaveId,
-        admin_id: adminId,
+        adminId: adminId,
         status: LeaveStatus.APPROVED,
-        leave_type: LeaveType.ANNUAL,
-        days_count: '3',
-        start_date: new Date('2026-02-01'),
+        leaveType: LeaveType.ANNUAL,
+        daysCount: '3',
+        startDate: new Date('2026-02-01'),
       });
 
       mockPrismaService.adminLeave.update.mockResolvedValue({
         id: leaveId,
         status: LeaveStatus.CANCELLED,
-        created_at: new Date(),
-        updated_at: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       mockPrismaService.adminLeaveBalance.findUnique.mockResolvedValue({
         id: 'balance-1',
-        admin_id: adminId,
+        adminId: adminId,
         year: 2026,
-        annual_used: '3',
-        annual_remaining: '12',
+        annualUsed: '3',
+        annualRemaining: '12',
       });
 
       mockPrismaService.adminLeaveBalance.update.mockResolvedValue({});
@@ -337,12 +337,12 @@ describe('LeaveService', () => {
         [
           {
             id: 'leave-1',
-            admin_id: 'admin-123',
-            leave_type: LeaveType.ANNUAL,
-            days_count: '3',
+            adminId: 'admin-123',
+            leaveType: LeaveType.ANNUAL,
+            daysCount: '3',
             status: LeaveStatus.APPROVED,
-            created_at: new Date(),
-            updated_at: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
           },
         ],
         1,
@@ -362,12 +362,12 @@ describe('LeaveService', () => {
       mockPrismaService.adminLeave.findMany.mockResolvedValue([
         {
           id: 'leave-1',
-          admin_id: 'admin-123',
+          adminId: 'admin-123',
           status: LeaveStatus.PENDING,
-          first_approver_id: approverId,
-          days_count: '3',
-          created_at: new Date(),
-          updated_at: new Date(),
+          firstApproverId: approverId,
+          daysCount: '3',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ]);
 

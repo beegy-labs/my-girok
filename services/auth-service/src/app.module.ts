@@ -22,6 +22,11 @@ import { AdminModule } from './admin/admin.module';
 import { OrganizationModule } from './organization/organization.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { LeaveModule } from './leave/leave.module';
+import { DelegationModule } from './delegation/delegation.module';
+import { ComplianceModule } from './compliance/compliance.module';
+import { GlobalMobilityModule } from './global-mobility/global-mobility.module';
+import { CountryConfigModule } from './country-config/country-config.module';
+import { OrganizationHistoryModule } from './organization-history/organization-history.module';
 import { ServicesModule } from './services/services.module';
 import { OperatorModule } from './operator/operator.module';
 import { CommonModule } from './common/common.module';
@@ -76,6 +81,11 @@ import configuration from './config/configuration';
     OrganizationModule,
     AttendanceModule,
     LeaveModule,
+    DelegationModule,
+    ComplianceModule,
+    GlobalMobilityModule,
+    CountryConfigModule,
+    OrganizationHistoryModule,
     ServicesModule,
     OperatorModule,
     HealthModule,

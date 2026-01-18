@@ -123,14 +123,14 @@ export class LeaveService {
 
       if (dto.approvalStatus === 'REJECTED') {
         updateData.status = LeaveStatus.REJECTED;
-        updateData.rejected_by = approverId;
-        updateData.rejected_at = new Date();
-        updateData.rejection_reason = dto.rejectionReason;
+        updateData.rejectedBy = approverId;
+        updateData.rejectedAt = new Date();
+        updateData.rejectionReason = dto.rejectionReason;
       } else if (!leave.secondApproverId) {
         // No second approver needed
         updateData.status = LeaveStatus.APPROVED;
-        updateData.final_approved_by = approverId;
-        updateData.final_approved_at = new Date();
+        updateData.finalApprovedBy = approverId;
+        updateData.finalApprovedAt = new Date();
       }
     }
     // Second approver
@@ -141,17 +141,17 @@ export class LeaveService {
     ) {
       updateData.secondApproverId = approverId;
       updateData.secondApprovedAt = new Date();
-      updateData.second_approval_status = dto.approvalStatus;
+      updateData.secondApprovalStatus = dto.approvalStatus;
 
       if (dto.approvalStatus === 'REJECTED') {
         updateData.status = LeaveStatus.REJECTED;
-        updateData.rejected_by = approverId;
-        updateData.rejected_at = new Date();
-        updateData.rejection_reason = dto.rejectionReason;
+        updateData.rejectedBy = approverId;
+        updateData.rejectedAt = new Date();
+        updateData.rejectionReason = dto.rejectionReason;
       } else {
         updateData.status = LeaveStatus.APPROVED;
-        updateData.final_approved_by = approverId;
-        updateData.final_approved_at = new Date();
+        updateData.finalApprovedBy = approverId;
+        updateData.finalApprovedAt = new Date();
       }
     } else {
       throw new ForbiddenException('You are not authorized to approve this leave');
@@ -236,12 +236,12 @@ export class LeaveService {
     }
 
     if (query.startDate || query.endDate) {
-      where.start_date = {};
+      where.startDate = {};
       if (query.startDate) {
-        where.start_date.gte = query.startDate;
+        where.startDate.gte = query.startDate;
       }
       if (query.endDate) {
-        where.start_date.lte = query.endDate;
+        where.startDate.lte = query.endDate;
       }
     }
 
@@ -276,7 +276,7 @@ export class LeaveService {
   }
 
   private async deductLeaveBalance(leave: any): Promise<void> {
-    const year = new Date(leave.start_date).getFullYear();
+    const year = new Date(leave.startDate).getFullYear();
 
     const balance = await this.prisma.adminLeaveBalance.findUnique({
       where: {
@@ -321,7 +321,7 @@ export class LeaveService {
   }
 
   private async restoreLeaveBalance(leave: any): Promise<void> {
-    const year = new Date(leave.start_date).getFullYear();
+    const year = new Date(leave.startDate).getFullYear();
 
     const balance = await this.prisma.adminLeaveBalance.findUnique({
       where: {
@@ -370,34 +370,34 @@ export class LeaveService {
       id: leave.id,
       adminId: leave.adminId,
       leaveType: leave.leaveType as LeaveType,
-      startDate: leave.start_date,
-      endDate: leave.end_date,
-      startHalf: leave.start_half,
-      endHalf: leave.end_half,
+      startDate: leave.startDate,
+      endDate: leave.endDate,
+      startHalf: leave.startHalf,
+      endHalf: leave.endHalf,
       daysCount: parseFloat(leave.daysCount || '0'),
       status: leave.status as LeaveStatus,
-      requestedAt: leave.requested_at,
-      submittedAt: leave.submitted_at,
+      requestedAt: leave.requestedAt,
+      submittedAt: leave.submittedAt,
       firstApproverId: leave.firstApproverId,
       firstApprovedAt: leave.firstApprovedAt,
       firstApprovalStatus: leave.firstApprovalStatus,
       secondApproverId: leave.secondApproverId,
       secondApprovedAt: leave.secondApprovedAt,
-      secondApprovalStatus: leave.second_approval_status,
-      finalApprovedBy: leave.final_approved_by,
-      finalApprovedAt: leave.final_approved_at,
-      rejectedBy: leave.rejected_by,
-      rejectedAt: leave.rejected_at,
-      rejectionReason: leave.rejection_reason,
-      cancelledAt: leave.cancelled_at,
-      cancellationReason: leave.cancellation_reason,
+      secondApprovalStatus: leave.secondApprovalStatus,
+      finalApprovedBy: leave.finalApprovedBy,
+      finalApprovedAt: leave.finalApprovedAt,
+      rejectedBy: leave.rejectedBy,
+      rejectedAt: leave.rejectedAt,
+      rejectionReason: leave.rejectionReason,
+      cancelledAt: leave.cancelledAt,
+      cancellationReason: leave.cancellationReason,
       reason: leave.reason,
-      emergencyContact: leave.emergency_contact,
-      handoverTo: leave.handover_to,
-      handoverNotes: leave.handover_notes,
-      attachmentUrls: leave.attachment_urls,
-      createdAt: leave.created_at,
-      updatedAt: leave.updated_at,
+      emergencyContact: leave.emergencyContact,
+      handoverTo: leave.handoverTo,
+      handoverNotes: leave.handoverNotes,
+      attachmentUrls: leave.attachmentUrls,
+      createdAt: leave.createdAt,
+      updatedAt: leave.updatedAt,
     };
   }
 }

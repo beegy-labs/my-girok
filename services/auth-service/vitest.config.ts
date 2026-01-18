@@ -1,4 +1,5 @@
 import { createNestJsConfig } from '@my-girok/vitest-config/nestjs';
+import path from 'node:path';
 
 export default createNestJsConfig(__dirname, {
   coverage: {
@@ -18,5 +19,8 @@ export default createNestJsConfig(__dirname, {
       // User personal info (separate domain)
       'src/users/controllers/user-personal-info.controller.ts',
     ],
+  },
+  aliases: {
+    '@prisma/auth-client': path.resolve(__dirname, 'node_modules/.prisma/auth-client'),
   },
 });

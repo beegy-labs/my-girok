@@ -9,7 +9,7 @@ describe('JobGradeService', () => {
   let service: JobGradeService;
 
   const mockPrismaService = {
-    jobGrade: {
+    job_grades: {
       create: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -63,8 +63,8 @@ describe('JobGradeService', () => {
         description: 'Senior level individual contributor',
       };
 
-      mockPrismaService.jobGrade.findUnique.mockResolvedValue(null);
-      mockPrismaService.jobGrade.create.mockResolvedValue(mockJobGrade);
+      mockPrismaService.job_grades.findUnique.mockResolvedValue(null);
+      mockPrismaService.job_grades.create.mockResolvedValue(mockJobGrade);
 
       const result = await service.create(dto);
 
@@ -72,10 +72,10 @@ describe('JobGradeService', () => {
       expect(result.name).toBe(dto.name);
       expect(result.jobFamily).toBe(dto.jobFamily);
       expect(result.level).toBe(dto.level);
-      expect(mockPrismaService.jobGrade.findUnique).toHaveBeenCalledWith({
+      expect(mockPrismaService.job_grades.findUnique).toHaveBeenCalledWith({
         where: { code: dto.code },
       });
-      expect(mockPrismaService.jobGrade.create).toHaveBeenCalled();
+      expect(mockPrismaService.job_grades.create).toHaveBeenCalled();
     });
 
     it('should throw ConflictException if code already exists', async () => {
@@ -87,23 +87,23 @@ describe('JobGradeService', () => {
         track: 'IC',
       };
 
-      mockPrismaService.jobGrade.findUnique.mockResolvedValue(mockJobGrade);
+      mockPrismaService.job_grades.findUnique.mockResolvedValue(mockJobGrade);
 
       await expect(service.create(dto)).rejects.toThrow(ConflictException);
-      expect(mockPrismaService.jobGrade.create).not.toHaveBeenCalled();
+      expect(mockPrismaService.job_grades.create).not.toHaveBeenCalled();
     });
   });
 
   describe('findAll', () => {
     it('should return all job grades', async () => {
       const mockJobGrades = [mockJobGrade];
-      mockPrismaService.jobGrade.findMany.mockResolvedValue(mockJobGrades);
+      mockPrismaService.job_grades.findMany.mockResolvedValue(mockJobGrades);
 
       const result = await service.findAll();
 
       expect(result).toHaveLength(1);
       expect(result[0].code).toBe('IC5');
-      expect(mockPrismaService.jobGrade.findMany).toHaveBeenCalledWith({
+      expect(mockPrismaService.job_grades.findMany).toHaveBeenCalledWith({
         where: {},
         orderBy: [{ level: 'asc' }, { track: 'asc' }],
       });
@@ -111,12 +111,12 @@ describe('JobGradeService', () => {
 
     it('should filter by job family', async () => {
       const mockJobGrades = [mockJobGrade];
-      mockPrismaService.jobGrade.findMany.mockResolvedValue(mockJobGrades);
+      mockPrismaService.job_grades.findMany.mockResolvedValue(mockJobGrades);
 
       const result = await service.findAll({ jobFamily: JobFamily.ENGINEERING });
 
       expect(result).toHaveLength(1);
-      expect(mockPrismaService.jobGrade.findMany).toHaveBeenCalledWith({
+      expect(mockPrismaService.job_grades.findMany).toHaveBeenCalledWith({
         where: { job_family: JobFamily.ENGINEERING },
         orderBy: [{ level: 'asc' }, { track: 'asc' }],
       });
@@ -124,12 +124,12 @@ describe('JobGradeService', () => {
 
     it('should filter by track', async () => {
       const mockJobGrades = [mockJobGrade];
-      mockPrismaService.jobGrade.findMany.mockResolvedValue(mockJobGrades);
+      mockPrismaService.job_grades.findMany.mockResolvedValue(mockJobGrades);
 
       const result = await service.findAll({ track: 'IC' });
 
       expect(result).toHaveLength(1);
-      expect(mockPrismaService.jobGrade.findMany).toHaveBeenCalledWith({
+      expect(mockPrismaService.job_grades.findMany).toHaveBeenCalledWith({
         where: { track: 'IC' },
         orderBy: [{ level: 'asc' }, { track: 'asc' }],
       });
@@ -138,19 +138,19 @@ describe('JobGradeService', () => {
 
   describe('findOne', () => {
     it('should return a job grade by ID', async () => {
-      mockPrismaService.jobGrade.findUnique.mockResolvedValue(mockJobGrade);
+      mockPrismaService.job_grades.findUnique.mockResolvedValue(mockJobGrade);
 
       const result = await service.findOne(mockJobGrade.id);
 
       expect(result.id).toBe(mockJobGrade.id);
       expect(result.code).toBe('IC5');
-      expect(mockPrismaService.jobGrade.findUnique).toHaveBeenCalledWith({
+      expect(mockPrismaService.job_grades.findUnique).toHaveBeenCalledWith({
         where: { id: mockJobGrade.id },
       });
     });
 
     it('should throw NotFoundException if job grade not found', async () => {
-      mockPrismaService.jobGrade.findUnique.mockResolvedValue(null);
+      mockPrismaService.job_grades.findUnique.mockResolvedValue(null);
 
       await expect(service.findOne('invalid-id')).rejects.toThrow(NotFoundException);
     });
@@ -158,18 +158,18 @@ describe('JobGradeService', () => {
 
   describe('findByCode', () => {
     it('should return a job grade by code', async () => {
-      mockPrismaService.jobGrade.findUnique.mockResolvedValue(mockJobGrade);
+      mockPrismaService.job_grades.findUnique.mockResolvedValue(mockJobGrade);
 
       const result = await service.findByCode('IC5');
 
       expect(result.code).toBe('IC5');
-      expect(mockPrismaService.jobGrade.findUnique).toHaveBeenCalledWith({
+      expect(mockPrismaService.job_grades.findUnique).toHaveBeenCalledWith({
         where: { code: 'IC5' },
       });
     });
 
     it('should throw NotFoundException if job grade not found', async () => {
-      mockPrismaService.jobGrade.findUnique.mockResolvedValue(null);
+      mockPrismaService.job_grades.findUnique.mockResolvedValue(null);
 
       await expect(service.findByCode('INVALID')).rejects.toThrow(NotFoundException);
     });
@@ -187,14 +187,14 @@ describe('JobGradeService', () => {
         ...updateDto,
       };
 
-      mockPrismaService.jobGrade.findUnique.mockResolvedValue(mockJobGrade);
-      mockPrismaService.jobGrade.update.mockResolvedValue(updatedJobGrade);
+      mockPrismaService.job_grades.findUnique.mockResolvedValue(mockJobGrade);
+      mockPrismaService.job_grades.update.mockResolvedValue(updatedJobGrade);
 
       const result = await service.update(mockJobGrade.id, updateDto);
 
       expect(result.name).toBe(updateDto.name);
       expect(result.description).toBe(updateDto.description);
-      expect(mockPrismaService.jobGrade.update).toHaveBeenCalledWith({
+      expect(mockPrismaService.job_grades.update).toHaveBeenCalledWith({
         where: { id: mockJobGrade.id },
         data: {
           name: updateDto.name,
@@ -205,32 +205,32 @@ describe('JobGradeService', () => {
     });
 
     it('should throw NotFoundException if job grade not found', async () => {
-      mockPrismaService.jobGrade.findUnique.mockResolvedValue(null);
+      mockPrismaService.job_grades.findUnique.mockResolvedValue(null);
 
       await expect(service.update('invalid-id', { name: 'New Name' })).rejects.toThrow(
         NotFoundException,
       );
-      expect(mockPrismaService.jobGrade.update).not.toHaveBeenCalled();
+      expect(mockPrismaService.job_grades.update).not.toHaveBeenCalled();
     });
   });
 
   describe('remove', () => {
     it('should delete a job grade successfully', async () => {
-      mockPrismaService.jobGrade.findUnique.mockResolvedValue(mockJobGrade);
-      mockPrismaService.jobGrade.delete.mockResolvedValue(mockJobGrade);
+      mockPrismaService.job_grades.findUnique.mockResolvedValue(mockJobGrade);
+      mockPrismaService.job_grades.delete.mockResolvedValue(mockJobGrade);
 
       await service.remove(mockJobGrade.id);
 
-      expect(mockPrismaService.jobGrade.delete).toHaveBeenCalledWith({
+      expect(mockPrismaService.job_grades.delete).toHaveBeenCalledWith({
         where: { id: mockJobGrade.id },
       });
     });
 
     it('should throw NotFoundException if job grade not found', async () => {
-      mockPrismaService.jobGrade.findUnique.mockResolvedValue(null);
+      mockPrismaService.job_grades.findUnique.mockResolvedValue(null);
 
       await expect(service.remove('invalid-id')).rejects.toThrow(NotFoundException);
-      expect(mockPrismaService.jobGrade.delete).not.toHaveBeenCalled();
+      expect(mockPrismaService.job_grades.delete).not.toHaveBeenCalled();
     });
   });
 });

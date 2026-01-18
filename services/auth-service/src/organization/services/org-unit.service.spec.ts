@@ -9,7 +9,7 @@ describe('OrgUnitService', () => {
   let service: OrgUnitService;
 
   const mockPrismaService = {
-    organizationUnit: {
+    organization_units: {
       create: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -60,14 +60,14 @@ describe('OrgUnitService', () => {
         description: 'Engineering department',
       };
 
-      mockPrismaService.organizationUnit.findUnique.mockResolvedValue(null);
-      mockPrismaService.organizationUnit.create.mockResolvedValue(mockOrgUnit);
+      mockPrismaService.organization_units.findUnique.mockResolvedValue(null);
+      mockPrismaService.organization_units.create.mockResolvedValue(mockOrgUnit);
 
       const result = await service.create(dto);
 
       expect(result.code).toBe(dto.code);
       expect(result.name).toBe(dto.name);
-      expect(mockPrismaService.organizationUnit.create).toHaveBeenCalled();
+      expect(mockPrismaService.organization_units.create).toHaveBeenCalled();
     });
 
     it('should throw ConflictException if code already exists', async () => {
@@ -77,10 +77,10 @@ describe('OrgUnitService', () => {
         orgType: OrgUnitType.DEPARTMENT,
       };
 
-      mockPrismaService.organizationUnit.findUnique.mockResolvedValue(mockOrgUnit);
+      mockPrismaService.organization_units.findUnique.mockResolvedValue(mockOrgUnit);
 
       await expect(service.create(dto)).rejects.toThrow(ConflictException);
-      expect(mockPrismaService.organizationUnit.create).not.toHaveBeenCalled();
+      expect(mockPrismaService.organization_units.create).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if parent does not exist', async () => {
@@ -91,12 +91,12 @@ describe('OrgUnitService', () => {
         parentId: 'non-existent-id',
       };
 
-      mockPrismaService.organizationUnit.findUnique
+      mockPrismaService.organization_units.findUnique
         .mockResolvedValueOnce(null) // code check
         .mockResolvedValueOnce(null); // parent check
 
       await expect(service.create(dto)).rejects.toThrow(NotFoundException);
-      expect(mockPrismaService.organizationUnit.create).not.toHaveBeenCalled();
+      expect(mockPrismaService.organization_units.create).not.toHaveBeenCalled();
     });
 
     it('should create with parent successfully', async () => {
@@ -116,10 +116,10 @@ describe('OrgUnitService', () => {
         parent_id: 'parent-id',
       };
 
-      mockPrismaService.organizationUnit.findUnique
+      mockPrismaService.organization_units.findUnique
         .mockResolvedValueOnce(null) // code check
         .mockResolvedValueOnce(parentOrgUnit); // parent check
-      mockPrismaService.organizationUnit.create.mockResolvedValue(createdOrgUnit);
+      mockPrismaService.organization_units.create.mockResolvedValue(createdOrgUnit);
 
       const result = await service.create(dto);
 
@@ -131,13 +131,13 @@ describe('OrgUnitService', () => {
   describe('findAll', () => {
     it('should return all organization units', async () => {
       const mockOrgUnits = [mockOrgUnit];
-      mockPrismaService.organizationUnit.findMany.mockResolvedValue(mockOrgUnits);
+      mockPrismaService.organization_units.findMany.mockResolvedValue(mockOrgUnits);
 
       const result = await service.findAll();
 
       expect(result).toHaveLength(1);
       expect(result[0].code).toBe('ENG');
-      expect(mockPrismaService.organizationUnit.findMany).toHaveBeenCalledWith({
+      expect(mockPrismaService.organization_units.findMany).toHaveBeenCalledWith({
         where: {},
         orderBy: [{ name: 'asc' }],
       });
@@ -145,15 +145,15 @@ describe('OrgUnitService', () => {
 
     it('should filter by org type', async () => {
       const mockOrgUnits = [mockOrgUnit];
-      mockPrismaService.organizationUnit.findMany.mockResolvedValue(mockOrgUnits);
+      mockPrismaService.organization_units.findMany.mockResolvedValue(mockOrgUnits);
 
       const result = await service.findAll({
         orgType: OrgUnitType.DEPARTMENT,
       });
 
       expect(result).toHaveLength(1);
-      expect(mockPrismaService.organizationUnit.findMany).toHaveBeenCalledWith({
-        where: { org_type: OrgUnitType.DEPARTMENT },
+      expect(mockPrismaService.organization_units.findMany).toHaveBeenCalledWith({
+        where: { unit_type: OrgUnitType.DEPARTMENT },
         orderBy: [{ name: 'asc' }],
       });
     });
@@ -176,7 +176,7 @@ describe('OrgUnitService', () => {
         parent_id: 'root-id',
       };
 
-      mockPrismaService.organizationUnit.findMany.mockResolvedValue([rootOrgUnit, childOrgUnit]);
+      mockPrismaService.organization_units.findMany.mockResolvedValue([rootOrgUnit, childOrgUnit]);
 
       const result = await service.findTree();
 
@@ -189,7 +189,7 @@ describe('OrgUnitService', () => {
 
   describe('findOne', () => {
     it('should return an organization unit by ID', async () => {
-      mockPrismaService.organizationUnit.findUnique.mockResolvedValue(mockOrgUnit);
+      mockPrismaService.organization_units.findUnique.mockResolvedValue(mockOrgUnit);
 
       const result = await service.findOne(mockOrgUnit.id);
 
@@ -198,7 +198,7 @@ describe('OrgUnitService', () => {
     });
 
     it('should throw NotFoundException if not found', async () => {
-      mockPrismaService.organizationUnit.findUnique.mockResolvedValue(null);
+      mockPrismaService.organization_units.findUnique.mockResolvedValue(null);
 
       await expect(service.findOne('invalid-id')).rejects.toThrow(NotFoundException);
     });
@@ -212,8 +212,8 @@ describe('OrgUnitService', () => {
         parent_id: mockOrgUnit.id,
       };
 
-      mockPrismaService.organizationUnit.findUnique.mockResolvedValue(mockOrgUnit);
-      mockPrismaService.organizationUnit.findMany.mockResolvedValue([childOrgUnit]);
+      mockPrismaService.organization_units.findUnique.mockResolvedValue(mockOrgUnit);
+      mockPrismaService.organization_units.findMany.mockResolvedValue([childOrgUnit]);
 
       const result = await service.findChildren(mockOrgUnit.id);
 
@@ -222,7 +222,7 @@ describe('OrgUnitService', () => {
     });
 
     it('should throw NotFoundException if parent not found', async () => {
-      mockPrismaService.organizationUnit.findUnique.mockResolvedValue(null);
+      mockPrismaService.organization_units.findUnique.mockResolvedValue(null);
 
       await expect(service.findChildren('invalid-id')).rejects.toThrow(NotFoundException);
     });
@@ -240,8 +240,8 @@ describe('OrgUnitService', () => {
         ...updateDto,
       };
 
-      mockPrismaService.organizationUnit.findUnique.mockResolvedValue(mockOrgUnit);
-      mockPrismaService.organizationUnit.update.mockResolvedValue(updatedOrgUnit);
+      mockPrismaService.organization_units.findUnique.mockResolvedValue(mockOrgUnit);
+      mockPrismaService.organization_units.update.mockResolvedValue(updatedOrgUnit);
 
       const result = await service.update(mockOrgUnit.id, updateDto);
 
@@ -254,7 +254,7 @@ describe('OrgUnitService', () => {
         parentId: mockOrgUnit.id,
       };
 
-      mockPrismaService.organizationUnit.findUnique.mockResolvedValue(mockOrgUnit);
+      mockPrismaService.organization_units.findUnique.mockResolvedValue(mockOrgUnit);
 
       await expect(service.update(mockOrgUnit.id, updateDto)).rejects.toThrow(BadRequestException);
     });
@@ -291,7 +291,7 @@ describe('OrgUnitService', () => {
       //    - findUnique(C) -> { parent_id: 'unit-b' }
       //    - findUnique(B) -> { parent_id: 'unit-a' }
       //    - Detects circular reference when it finds 'unit-a' in the chain
-      mockPrismaService.organizationUnit.findUnique
+      mockPrismaService.organization_units.findUnique
         .mockResolvedValueOnce(orgUnitA) // findOne check
         .mockResolvedValueOnce(orgUnitC) // parent exists check
         .mockResolvedValueOnce({ parent_id: 'unit-b' }) // circular check: C's parent
@@ -332,28 +332,28 @@ describe('OrgUnitService', () => {
         parent_id: 'unit-c',
       };
 
-      mockPrismaService.organizationUnit.findUnique
+      mockPrismaService.organization_units.findUnique
         .mockResolvedValueOnce(orgUnitB) // findOne check
         .mockResolvedValueOnce(orgUnitC) // parent exists check
         .mockResolvedValueOnce({ id: 'unit-c', parent_id: null }); // circular check: C has no parent
-      mockPrismaService.organizationUnit.update.mockResolvedValue(updatedOrgUnit);
+      mockPrismaService.organization_units.update.mockResolvedValue(updatedOrgUnit);
 
       const result = await service.update('unit-b', updateDto);
 
       expect(result.parentId).toBe('unit-c');
-      expect(mockPrismaService.organizationUnit.update).toHaveBeenCalled();
+      expect(mockPrismaService.organization_units.update).toHaveBeenCalled();
     });
   });
 
   describe('remove', () => {
     it('should delete an organization unit successfully', async () => {
-      mockPrismaService.organizationUnit.findUnique.mockResolvedValue(mockOrgUnit);
-      mockPrismaService.organizationUnit.findMany.mockResolvedValue([]);
-      mockPrismaService.organizationUnit.delete.mockResolvedValue(mockOrgUnit);
+      mockPrismaService.organization_units.findUnique.mockResolvedValue(mockOrgUnit);
+      mockPrismaService.organization_units.findMany.mockResolvedValue([]);
+      mockPrismaService.organization_units.delete.mockResolvedValue(mockOrgUnit);
 
       await service.remove(mockOrgUnit.id);
 
-      expect(mockPrismaService.organizationUnit.delete).toHaveBeenCalledWith({
+      expect(mockPrismaService.organization_units.delete).toHaveBeenCalledWith({
         where: { id: mockOrgUnit.id },
       });
     });
@@ -365,11 +365,11 @@ describe('OrgUnitService', () => {
         parent_id: mockOrgUnit.id,
       };
 
-      mockPrismaService.organizationUnit.findUnique.mockResolvedValue(mockOrgUnit);
-      mockPrismaService.organizationUnit.findMany.mockResolvedValue([childOrgUnit]);
+      mockPrismaService.organization_units.findUnique.mockResolvedValue(mockOrgUnit);
+      mockPrismaService.organization_units.findMany.mockResolvedValue([childOrgUnit]);
 
       await expect(service.remove(mockOrgUnit.id)).rejects.toThrow(BadRequestException);
-      expect(mockPrismaService.organizationUnit.delete).not.toHaveBeenCalled();
+      expect(mockPrismaService.organization_units.delete).not.toHaveBeenCalled();
     });
   });
 });

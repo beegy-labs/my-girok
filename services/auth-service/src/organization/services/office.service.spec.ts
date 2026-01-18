@@ -9,14 +9,14 @@ describe('OfficeService', () => {
   let service: OfficeService;
 
   const mockPrismaService = {
-    office: {
+    offices: {
       create: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
-    legalEntity: {
+    legal_entities: {
       findUnique: vi.fn(),
     },
     building: {
@@ -70,9 +70,9 @@ describe('OfficeService', () => {
         countryCode: 'KR',
       };
 
-      mockPrismaService.office.findUnique.mockResolvedValue(null);
-      mockPrismaService.legalEntity.findUnique.mockResolvedValue({ id: 'legal-entity-id' });
-      mockPrismaService.office.create.mockResolvedValue(mockOffice);
+      mockPrismaService.offices.findUnique.mockResolvedValue(null);
+      mockPrismaService.legal_entities.findUnique.mockResolvedValue({ id: 'legal-entity-id' });
+      mockPrismaService.offices.create.mockResolvedValue(mockOffice);
 
       const result = await service.create(dto);
 
@@ -89,7 +89,7 @@ describe('OfficeService', () => {
         countryCode: 'KR',
       };
 
-      mockPrismaService.office.findUnique.mockResolvedValue(mockOffice);
+      mockPrismaService.offices.findUnique.mockResolvedValue(mockOffice);
 
       await expect(service.create(dto)).rejects.toThrow(ConflictException);
     });
@@ -103,8 +103,8 @@ describe('OfficeService', () => {
         countryCode: 'KR',
       };
 
-      mockPrismaService.office.findUnique.mockResolvedValue(null);
-      mockPrismaService.legalEntity.findUnique.mockResolvedValue(null);
+      mockPrismaService.offices.findUnique.mockResolvedValue(null);
+      mockPrismaService.legal_entities.findUnique.mockResolvedValue(null);
 
       await expect(service.create(dto)).rejects.toThrow(NotFoundException);
     });
@@ -112,7 +112,7 @@ describe('OfficeService', () => {
 
   describe('findAll', () => {
     it('should return all offices', async () => {
-      mockPrismaService.office.findMany.mockResolvedValue([mockOffice]);
+      mockPrismaService.offices.findMany.mockResolvedValue([mockOffice]);
 
       const result = await service.findAll();
 
@@ -123,7 +123,7 @@ describe('OfficeService', () => {
 
   describe('findOne', () => {
     it('should return an office by ID', async () => {
-      mockPrismaService.office.findUnique.mockResolvedValue(mockOffice);
+      mockPrismaService.offices.findUnique.mockResolvedValue(mockOffice);
 
       const result = await service.findOne(mockOffice.id);
 
@@ -131,7 +131,7 @@ describe('OfficeService', () => {
     });
 
     it('should throw NotFoundException if not found', async () => {
-      mockPrismaService.office.findUnique.mockResolvedValue(null);
+      mockPrismaService.offices.findUnique.mockResolvedValue(null);
 
       await expect(service.findOne('invalid-id')).rejects.toThrow(NotFoundException);
     });
@@ -148,8 +148,8 @@ describe('OfficeService', () => {
         ...updateDto,
       };
 
-      mockPrismaService.office.findUnique.mockResolvedValue(mockOffice);
-      mockPrismaService.office.update.mockResolvedValue(updatedOffice);
+      mockPrismaService.offices.findUnique.mockResolvedValue(mockOffice);
+      mockPrismaService.offices.update.mockResolvedValue(updatedOffice);
 
       const result = await service.update(mockOffice.id, updateDto);
 
@@ -159,12 +159,12 @@ describe('OfficeService', () => {
 
   describe('remove', () => {
     it('should delete an office successfully', async () => {
-      mockPrismaService.office.findUnique.mockResolvedValue(mockOffice);
-      mockPrismaService.office.delete.mockResolvedValue(mockOffice);
+      mockPrismaService.offices.findUnique.mockResolvedValue(mockOffice);
+      mockPrismaService.offices.delete.mockResolvedValue(mockOffice);
 
       await service.remove(mockOffice.id);
 
-      expect(mockPrismaService.office.delete).toHaveBeenCalledWith({
+      expect(mockPrismaService.offices.delete).toHaveBeenCalledWith({
         where: { id: mockOffice.id },
       });
     });

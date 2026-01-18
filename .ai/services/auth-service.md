@@ -1,23 +1,28 @@
 # Auth Service
 
-> Admin & Operator authentication + MFA + Session + Legal + SCIM 2.0 + HR Backend (Phase 3) | Port: 3002 | DB: girok_auth
+> Admin & Operator authentication + MFA + Session + Legal + SCIM 2.0 + HR Backend (Phase 3-4) | Port: 3002 | DB: girok_auth
 
-**Phase 3 Migration Applied**: HR Backend (Attendance & Leave Management) - 6 new tables, 30+ endpoints
+**Phase 4 Migration Applied**: Advanced Features (Delegation, Compliance, Global Mobility) - 15 new tables, 45+ endpoints
 
-| Owns                 | Delegates         |
-| -------------------- | ----------------- |
-| Admin Auth           | -                 |
-| Operator Auth        | -                 |
-| MFA (TOTP/Backup)    | -                 |
-| Session Management   | -                 |
-| Legal Documents      | -                 |
-| Consent Tracking     | -                 |
-| OAuth Config         | Phase 1           |
-| Admin Profile        | Phase 2           |
-| Admin Enterprise     | Phase 2           |
-| NHI Management       | Phase 2           |
-| **Attendance**       | **Phase 3 (NEW)** |
-| **Leave Management** | **Phase 3 (NEW)** |
+| Owns                     | Delegates         |
+| ------------------------ | ----------------- |
+| Admin Auth               | -                 |
+| Operator Auth            | -                 |
+| MFA (TOTP/Backup)        | -                 |
+| Session Management       | -                 |
+| Legal Documents          | -                 |
+| Consent Tracking         | -                 |
+| OAuth Config             | Phase 1           |
+| Admin Profile            | Phase 2           |
+| Admin Enterprise         | Phase 2           |
+| NHI Management           | Phase 2           |
+| Attendance               | Phase 3           |
+| Leave Management         | Phase 3           |
+| **Delegation**           | **Phase 4 (NEW)** |
+| **Compliance**           | **Phase 4 (NEW)** |
+| **Global Mobility**      | **Phase 4 (NEW)** |
+| **Country Config**       | **Phase 4 (NEW)** |
+| **Organization History** | **Phase 4 (NEW)** |
 
 ## Phase 2: Enterprise Admin Management
 
@@ -88,5 +93,49 @@
 **Leave:** `POST /leaves`, `POST /leaves/:id/submit`, `POST /leaves/:id/approve`, `GET /leaves/pending-approvals`
 
 **Balance:** `GET /leave-balances/me`, `PATCH /leave-balances/:adminId/:year/adjust`, `POST /leave-balances/:adminId/:year/recalculate`
+
+## Phase 4: Advanced Features (Delegation, Compliance, Global Mobility)
+
+### Delegation Management
+
+- Authority delegation with approval workflow
+- Delegation logs for audit trail
+- Constraints: allowed hours, IPs, max actions
+- Auto-expiry and reminder notifications
+
+### Compliance Management
+
+- **Attestations**: Code of conduct, security policies, mandatory acknowledgments
+- **Certifications**: Professional credentials with verification
+- **Training**: Assignment, completion tracking, scoring, recurrence
+
+### Global Mobility
+
+- **Assignments**: International/domestic assignments with compensation tracking
+- **Work Authorizations**: Visas, work permits, residency with expiry alerts
+
+### Country Configuration
+
+- Country-specific HR policies (12 countries pre-populated)
+- Work hours, leave policies, holidays, tax years per country
+- Read-heavy service for global workforce management
+
+### Organization History
+
+- Track promotions, transfers, role changes
+- Approval workflow for organizational changes
+- Compensation and effective date tracking
+
+### Key Endpoints
+
+**Delegation:** `POST /delegations`, `POST /delegations/:id/approve`, `POST /delegations/:id/revoke`, `GET /delegations/:id/logs`
+
+**Compliance:** `POST /compliance/attestations`, `POST /compliance/certifications`, `POST /compliance/training`, `PATCH /compliance/training/:id/complete`
+
+**Global Mobility:** `POST /global-mobility/assignments`, `POST /global-mobility/work-authorizations`, `GET /global-mobility/work-authorizations/expiring`
+
+**Country Config:** `GET /country-configs`, `GET /country-configs/:code`
+
+**Org History:** `POST /organization-history`, `POST /organization-history/:id/approve`
 
 **SSOT**: `docs/llm/services/auth-service.md`
