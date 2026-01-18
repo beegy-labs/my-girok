@@ -16,8 +16,10 @@ import {
   AdminResponse,
   AdminDetailResponse,
   AdminListResponse,
+  AdminRoleListResponse,
   InvitationResponse,
   AdminListQueryDto,
+  AdminRoleListQueryDto,
   InvitationType,
 } from '../dto/admin-account.dto';
 
@@ -311,6 +313,41 @@ export class AdminAccountService {
       total,
       page,
       limit,
+    };
+  }
+
+  /**
+   * Get available roles for admin account creation
+   */
+  async getRoles(query: AdminRoleListQueryDto): Promise<AdminRoleListResponse> {
+    const { scope } = query;
+
+    let roles: RoleRow[];
+    if (scope) {
+      roles = await this.prisma.$queryRaw<RoleRow[]>`
+        SELECT id, name, display_name, scope, level
+        FROM roles
+        WHERE scope = ${scope}::admin_scope AND deleted_at IS NULL
+        ORDER BY level ASC, name ASC
+      `;
+    } else {
+      roles = await this.prisma.$queryRaw<RoleRow[]>`
+        SELECT id, name, display_name, scope, level
+        FROM roles
+        WHERE deleted_at IS NULL
+        ORDER BY level ASC, name ASC
+      `;
+    }
+
+    return {
+      roles: roles.map((r) => ({
+        id: r.id,
+        name: r.name,
+        displayName: r.display_name,
+        level: r.level,
+        scope: r.scope as 'SYSTEM' | 'TENANT',
+      })),
+      total: roles.length,
     };
   }
 

@@ -17,6 +17,10 @@ export * from './admin.enums.js';
 export * from './admin.types.js';
 export * from './admin-auth.types.js';
 
+// Phase 3: Admin Account Management
+export * from './admin-account.enums.js';
+export * from './admin-account.types.js';
+
 // Phase 6: HR Management Types
 export * from './hr-employee.types.js';
 export * from './hr-attendance.types.js';

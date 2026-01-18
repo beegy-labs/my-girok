@@ -21,8 +21,10 @@ import {
   AdminResponse,
   AdminDetailResponse,
   AdminListResponse,
+  AdminRoleListResponse,
   InvitationResponse,
   AdminListQueryDto,
+  AdminRoleListQueryDto,
 } from '../dto/admin-account.dto';
 import { CurrentAdmin } from '../decorators/current-admin.decorator';
 import { Permissions } from '../decorators/permissions.decorator';
@@ -70,6 +72,16 @@ export class AdminAccountController {
   @Permissions('system_admin:read')
   async findAll(@Query() query: AdminListQueryDto): Promise<AdminListResponse> {
     return this.adminAccountService.findAll(query);
+  }
+
+  /**
+   * Get available roles for admin account creation
+   * GET /v1/admin/admins/roles
+   */
+  @Get('roles')
+  @Permissions('system_admin:read')
+  async getRoles(@Query() query: AdminRoleListQueryDto): Promise<AdminRoleListResponse> {
+    return this.adminAccountService.getRoles(query);
   }
 
   /**

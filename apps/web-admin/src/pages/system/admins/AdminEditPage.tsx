@@ -10,25 +10,6 @@ import {
 import { useApiError } from '../../../hooks/useApiError';
 import { toast } from 'sonner';
 
-// Mock roles data - in production this would come from an API
-const MOCK_ROLES = [
-  {
-    id: '019426c7-4e71-7c92-a5ed-95aa1e0f21a0',
-    name: 'master',
-    displayName: 'Master Admin',
-    level: 0,
-  },
-  { id: '019426c7-4e71-7c92-a5ed-95aa1e0f21a1', name: 'admin', displayName: 'Admin', level: 1 },
-  {
-    id: '019426c7-4e71-7c92-a5ed-95aa1e0f21a2',
-    name: 'system_admin',
-    displayName: 'System Admin',
-    level: 2,
-  },
-  { id: '019426c7-4e71-7c92-a5ed-95aa1e0f21a3', name: 'editor', displayName: 'Editor', level: 3 },
-  { id: '019426c7-4e71-7c92-a5ed-95aa1e0f21a4', name: 'viewer', displayName: 'Viewer', level: 4 },
-];
-
 interface FormData {
   email: string;
   name: string;
@@ -42,6 +23,14 @@ interface FormErrors {
   name?: string;
   tempPassword?: string;
   roleId?: string;
+}
+
+interface Role {
+  id: string;
+  name: string;
+  displayName: string;
+  level: number;
+  scope: 'SYSTEM' | 'TENANT';
 }
 
 export default function AdminEditPage() {
@@ -59,11 +48,25 @@ export default function AdminEditPage() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(false);
 
   const { executeWithErrorHandling, isLoading: loading } = useApiError({
     context: 'AdminEditPage',
     retry: false,
   });
+
+  const fetchRoles = useCallback(async () => {
+    setRolesLoading(true);
+    try {
+      const response = await adminAccountsApi.getRoles({ scope: formData.scope });
+      setRoles(response.roles);
+    } catch (error) {
+      toast.error(t('admin.rolesLoadError'));
+    } finally {
+      setRolesLoading(false);
+    }
+  }, [formData.scope, t]);
 
   const fetchAdmin = useCallback(async () => {
     if (!id) return;
@@ -86,6 +89,12 @@ export default function AdminEditPage() {
       fetchAdmin();
     }
   }, [isEdit, fetchAdmin]);
+
+  useEffect(() => {
+    if (!isEdit) {
+      fetchRoles();
+    }
+  }, [isEdit, fetchRoles]);
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -247,14 +256,17 @@ export default function AdminEditPage() {
                   <select
                     value={formData.roleId}
                     onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
+                    disabled={rolesLoading}
                     className={`w-full px-4 py-2 bg-theme-bg-secondary border rounded-lg text-theme-text-primary text-sm ${
                       errors.roleId
                         ? 'border-theme-status-error-text'
                         : 'border-theme-border-default'
-                    }`}
+                    } ${rolesLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    <option value="">{t('admin.selectRole')}</option>
-                    {MOCK_ROLES.map((role) => (
+                    <option value="">
+                      {rolesLoading ? t('admin.loadingRoles') : t('admin.selectRole')}
+                    </option>
+                    {roles.map((role) => (
                       <option key={role.id} value={role.id}>
                         {role.displayName} (Level {role.level})
                       </option>

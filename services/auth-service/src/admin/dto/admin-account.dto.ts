@@ -12,6 +12,29 @@ import {
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
+// Import types from shared package (SSOT)
+import type {
+  AdminAccount,
+  AdminAccountDetail,
+  AdminListResponse,
+  AdminRoleListResponse,
+  InvitationResponse,
+} from '@my-girok/types';
+
+// Re-export types for convenience
+export type {
+  AdminAccount,
+  AdminAccountDetail,
+  AdminListResponse,
+  AdminRoleListResponse,
+  InvitationResponse,
+};
+
+// Type aliases for backward compatibility
+export type AdminResponse = AdminAccount;
+export type AdminDetailResponse = AdminAccountDetail;
+
+// Local enums for validation (matching types package)
 export enum AdminScope {
   SYSTEM = 'SYSTEM',
   TENANT = 'TENANT',
@@ -114,59 +137,9 @@ export class AssignRoleDto {
   roleId!: string;
 }
 
-export interface RoleResponse {
-  id: string;
-  name: string;
-  displayName: string;
-  level: number;
-}
-
-export interface PermissionResponse {
-  id: string;
-  resource: string;
-  action: string;
-  displayName: string;
-  description: string | null;
-  category: string;
-}
-
-export interface TenantResponse {
-  id: string;
-  name: string;
-  slug: string;
-  type: string;
-}
-
-export interface AdminResponse {
-  id: string;
-  email: string;
-  name: string;
-  scope: AdminScope;
-  tenantId: string | null;
-  role: RoleResponse;
-  isActive: boolean;
-  lastLoginAt: Date | null;
-  createdAt: Date;
-}
-
-export interface AdminDetailResponse extends AdminResponse {
-  permissions: PermissionResponse[];
-  tenant?: TenantResponse;
-}
-
-export interface AdminListResponse {
-  admins: AdminResponse[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
-export interface InvitationResponse {
-  id: string;
-  email: string;
-  name: string;
-  type: InvitationType;
-  status: 'PENDING' | 'ACCEPTED' | 'EXPIRED';
-  expiresAt: Date;
-  createdAt: Date;
+// Role List Query DTO
+export class AdminRoleListQueryDto {
+  @IsOptional()
+  @IsEnum(AdminScope)
+  scope?: AdminScope;
 }

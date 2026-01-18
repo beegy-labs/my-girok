@@ -1,93 +1,32 @@
 import apiClient from './client';
 
-// Types for Admin Account Management
-export interface AdminRole {
-  id: string;
-  name: string;
-  displayName: string;
-  level: number;
-}
+// Import types from shared package (SSOT)
+import type {
+  AdminAccount,
+  AdminAccountDetail,
+  AdminListResponse,
+  AdminListQuery,
+  AdminRoleListResponse,
+  AdminRoleListQuery,
+  CreateAdminRequest,
+  UpdateAdminRequest,
+  InviteAdminRequest,
+  InvitationResponse,
+} from '@my-girok/types';
 
-export interface AdminPermission {
-  id: string;
-  resource: string;
-  action: string;
-  displayName: string;
-  description: string | null;
-  category: string;
-}
-
-export interface AdminTenant {
-  id: string;
-  name: string;
-  slug: string;
-  type: string;
-}
-
-export interface AdminAccount {
-  id: string;
-  email: string;
-  name: string;
-  scope: 'SYSTEM' | 'TENANT';
-  tenantId: string | null;
-  role: AdminRole;
-  isActive: boolean;
-  lastLoginAt: Date | null;
-  createdAt: Date;
-}
-
-export interface AdminAccountDetail extends AdminAccount {
-  permissions: AdminPermission[];
-  tenant?: AdminTenant;
-}
-
-export interface AdminListResponse {
-  admins: AdminAccount[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
-export interface AdminListQuery {
-  scope?: 'SYSTEM' | 'TENANT';
-  roleId?: string;
-  isActive?: boolean;
-  search?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface CreateAdminRequest {
-  email: string;
-  name: string;
-  tempPassword: string;
-  roleId: string;
-  scope?: 'SYSTEM' | 'TENANT';
-  tenantId?: string;
-}
-
-export interface UpdateAdminRequest {
-  name?: string;
-  isActive?: boolean;
-}
-
-export interface InviteAdminRequest {
-  email: string;
-  name: string;
-  roleId: string;
-  type: 'EMAIL' | 'DIRECT';
-  tempPassword?: string;
-}
-
-export interface InvitationResponse {
-  id: string;
-  email: string;
-  name: string;
-  type: 'EMAIL' | 'DIRECT';
-  status: 'PENDING' | 'ACCEPTED' | 'EXPIRED';
-  expiresAt: Date;
-  createdAt: Date;
-}
+// Re-export types for convenience
+export type {
+  AdminAccount,
+  AdminAccountDetail,
+  AdminListResponse,
+  AdminListQuery,
+  AdminRoleListResponse,
+  AdminRoleListQuery,
+  CreateAdminRequest,
+  UpdateAdminRequest,
+  InviteAdminRequest,
+  InvitationResponse,
+};
 
 export const adminAccountsApi = {
   list: async (query?: AdminListQuery): Promise<AdminListResponse> => {
@@ -134,6 +73,14 @@ export const adminAccountsApi = {
 
   invite: async (data: InviteAdminRequest): Promise<InvitationResponse> => {
     const response = await apiClient.post<InvitationResponse>('/admins/invite', data);
+    return response.data;
+  },
+
+  getRoles: async (query?: AdminRoleListQuery): Promise<AdminRoleListResponse> => {
+    const params = new URLSearchParams();
+    if (query?.scope) params.append('scope', query.scope);
+
+    const response = await apiClient.get<AdminRoleListResponse>(`/admins/roles?${params}`);
     return response.data;
   },
 };
