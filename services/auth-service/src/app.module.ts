@@ -29,6 +29,7 @@ import { CountryConfigModule } from './country-config/country-config.module';
 import { OrganizationHistoryModule } from './organization-history/organization-history.module';
 import { ServicesModule } from './services/services.module';
 import { OperatorModule } from './operator/operator.module';
+import { EmployeeModule } from './employee/employee.module';
 import { CommonModule } from './common/common.module';
 import { GrpcModule } from './grpc/grpc.module';
 import configuration from './config/configuration';
@@ -88,6 +89,7 @@ import configuration from './config/configuration';
     OrganizationHistoryModule,
     ServicesModule,
     OperatorModule,
+    EmployeeModule,
     HealthModule,
     GrpcModule,
     IdentityGrpcClientModule.forRoot(),
