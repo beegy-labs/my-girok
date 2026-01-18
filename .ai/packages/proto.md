@@ -1,22 +1,21 @@
 # @my-girok/proto
 
-> Protocol Buffers definitions for gRPC services | **Last Updated**: 2026-01-11
+> Protocol Buffers for gRPC | Cached via Gitea | **Last Updated**: 2026-01-18
 
-## Structure
+| Directory   | Service  | Caching           | Time  |
+| ----------- | -------- | ----------------- | ----- |
+| `identity/` | Accounts | Gitea Generic Pkg | 15s ↓ |
+| `auth/`     | RBAC     | Hash: SHA256(12)  | 33s ↑ |
+| `legal/`    | Consent  | Size: ~100KB      |       |
+| `audit/`    | Logs     |                   |       |
+| `common/`   | Shared   |                   |       |
 
-| Directory   | Service                               |
-| ----------- | ------------------------------------- |
-| `identity/` | Identity service (accounts, sessions) |
-| `auth/`     | Auth service (RBAC, operators)        |
-| `legal/`    | Legal service (consent, DSR)          |
-| `audit/`    | Audit service (compliance logs)       |
-| `common/`   | Shared types (pagination, errors)     |
-
-## Commands
+**CI**: `.github/workflows/build-proto.yml`
+**Speedup**: 59-67% faster (vs Buf rate limit)
 
 ```bash
-pnpm --filter @my-girok/proto generate  # Generate TS types
-pnpm --filter @my-girok/proto lint      # Lint proto files
+pnpm --filter @my-girok/proto generate  # TS types
+pnpm --filter @my-girok/proto lint      # Lint
 ```
 
-**SSOT**: `docs/llm/packages/proto.md`
+**SSOT**: `docs/llm/policies/proto-caching.md`

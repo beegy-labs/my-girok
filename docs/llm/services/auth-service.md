@@ -2085,22 +2085,323 @@ Query params: `adminId`, `changeType`, `status`, `startDate`, `endDate`, `page`,
 - `country-config.service.spec.ts`: 9 tests
 - `organization-history.service.spec.ts`: 11 tests
 
+## 6. Phase 5: Employee Self-Service APIs
+
+### 6.1. Overview
+
+Phase 5 implements the **Employee Self-Service Portal** backend, allowing employees to manage their own data without admin intervention.
+
+**Key Features**:
+
+1. **Employee Profile** - View/edit own profile (limited fields)
+2. **Employee Attendance** - Clock in/out, view own records
+3. **Employee Leave** - Submit leave requests, view balance
+4. **Employee Delegation** - View delegations assigned to them (read-only)
+
+**Security Model**:
+
+- Employees can only access their OWN data (enforced by `EmployeeAuthGuard`)
+- Employees cannot view other employees' data
+- Employees cannot access admin-only endpoints
+- Limited update permissions (cannot change job title, salary, etc.)
+
+### 6.2. Employee Profile
+
+**Purpose**: Allow employees to view and update limited profile fields.
+
+**Module**: `EmployeeProfileModule`
+
+**Services**: `EmployeeProfileService` (wraps `AdminProfileService`)
+
+#### API Endpoints (Employee Profile)
+
+**GET /employee/profile/me** - Get own profile
+
+Returns complete profile with all fields (read-only).
+
+**PATCH /employee/profile/me** - Update own profile
+
+Allowed fields (limited):
+
+```typescript
+{
+  // SCIM Core (limited)
+  displayName?: string;
+  nickname?: string;
+  preferredLanguage?: string;  // ISO 639-1
+  locale?: string;              // BCP 47
+  timezone?: string;            // IANA timezone
+  profileUrl?: string;
+  profilePhotoUrl?: string;
+
+  // Contact Info
+  phoneNumber?: string;
+  phoneCountryCode?: string;
+  mobileNumber?: string;
+  mobileCountryCode?: string;
+  emergencyContact?: Record<string, any>;
+}
+```
+
+**Restricted fields** (employees CANNOT update):
+
+- `email`, `username` (identity fields)
+- `employeeNumber`, `jobTitle`, `organizationUnitId` (HR fields)
+- `employmentStatus`, `hireDate`, `salary` (JML fields)
+
+### 6.3. Employee Attendance
+
+**Purpose**: Allow employees to clock in/out and view their own attendance records.
+
+**Module**: `EmployeeAttendanceModule`
+
+**Services**: `EmployeeAttendanceService` (wraps `AttendanceService`)
+
+#### API Endpoints (Employee Attendance)
+
+**POST /employee/attendance/clock-in** - Clock in
+
+```typescript
+{
+  date: Date;                    // "2026-01-18"
+  workType?: WorkType;           // OFFICE, REMOTE, HYBRID, FIELD
+  officeId?: string;
+  remoteLocation?: string;
+  location?: {                   // GPS coordinates
+    lat: number;
+    lng: number;
+    address?: string;
+  };
+  notes?: string;
+}
+```
+
+**POST /employee/attendance/clock-out** - Clock out
+
+```typescript
+{
+  date: Date;
+  overtimeMinutes?: number;
+  overtimeReason?: string;
+  location?: {
+    lat: number;
+    lng: number;
+    address?: string;
+  };
+  notes?: string;
+}
+```
+
+**GET /employee/attendance/me** - Get own attendance records
+
+Query params: `startDate`, `endDate`, `page`, `limit`
+
+Returns paginated list of attendance records.
+
+**GET /employee/attendance/me/stats** - Get own attendance statistics
+
+Query params: `startDate` (required), `endDate` (required)
+
+Returns:
+
+```typescript
+{
+  totalDays: number;
+  presentDays: number;
+  absentDays: number;
+  lateDays: number;
+  totalWorkMinutes: number;
+  averageWorkMinutes: number;
+  totalOvertimeMinutes: number;
+  approvedOvertimeMinutes: number;
+}
+```
+
+**Features**:
+
+- IP address and GPS location tracking
+- Duplicate clock-in prevention
+- Overtime request (requires manager approval)
+- Work type tracking (office/remote/hybrid/field)
+
+### 6.4. Employee Leave
+
+**Purpose**: Allow employees to submit leave requests and view their leave balance.
+
+**Module**: `EmployeeLeaveModule`
+
+**Services**: `EmployeeLeaveService` (wraps `LeaveService` + `LeaveBalanceService`)
+
+#### API Endpoints (Employee Leave)
+
+**POST /employee/leave/requests** - Create leave request (DRAFT)
+
+```typescript
+{
+  leaveType: LeaveType;          // ANNUAL, SICK, COMPENSATORY, SPECIAL, etc.
+  startDate: Date;
+  endDate: Date;
+  startHalf?: 'MORNING' | 'AFTERNOON';
+  endHalf?: 'MORNING' | 'AFTERNOON';
+  daysCount: number;
+  reason?: string;
+  emergencyContact?: Record<string, any>;
+  handoverTo?: string;
+  handoverNotes?: string;
+  attachmentUrls?: string[];
+}
+```
+
+**POST /employee/leave/requests/:id/submit** - Submit leave request for approval
+
+```typescript
+{
+  firstApproverId: string;       // Manager who will approve
+  secondApproverId?: string;     // Optional second approver
+}
+```
+
+**POST /employee/leave/requests/:id/cancel** - Cancel own leave request
+
+```typescript
+{
+  cancellationReason: string;
+}
+```
+
+**GET /employee/leave/requests/me** - Get own leave requests
+
+Query params: `startDate`, `endDate`, `status`, `page`, `limit`
+
+**GET /employee/leave/requests/:id** - Get leave request by ID
+
+**GET /employee/leave/balance/me** - Get own leave balance (current year)
+
+Returns:
+
+```typescript
+{
+  adminId: string;
+  year: number;
+  annualEntitled: number;
+  annualUsed: number;
+  annualPending: number;
+  annualRemaining: number;
+  sickEntitled: number;
+  sickUsed: number;
+  sickRemaining: number;
+  compensatoryEntitled: number;
+  compensatoryUsed: number;
+  compensatoryRemaining: number;
+  specialEntitled: number;
+  specialUsed: number;
+  specialRemaining: number;
+  carryoverFromPrevious: number;
+  lastCalculatedAt: Date;
+}
+```
+
+**GET /employee/leave/balance/me/:year** - Get leave balance for specific year
+
+**Features**:
+
+- Leave request workflow (DRAFT → PENDING → APPROVED/REJECTED)
+- Automatic balance deduction/restoration
+- Multi-level approval support
+- Overlap detection
+- Half-day leave support
+
+### 6.5. Employee Delegation
+
+**Purpose**: Allow employees to view delegations assigned TO them (read-only).
+
+**Module**: `EmployeeDelegationModule`
+
+**Services**: `EmployeeDelegationService` (wraps `DelegationService`)
+
+#### API Endpoints (Employee Delegation)
+
+**GET /employee/delegations/received** - Get delegations assigned to employee
+
+Query params: `status`, `page`, `limit`
+
+Returns delegations where `delegateId` matches the employee's ID.
+
+**GET /employee/delegations/received/:id** - Get delegation by ID
+
+Returns delegation details.
+
+**Features**:
+
+- Read-only access (employees cannot create or approve delegations)
+- Only shows delegations assigned TO the employee
+- Useful for employees to know what permissions they temporarily have
+
+### 6.6. Phase 5 Implementation Details
+
+**Modules**:
+
+- `EmployeeModule` - Parent module
+- `EmployeeProfileModule` - Profile management
+- `EmployeeAttendanceModule` - Attendance tracking
+- `EmployeeLeaveModule` - Leave management
+- `EmployeeDelegationModule` - Delegation viewing
+
+**Guards**:
+
+- `EmployeeAuthGuard` - JWT validation + employee access control
+
+**Tests**: 30 new unit tests (100% passing)
+
+- `employee-auth.guard.spec.ts`: 7 tests
+- `employee-profile.service.spec.ts`: 4 tests
+- `employee-attendance.service.spec.ts`: 6 tests
+- `employee-leave.service.spec.ts`: 8 tests
+- `employee-delegation.service.spec.ts`: 5 tests
+
+**Total API Endpoints**: 17 new endpoints
+
+- Profile: 2 endpoints (GET /me, PATCH /me)
+- Attendance: 4 endpoints (clock-in, clock-out, list, stats)
+- Leave: 7 endpoints (create, submit, cancel, list, get, balance, balance by year)
+- Delegation: 2 endpoints (list received, get by ID)
+- All endpoints prefixed with `/employee/*`
+
+**Security Features**:
+
+- Employees can only access their own data (enforced by JWT `sub` claim)
+- Limited update permissions (cannot change HR/admin fields)
+- Read-only access to delegations
+- IP address and location tracking for attendance
+
 ---
 
-**Version**: Phase 4 (2026-01-18)
-**Last Updated**: Advanced Features APIs implemented (Delegation, Compliance, Global Mobility)
+**Version**: Phase 5 (2026-01-18)
+**Last Updated**: Employee Self-Service APIs implemented (Profile, Attendance, Leave, Delegation)
 **Status**:
 
 - Admin Profile & Enterprise APIs: Complete (26 tests, 100% passing)
 - Organization APIs: Complete (73 tests, 84.22% coverage, 100% passing)
 - Attendance APIs: Complete (63 tests, 80%+ coverage)
 - Leave Management APIs: Complete (66 tests, 80%+ coverage)
-- **Delegation APIs: Complete (18 tests, 80%+ coverage)** ✨ NEW
-- **Compliance APIs: Complete (22 tests, 80%+ coverage)** ✨ NEW
-- **Global Mobility APIs: Complete (17 tests, 80%+ coverage)** ✨ NEW
-- **Country Config APIs: Complete (9 tests, 80%+ coverage)** ✨ NEW
-- **Organization History APIs: Complete (11 tests, 80%+ coverage)** ✨ NEW
-- Total: 1,329+ tests passing across entire auth-service
+- Delegation APIs: Complete (18 tests, 80%+ coverage)
+- Compliance APIs: Complete (22 tests, 80%+ coverage)
+- Global Mobility APIs: Complete (17 tests, 80%+ coverage)
+- Country Config APIs: Complete (9 tests, 80%+ coverage)
+- Organization History APIs: Complete (11 tests, 80%+ coverage)
+- **Employee Self-Service APIs: Complete (30 tests, 100% passing)** ✨ NEW
+- Total: 1,359+ tests passing across entire auth-service
+
+**Phase 5 Highlights**:
+
+- 17 new employee self-service endpoints
+- 30 new tests (100% passing)
+- Employee profile management with limited update permissions
+- Employee attendance tracking (clock in/out, view records, stats)
+- Employee leave management (create, submit, view balance)
+- Employee delegation viewing (read-only access)
+- Security: Employees can only access their own data
+- No new database tables (reuses existing admin, attendance, leave tables)
 
 **Phase 4 Highlights**:
 
