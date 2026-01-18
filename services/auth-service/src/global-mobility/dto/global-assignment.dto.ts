@@ -12,7 +12,7 @@ import {
   Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { assignment_type } from '../../../node_modules/.prisma/auth-client';
+import { assignment_type } from '@prisma/auth-client';
 
 export class CreateGlobalAssignmentDto {
   @ApiProperty({ description: 'ID of the admin' })

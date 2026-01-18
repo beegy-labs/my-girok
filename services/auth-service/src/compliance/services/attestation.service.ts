@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { attestation_status } from '../../../node_modules/.prisma/auth-client';
+import { attestation_status } from '@prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateAttestationDto,
@@ -35,7 +35,7 @@ export class AttestationService {
         status: attestation_status.PENDING,
         dueDate: dto.dueDate,
         recurrenceMonths: dto.recurrenceMonths || 12,
-        metadata: dto.metadata ? JSON.parse(dto.metadata) : {},
+        metadata: dto.metadata || {},
       },
     });
 

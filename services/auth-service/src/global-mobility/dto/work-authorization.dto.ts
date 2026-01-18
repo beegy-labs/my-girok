@@ -12,7 +12,7 @@ import {
   Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { work_permit_type, visa_status } from '../../../node_modules/.prisma/auth-client';
+import { work_permit_type, visa_status } from '@prisma/auth-client';
 
 export class CreateWorkAuthorizationDto {
   @ApiProperty({ description: 'ID of the admin' })

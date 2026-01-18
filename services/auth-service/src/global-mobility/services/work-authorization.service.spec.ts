@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { WorkAuthorizationService } from './work-authorization.service';
 import { PrismaService } from '../../database/prisma.service';
-import { work_permit_type, visa_status } from '../../../node_modules/.prisma/auth-client';
+import { work_permit_type, visa_status } from '@prisma/auth-client';
 
 describe('WorkAuthorizationService', () => {
   let service: WorkAuthorizationService;

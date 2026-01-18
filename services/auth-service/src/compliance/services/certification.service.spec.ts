@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { CertificationService } from './certification.service';
 import { PrismaService } from '../../database/prisma.service';
-import { certification_status } from '../../../node_modules/.prisma/auth-client';
+import { certification_status } from '@prisma/auth-client';
 
 describe('CertificationService', () => {
   let service: CertificationService;

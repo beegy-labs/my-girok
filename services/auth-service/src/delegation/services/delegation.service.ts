@@ -5,7 +5,7 @@ import {
   ConflictException,
   ForbiddenException,
 } from '@nestjs/common';
-import { delegation_status } from '../../../node_modules/.prisma/auth-client';
+import { delegation_status } from '@prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateDelegationDto,

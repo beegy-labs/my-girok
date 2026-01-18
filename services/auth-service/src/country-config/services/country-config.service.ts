@@ -46,7 +46,7 @@ export class CountryConfigService {
         dataPrivacyLaw: dto.dataPrivacyLaw,
         employmentLawNotes: dto.employmentLawNotes,
         isActive: dto.isActive ?? true,
-        metadata: dto.metadata ? JSON.parse(dto.metadata) : {},
+        metadata: dto.metadata || {},
       },
     });
 

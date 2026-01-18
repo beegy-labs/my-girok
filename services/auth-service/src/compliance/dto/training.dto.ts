@@ -10,9 +10,11 @@ import {
   IsNumber,
   Min,
   Max,
+  IsObject,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { training_type, training_status } from '../../../node_modules/.prisma/auth-client';
+import { Type, Transform } from 'class-transformer';
+import { training_type, training_status } from '@prisma/auth-client';
+import { BadRequestException } from '@nestjs/common';
 
 export class CreateTrainingDto {
   @ApiProperty({ description: 'ID of the admin' })
@@ -61,10 +63,22 @@ export class CreateTrainingDto {
   @Min(1)
   recurrenceMonths?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'JSON string for metadata' })
   @IsOptional()
-  @IsString()
-  metadata?: string;
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        throw new BadRequestException(
+          `Invalid JSON in metadata field: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+    }
+    return value;
+  })
+  @IsObject()
+  metadata?: Record<string, any>;
 }
 
 export class UpdateTrainingDto {

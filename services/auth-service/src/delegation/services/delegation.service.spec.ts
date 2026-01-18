@@ -12,7 +12,7 @@ import {
   delegation_type,
   delegation_scope,
   delegation_reason,
-} from '../../../node_modules/.prisma/auth-client';
+} from '@prisma/auth-client';
 
 describe('DelegationService', () => {
   let service: DelegationService;

@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { AttestationService } from './attestation.service';
 import { PrismaService } from '../../database/prisma.service';
-import { attestation_status, attestation_type } from '../../../node_modules/.prisma/auth-client';
+import { attestation_status, attestation_type } from '@prisma/auth-client';
 
 describe('AttestationService', () => {
   let service: AttestationService;

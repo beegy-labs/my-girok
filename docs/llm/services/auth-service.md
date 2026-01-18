@@ -1545,17 +1545,573 @@ Get pending leave approvals for me (manager).
 - `migrations/20260117000007_add_attendance.sql`: Phase 3 attendance tables (admin_attendances, admin_work_schedules)
 - `migrations/20260117000008_add_leave_management.sql`: Phase 3 leave tables (admin_leaves, admin_leave_balances, leave_policies, public_holidays)
 
+## 5. Phase 4: Advanced Features (Delegation, Compliance, Global Mobility)
+
+Phase 4 introduces 5 new modules to support advanced HR and enterprise governance features.
+
+### 5.1. Delegation Management
+
+**Purpose**: Enable temporary delegation of administrative authority with approval workflows, constraints, and audit trails.
+
+**Tables**: `admin_delegations`, `admin_delegation_logs`
+
+**Enums**:
+
+- `delegation_type`: FULL, PARTIAL, VIEW_ONLY, APPROVAL_ONLY, EMERGENCY
+- `delegation_scope`: ALL, TEAM, DEPARTMENT, SERVICE, SPECIFIC_RESOURCES
+- `delegation_status`: PENDING, ACTIVE, EXPIRED, REVOKED, COMPLETED
+- `delegation_reason`: VACATION, SICK_LEAVE, BUSINESS_TRIP, PARENTAL_LEAVE, TRAINING, TEMPORARY_ASSIGNMENT, EMERGENCY
+
+#### API Endpoints (Delegation)
+
+**POST /delegations** - Create delegation
+
+```typescript
+{
+  delegatorId: string;          // Admin delegating authority
+  delegateId: string;           // Admin receiving authority
+  delegationType: delegation_type;
+  delegationScope: delegation_scope;
+  delegationReason: delegation_reason;
+  specificPermissions: string[];
+  specificRoleIds?: string[];
+  resourceIds?: string[];
+  startDate: Date;
+  endDate: Date;
+  requiresApproval?: boolean;   // Default: true
+  maxActions?: number;          // Limit number of actions
+  allowedHours?: string[];      // e.g., ["09:00-18:00"]
+  allowedIps?: string[];        // IP whitelist
+  notifyOnUse?: boolean;        // Default: true
+  notifyOnExpiry?: boolean;     // Default: true
+  expiryReminderDays?: number[]; // Default: [7, 1]
+  notes?: string;
+}
+```
+
+**GET /delegations** - List delegations (with filters)
+
+Query params: `delegatorId`, `delegateId`, `status`, `delegationType`, `startDate`, `endDate`, `page`, `limit`
+
+**GET /delegations/me/delegated** - Get delegations I created
+
+**GET /delegations/me/received** - Get delegations I received
+
+**GET /delegations/:id** - Get delegation by ID
+
+**PATCH /delegations/:id** - Update delegation (endDate, permissions, constraints)
+
+**POST /delegations/:id/approve** - Approve or reject delegation
+
+```typescript
+{
+  approved: boolean;
+  rejectionReason?: string;
+}
+```
+
+**POST /delegations/:id/revoke** - Revoke active delegation
+
+```typescript
+{
+  revocationReason: string;
+}
+```
+
+**DELETE /delegations/:id** - Delete delegation (only if not active)
+
+**GET /delegations/:id/logs** - Get delegation usage logs
+
+**Features**:
+
+- Overlap detection (prevents conflicting delegations)
+- Auto-expiry on end date
+- Delegation logs for every action taken by delegate
+- Constraints: time-based (allowed hours), IP-based, action count limits
+
+### 5.2. Compliance Management
+
+**Purpose**: Track compliance requirements including attestations, certifications, and training.
+
+**Tables**: `admin_attestations`, `admin_certifications`, `admin_training_records`
+
+**Enums**:
+
+- `attestation_type`: CODE_OF_CONDUCT, SECURITY_POLICY, DATA_PRIVACY, ACCEPTABLE_USE, CONFLICT_OF_INTEREST, INSIDER_TRADING, EXPORT_CONTROL, ANTI_BRIBERY
+- `attestation_status`: PENDING, COMPLETED, WAIVED, EXPIRED
+- `certification_status`: ACTIVE, EXPIRED, SUSPENDED, REVOKED
+- `training_type`: ONBOARDING, SECURITY, COMPLIANCE, TECHNICAL, SOFT_SKILLS, LEADERSHIP, SAFETY, PRODUCT
+- `training_status`: NOT_STARTED, IN_PROGRESS, COMPLETED, FAILED, WAIVED
+
+#### API Endpoints (Compliance - Attestations)
+
+**POST /compliance/attestations** - Create attestation
+
+```typescript
+{
+  adminId: string;
+  attestationType: attestation_type;
+  documentVersion?: string;
+  documentUrl?: string;
+  documentHash?: string;
+  dueDate?: Date;
+  recurrenceMonths?: number;    // Default: 12 (annual)
+  metadata?: Record<string, any>;
+}
+```
+
+**GET /compliance/attestations** - List attestations
+
+Query params: `adminId`, `attestationType`, `status`, `page`, `limit`
+
+**GET /compliance/attestations/:id** - Get attestation by ID
+
+**PATCH /compliance/attestations/:id/complete** - Complete attestation
+
+```typescript
+{
+  ipAddress?: string;
+  userAgent?: string;
+  signatureData?: string;
+}
+```
+
+**PATCH /compliance/attestations/:id/waive** - Waive attestation
+
+```typescript
+{
+  waiverId: string;
+  waiverReason: string;
+  waiverExpiry?: Date;
+}
+```
+
+#### API Endpoints (Compliance - Certifications)
+
+**POST /compliance/certifications** - Create certification
+
+```typescript
+{
+  adminId: string;
+  name: string;
+  issuingOrganization: string;
+  credentialId?: string;
+  credentialUrl?: string;
+  issueDate: Date;
+  expiryDate?: Date;
+  metadata?: Record<string, any>;
+}
+```
+
+**GET /compliance/certifications** - List certifications
+
+Query params: `adminId`, `issuingOrganization`, `status`, `page`, `limit`
+
+**GET /compliance/certifications/:id** - Get certification by ID
+
+**PATCH /compliance/certifications/:id/verify** - Verify certification
+
+```typescript
+{
+  verifierId: string;
+  verificationUrl?: string;
+}
+```
+
+**PATCH /compliance/certifications/:id/renew** - Renew certification
+
+```typescript
+{
+  newExpiryDate: Date;
+}
+```
+
+#### API Endpoints (Compliance - Training)
+
+**POST /compliance/training** - Create training record
+
+```typescript
+{
+  adminId: string;
+  trainingType: training_type;
+  name: string;
+  description?: string;
+  provider?: string;
+  assignedAt?: Date;
+  dueDate?: Date;
+  passingScore?: number;
+  isMandatory?: boolean;
+  recurrenceMonths?: number;
+  metadata?: Record<string, any>;
+}
+```
+
+**GET /compliance/training** - List training records
+
+Query params: `adminId`, `trainingType`, `status`, `isMandatory`, `page`, `limit`
+
+**GET /compliance/training/:id** - Get training by ID
+
+**PATCH /compliance/training/:id/start** - Start training
+
+**PATCH /compliance/training/:id/complete** - Complete training
+
+```typescript
+{
+  score?: number;
+  certificateUrl?: string;
+}
+```
+
+**PATCH /compliance/training/:id/assign** - Assign training to admin
+
+```typescript
+{
+  adminId: string;
+  dueDate?: Date;
+  isMandatory?: boolean;
+}
+```
+
+**Features**:
+
+- Automatic recurrence calculation for periodic attestations/training
+- Digital signature capture for attestations
+- Certification verification workflow
+- Training completion with scoring and certificate management
+- Waiver support with expiry tracking
+
+### 5.3. Global Mobility
+
+**Purpose**: Manage international assignments and work authorizations for global workforce.
+
+**Tables**: `global_assignments`, `work_authorizations`
+
+**Enums**:
+
+- `assignment_type`: INTERNATIONAL, DOMESTIC, SHORT_TERM, LONG_TERM, PERMANENT_TRANSFER, TEMPORARY, ROTATIONAL
+- `assignment_status`: PLANNED, APPROVED, ACTIVE, COMPLETED, CANCELLED
+- `visa_status`: NOT_REQUIRED, PENDING, APPROVED, REJECTED, EXPIRED, CANCELLED
+- `work_permit_type`: VISA, WORK_PERMIT, RESIDENCE_PERMIT, PERMANENT_RESIDENCE, CITIZENSHIP, EXEMPTION
+
+#### API Endpoints (Global Mobility - Assignments)
+
+**POST /global-mobility/assignments** - Create assignment
+
+```typescript
+{
+  adminId: string;
+  assignmentType: assignment_type;
+  homeCountryCode: string;
+  hostCountryCode: string;
+  homeLocationId?: string;
+  hostLocationId?: string;
+  startDate: Date;
+  expectedEndDate: Date;
+  purposeDescription?: string;
+  costCenterAllocation?: string;
+  hostingDepartmentId?: string;
+  localManager?: string;
+  compensationNotes?: string;
+  housingAllowance?: number;
+  transportAllowance?: number;
+  educationAllowance?: number;
+  hardshipAllowance?: number;
+  taxEqualizationApplied?: boolean;
+  relocationPackageOffered?: boolean;
+  dependentsIncluded?: boolean;
+  numberOfDependents?: number;
+  metadata?: Record<string, any>;
+}
+```
+
+**GET /global-mobility/assignments** - List assignments
+
+Query params: `adminId`, `assignmentType`, `status`, `homeCountryCode`, `hostCountryCode`, `page`, `limit`
+
+**GET /global-mobility/assignments/:id** - Get assignment by ID
+
+**PATCH /global-mobility/assignments/:id** - Update assignment
+
+**POST /global-mobility/assignments/:id/approve** - Approve assignment
+
+```typescript
+{
+  approverId: string;
+}
+```
+
+**POST /global-mobility/assignments/:id/start** - Start assignment (activates)
+
+**POST /global-mobility/assignments/:id/complete** - Complete assignment
+
+```typescript
+{
+  actualEndDate?: Date;
+  completionNotes?: string;
+}
+```
+
+**POST /global-mobility/assignments/:id/cancel** - Cancel assignment
+
+```typescript
+{
+  cancellationReason: string;
+}
+```
+
+**DELETE /global-mobility/assignments/:id** - Delete assignment (only if not active)
+
+#### API Endpoints (Global Mobility - Work Authorizations)
+
+**POST /global-mobility/work-authorizations** - Create work authorization
+
+```typescript
+{
+  adminId: string;
+  assignmentId?: string;
+  countryCode: string;
+  workPermitType: work_permit_type;
+  visaStatus: visa_status;
+  applicationNumber?: string;
+  applicationDate?: Date;
+  approvalNumber?: string;
+  approvalDate?: Date;
+  startDate: Date;
+  expiryDate: Date;
+  sponsorOrganization?: string;
+  dependentsIncluded?: boolean;
+  numberOfDependents?: number;
+  renewalEligible?: boolean;
+  renewalNoticeMonths?: number;
+  restrictionsNotes?: string;
+  metadata?: Record<string, any>;
+}
+```
+
+**GET /global-mobility/work-authorizations** - List work authorizations
+
+Query params: `adminId`, `assignmentId`, `countryCode`, `workPermitType`, `visaStatus`, `page`, `limit`
+
+**GET /global-mobility/work-authorizations/expiring** - Get expiring authorizations (within 90 days)
+
+**GET /global-mobility/work-authorizations/:id** - Get authorization by ID
+
+**PATCH /global-mobility/work-authorizations/:id** - Update authorization
+
+**POST /global-mobility/work-authorizations/:id/renew** - Renew authorization
+
+```typescript
+{
+  newExpiryDate: Date;
+  newApprovalNumber?: string;
+}
+```
+
+**POST /global-mobility/work-authorizations/:id/expire** - Mark as expired
+
+**DELETE /global-mobility/work-authorizations/:id** - Delete authorization (only if not active)
+
+**Features**:
+
+- Assignment lifecycle management (planned → approved → active → completed)
+- Compensation and allowance tracking
+- Work authorization linked to assignments
+- Expiry alerts for visas and permits
+- Dependent tracking for family relocations
+
+### 5.4. Country Configuration
+
+**Purpose**: Store country-specific HR policies and regulations for global workforce management.
+
+**Table**: `country_configs`
+
+**Data**: 12 countries pre-populated (US, UK, CA, AU, DE, FR, JP, KR, SG, IN, CN, BR)
+
+#### API Endpoints (Country Config)
+
+**GET /country-configs** - List all country configurations
+
+**GET /country-configs/:countryCode** - Get config by country code (e.g., "US", "KR")
+
+```typescript
+{
+  countryCode: string;
+  countryName: string;
+  standardWorkHoursPerWeek: number;
+  standardWorkDaysPerWeek: number;
+  workWeekStartDay: string;        // "MONDAY"
+  workDayStartTime: string;        // "09:00"
+  workDayEndTime: string;          // "18:00"
+  annualLeaveEntitlement: number;  // Base days
+  sickLeaveEntitlement?: number;
+  publicHolidaysPerYear?: number;
+  fiscalYearStartMonth: number;    // 1-12
+  taxYearStartMonth: number;
+  currencyCode: string;            // "USD", "KRW"
+  timezoneIana: string;            // "America/New_York"
+  weekendDays: string[];           // ["SATURDAY", "SUNDAY"]
+  probationPeriodMonths?: number;
+  noticePeriodWeeks?: number;
+  overtimeMultiplier?: number;     // 1.5
+  nightShiftMultiplier?: number;
+  holidayWorkMultiplier?: number;
+  metadata?: Record<string, any>;
+}
+```
+
+**PATCH /country-configs/:countryCode** - Update config (admin only)
+
+**Features**:
+
+- Read-heavy service (configs rarely change)
+- Used by attendance, leave, and payroll modules
+- Supports multi-country organizations
+- Timezone and currency conversion data
+
+### 5.5. Organization History
+
+**Purpose**: Track organizational changes (promotions, transfers, role changes) with approval workflow.
+
+**Table**: `admin_organization_history`
+
+**Enums**:
+
+- `org_change_type`: PROMOTION, DEMOTION, TRANSFER, ROLE_CHANGE, DEPARTMENT_CHANGE, LOCATION_CHANGE, MANAGER_CHANGE, COMPENSATION_CHANGE, JOB_TITLE_CHANGE
+- `org_change_status`: PENDING, APPROVED, REJECTED, CANCELLED
+
+#### API Endpoints (Organization History)
+
+**POST /organization-history** - Record organizational change
+
+```typescript
+{
+  adminId: string;
+  changeType: org_change_type;
+  effectiveDate: Date;
+  previousJobTitle?: string;
+  newJobTitle?: string;
+  previousDepartmentId?: string;
+  newDepartmentId?: string;
+  previousManagerId?: string;
+  newManagerId?: string;
+  previousJobGrade?: string;
+  newJobGrade?: string;
+  previousLocationId?: string;
+  newLocationId?: string;
+  previousCompensation?: number;
+  newCompensation?: number;
+  compensationCurrency?: string;
+  changeReason?: string;
+  requestedBy: string;
+  approvalRequired?: boolean;
+  notes?: string;
+  metadata?: Record<string, any>;
+}
+```
+
+**GET /organization-history** - List all history records
+
+Query params: `adminId`, `changeType`, `status`, `startDate`, `endDate`, `page`, `limit`
+
+**GET /organization-history/admin/:adminId** - Get history for specific admin
+
+**GET /organization-history/:id** - Get history record by ID
+
+**POST /organization-history/:id/approve** - Approve change
+
+```typescript
+{
+  approverId: string;
+  approvalNotes?: string;
+}
+```
+
+**DELETE /organization-history/:id** - Delete record (only if not approved)
+
+**Features**:
+
+- Complete audit trail of organizational changes
+- Before/after state tracking
+- Compensation change history
+- Approval workflow integration
+- Effective date tracking for future changes
+
+### 5.6. Phase 4 Database Schema
+
+**New Tables** (15 total):
+
+1. `admin_delegations` - Authority delegation records
+2. `admin_delegation_logs` - Delegation usage audit logs
+3. `admin_attestations` - Compliance attestations
+4. `admin_certifications` - Professional certifications
+5. `admin_training_records` - Training completion tracking
+6. `global_assignments` - International assignments
+7. `work_authorizations` - Visas and work permits
+8. `country_configs` - Country-specific HR policies
+9. `admin_organization_history` - Organizational change tracking
+
+**New Enums** (15 total):
+
+- `delegation_type`, `delegation_scope`, `delegation_status`, `delegation_reason`
+- `attestation_type`, `attestation_status`
+- `certification_status`
+- `training_type`, `training_status`
+- `assignment_type`, `assignment_status`
+- `visa_status`, `work_permit_type`
+- `org_change_type`, `org_change_status`
+
+### 5.7. Phase 4 Implementation Details
+
+**Services**:
+
+- `DelegationService` - CRUD + approval workflow + logging
+- `AttestationService` - Attestation lifecycle + recurrence
+- `CertificationService` - Certification verification + renewal
+- `TrainingService` - Training assignment + completion tracking
+- `GlobalAssignmentService` - Assignment lifecycle + compensation
+- `WorkAuthorizationService` - Work permit management + expiry alerts
+- `CountryConfigService` - Country policy management (read-heavy)
+- `OrganizationHistoryService` - Org change tracking + approval
+
+**Tests**: 77 new unit tests (100% passing)
+
+- `delegation.service.spec.ts`: 18 tests
+- `attestation.service.spec.ts`: 7 tests
+- `certification.service.spec.ts`: 7 tests
+- `training.service.spec.ts`: 8 tests
+- `global-assignment.service.spec.ts`: 8 tests
+- `work-authorization.service.spec.ts`: 9 tests
+- `country-config.service.spec.ts`: 9 tests
+- `organization-history.service.spec.ts`: 11 tests
+
 ---
 
-**Version**: Phase 3 (2026-01-17)
-**Last Updated**: HR Backend APIs implemented (Attendance + Leave Management)
+**Version**: Phase 4 (2026-01-18)
+**Last Updated**: Advanced Features APIs implemented (Delegation, Compliance, Global Mobility)
 **Status**:
 
 - Admin Profile & Enterprise APIs: Complete (26 tests, 100% passing)
 - Organization APIs: Complete (73 tests, 84.22% coverage, 100% passing)
-- **Attendance APIs: Complete (63 tests, 80%+ coverage)** ✨ NEW
-- **Leave Management APIs: Complete (66 tests, 80%+ coverage)** ✨ NEW
-- Total: 1,252+ tests passing across entire auth-service
+- Attendance APIs: Complete (63 tests, 80%+ coverage)
+- Leave Management APIs: Complete (66 tests, 80%+ coverage)
+- **Delegation APIs: Complete (18 tests, 80%+ coverage)** ✨ NEW
+- **Compliance APIs: Complete (22 tests, 80%+ coverage)** ✨ NEW
+- **Global Mobility APIs: Complete (17 tests, 80%+ coverage)** ✨ NEW
+- **Country Config APIs: Complete (9 tests, 80%+ coverage)** ✨ NEW
+- **Organization History APIs: Complete (11 tests, 80%+ coverage)** ✨ NEW
+- Total: 1,329+ tests passing across entire auth-service
+
+**Phase 4 Highlights**:
+
+- 15 new tables: delegation, compliance (3 tables), global mobility (2 tables), country configs, org history
+- 45+ new endpoints for advanced HR features
+- 77 new tests (Phase 4 modules)
+- Authority delegation with constraints and audit logging
+- Comprehensive compliance tracking (attestations, certifications, training)
+- Global workforce management (assignments, work authorizations)
+- Country-specific HR policies for 12 countries
+- Organizational change tracking with approval workflows
 
 **Phase 3 Highlights**:
 

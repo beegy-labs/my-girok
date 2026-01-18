@@ -18,7 +18,7 @@ import {
   delegation_scope,
   delegation_status,
   delegation_reason,
-} from '../../../node_modules/.prisma/auth-client';
+} from '@prisma/auth-client';
 
 export class CreateDelegationDto {
   @ApiProperty({ description: 'ID of the admin delegating authority' })

@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { GlobalAssignmentService } from './global-assignment.service';
 import { PrismaService } from '../../database/prisma.service';
-import { assignment_type } from '../../../node_modules/.prisma/auth-client';
+import { assignment_type } from '@prisma/auth-client';
 
 describe('GlobalAssignmentService', () => {
   let service: GlobalAssignmentService;

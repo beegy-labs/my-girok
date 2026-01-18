@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { certification_status } from '../../../node_modules/.prisma/auth-client';
+import { certification_status } from '@prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateCertificationDto,
@@ -38,7 +38,7 @@ export class CertificationService {
         issueDate: dto.issueDate,
         expiryDate: dto.expiryDate,
         status: certification_status.ACTIVE,
-        metadata: dto.metadata ? JSON.parse(dto.metadata) : {},
+        metadata: dto.metadata || {},
       },
     });
 

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { visa_status } from '../../../node_modules/.prisma/auth-client';
+import { visa_status } from '@prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateWorkAuthorizationDto,

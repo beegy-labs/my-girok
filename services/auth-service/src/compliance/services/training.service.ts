@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { training_status } from '../../../node_modules/.prisma/auth-client';
+import { training_status } from '@prisma/auth-client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateTrainingDto,
@@ -38,7 +38,7 @@ export class TrainingService {
         passingScore: dto.passingScore,
         isMandatory: dto.isMandatory || false,
         recurrenceMonths: dto.recurrenceMonths,
-        metadata: dto.metadata ? JSON.parse(dto.metadata) : {},
+        metadata: dto.metadata || {},
       },
     });
 

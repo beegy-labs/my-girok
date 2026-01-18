@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { TrainingService } from './training.service';
 import { PrismaService } from '../../database/prisma.service';
-import { training_status, training_type } from '../../../node_modules/.prisma/auth-client';
+import { training_status, training_type } from '@prisma/auth-client';
 
 describe('TrainingService', () => {
   let service: TrainingService;

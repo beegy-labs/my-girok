@@ -8,8 +8,10 @@ import {
   IsNumber,
   Min,
   Max,
+  IsObject,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
+import { BadRequestException } from '@nestjs/common';
 
 export class CreateCountryConfigDto {
   @ApiProperty()
@@ -128,10 +130,22 @@ export class CreateCountryConfigDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'JSON string for metadata' })
   @IsOptional()
-  @IsString()
-  metadata?: string;
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        throw new BadRequestException(
+          `Invalid JSON in metadata field: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+    }
+    return value;
+  })
+  @IsObject()
+  metadata?: Record<string, any>;
 }
 
 export class UpdateCountryConfigDto {
