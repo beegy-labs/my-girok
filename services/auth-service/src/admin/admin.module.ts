@@ -26,6 +26,7 @@ import {
   SanctionController,
   AdminProfileController,
   AdminEnterpriseController,
+  AdminAccountController,
 } from './controllers';
 import { UserPersonalInfoController } from './controllers/user-personal-info.controller';
 
@@ -51,6 +52,7 @@ import {
   OperatorAssignmentService,
   AdminProfileService,
   AdminEnterpriseService,
+  AdminAccountService,
 } from './services';
 
 // Guards
@@ -92,6 +94,7 @@ const JwtModuleConfig = JwtModule.registerAsync({
     SanctionController,
     AdminProfileController,
     AdminEnterpriseController,
+    AdminAccountController,
   ],
   providers: [
     // Interceptors (global for AdminModule)
@@ -120,6 +123,7 @@ const JwtModuleConfig = JwtModule.registerAsync({
     OperatorAssignmentService,
     AdminProfileService,
     AdminEnterpriseService,
+    AdminAccountService,
     // Guards
     AdminAuthGuard,
     PermissionGuard,
@@ -150,6 +154,7 @@ const JwtModuleConfig = JwtModule.registerAsync({
     AdminServiceAccessGuard,
     AdminProfileService,
     AdminEnterpriseService,
+    AdminAccountService,
   ],
 })
 export class AdminModule {}

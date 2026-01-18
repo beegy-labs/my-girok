@@ -16,3 +16,6 @@ export * from './sanction.controller';
 // Phase 2: Admin Enterprise Controllers
 export * from './admin-profile.controller';
 export * from './admin-enterprise.controller';
+
+// Phase 3: Admin Account Management
+export * from './admin-account.controller';

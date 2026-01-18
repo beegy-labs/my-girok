@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Layers,
   Shield,
+  ShieldCheck,
   Settings2,
   Grid3X3,
   ClipboardCheck,
@@ -162,12 +163,20 @@ export const MENU_CONFIG: MenuItem[] = [
     parentId: null,
     children: [
       {
+        id: 'system-admins',
+        path: '/system/admins',
+        icon: ShieldCheck,
+        labelKey: 'menu.adminAccounts',
+        permission: 'system_admin:read',
+        order: 0,
+      },
+      {
         id: 'system-countries',
         path: '/system/countries',
         icon: Globe,
         labelKey: 'menu.supportedCountries',
         permission: 'settings:read',
-        order: 0,
+        order: 1,
       },
       {
         id: 'system-locales',
@@ -175,7 +184,7 @@ export const MENU_CONFIG: MenuItem[] = [
         icon: Languages,
         labelKey: 'menu.supportedLocales',
         permission: 'settings:read',
-        order: 1,
+        order: 2,
       },
       {
         id: 'system-oauth',
@@ -183,7 +192,7 @@ export const MENU_CONFIG: MenuItem[] = [
         icon: Key,
         labelKey: 'menu.oauthSettings',
         permission: 'settings:read',
-        order: 2,
+        order: 3,
       },
       {
         id: 'system-audit',
@@ -191,7 +200,7 @@ export const MENU_CONFIG: MenuItem[] = [
         icon: ClipboardList,
         labelKey: 'menu.auditLogs',
         permission: 'audit:read',
-        order: 3,
+        order: 4,
       },
       {
         id: 'system-login-history',
@@ -199,7 +208,7 @@ export const MENU_CONFIG: MenuItem[] = [
         icon: History,
         labelKey: 'menu.loginHistory',
         permission: 'audit:read',
-        order: 4,
+        order: 5,
       },
       {
         id: 'system-session-recordings',
@@ -207,14 +216,14 @@ export const MENU_CONFIG: MenuItem[] = [
         icon: Video,
         labelKey: 'menu.sessionRecordings',
         permission: 'audit:read',
-        order: 5,
+        order: 6,
       },
       {
         id: 'system-settings',
         path: '/system/settings',
         icon: Cog,
         labelKey: 'menu.settings',
-        order: 6,
+        order: 7,
       },
     ],
   },
