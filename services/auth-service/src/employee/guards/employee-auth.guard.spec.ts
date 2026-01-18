@@ -9,7 +9,6 @@ import { EmployeeAuthGuard } from './employee-auth.guard';
 describe('EmployeeAuthGuard', () => {
   let guard: EmployeeAuthGuard;
   let jwtService: JwtService;
-  let configService: ConfigService;
 
   const mockJwtService = {
     verifyAsync: vi.fn(),
@@ -30,7 +29,6 @@ describe('EmployeeAuthGuard', () => {
 
     guard = module.get<EmployeeAuthGuard>(EmployeeAuthGuard);
     jwtService = module.get<JwtService>(JwtService);
-    configService = module.get<ConfigService>(ConfigService);
   });
 
   afterEach(() => {
