@@ -1,0 +1,93 @@
+name: Build Proto
+
+on:
+  push:
+    branches: [develop, release, main]
+    paths:
+      - 'packages/proto/**'
+      - '.github/workflows/build-proto.yml'
+  pull_request:
+    branches: [develop, release, main]
+    paths:
+      - 'packages/proto/**'
+      - '.github/workflows/build-proto.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: gitea.girok.dev
+
+jobs:
+  build:
+    name: Build and Upload Proto
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter @my-girok/proto
+
+      # Calculate hash of proto source files (for versioning)
+      - name: Calculate proto hash
+        id: proto-hash
+        run: |
+          HASH=$(find packages/proto -type f \( -name "*.proto" -o -name "buf.gen.yaml" -o -name "buf.yaml" \) -exec sha256sum {} \; | sort | sha256sum | cut -c1-12)
+          echo "hash=${HASH}" >> $GITHUB_OUTPUT
+          echo "📦 Proto hash: ${HASH}"
+
+      # Check if package already exists
+      - name: Check if proto package exists
+        id: check-package
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          HASH="${{ steps.proto-hash.outputs.hash }}"
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${GITEA_TOKEN}" \
+            "${{ env.REGISTRY }}/api/v1/packages/beegy-labs/generic/proto-generated/${HASH}")
+
+          if [ "$RESPONSE" = "200" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Proto package ${HASH} already exists, skipping build"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "🔨 Proto package ${HASH} not found, proceeding with build"
+          fi
+
+      # Generate proto files
+      - name: Generate proto files
+        if: steps.check-package.outputs.exists != 'true'
+        run: pnpm --filter @my-girok/proto generate
+
+      # Package generated files
+      - name: Package proto files
+        if: steps.check-package.outputs.exists != 'true'
+        run: |
+          cd packages/types/src/generated
+          tar -czf /tmp/proto-generated.tar.gz proto/
+          echo "📦 Packaged $(du -h /tmp/proto-generated.tar.gz | cut -f1) proto files"
+
+      # Upload to Gitea generic package registry
+      - name: Upload to Gitea
+        if: steps.check-package.outputs.exists != 'true'
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          HASH="${{ steps.proto-hash.outputs.hash }}"
+          curl -X PUT \
+            -H "Authorization: token ${GITEA_TOKEN}" \
+            --upload-file /tmp/proto-generated.tar.gz \
+            "${{ env.REGISTRY }}/api/v1/packages/beegy-labs/generic/proto-generated/${HASH}/proto-generated.tar.gz"
+
+          echo "✅ Uploaded proto package: ${HASH}"
+          echo "📍 URL: ${{ env.REGISTRY }}/beegy-labs/-/packages/generic/proto-generated/${HASH}"
+
+      # Output hash for dependent jobs
+      - name: Output hash
+        run: |
+          echo "proto_hash=${{ steps.proto-hash.outputs.hash }}" >> $GITHUB_OUTPUT
