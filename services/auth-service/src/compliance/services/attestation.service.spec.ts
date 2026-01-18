@@ -6,7 +6,7 @@ import { attestation_status, attestation_type } from '@prisma/auth-client';
 
 describe('AttestationService', () => {
   let service: AttestationService;
-  let prisma: PrismaService;
+  let _prisma: PrismaService;
 
   const mockPrismaService = {
     admins: {
@@ -41,7 +41,7 @@ describe('AttestationService', () => {
     }).compile();
 
     service = module.get<AttestationService>(AttestationService);
-    prisma = module.get<PrismaService>(PrismaService);
+    _prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

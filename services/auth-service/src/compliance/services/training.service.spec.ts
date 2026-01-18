@@ -6,7 +6,7 @@ import { training_status, training_type } from '@prisma/auth-client';
 
 describe('TrainingService', () => {
   let service: TrainingService;
-  let prisma: PrismaService;
+  let _prisma: PrismaService;
 
   const mockPrismaService = {
     admins: {
@@ -40,7 +40,7 @@ describe('TrainingService', () => {
     }).compile();
 
     service = module.get<TrainingService>(TrainingService);
-    prisma = module.get<PrismaService>(PrismaService);
+    _prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

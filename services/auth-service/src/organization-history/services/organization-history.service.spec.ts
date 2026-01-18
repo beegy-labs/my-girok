@@ -5,7 +5,7 @@ import { PrismaService } from '../../database/prisma.service';
 
 describe('OrganizationHistoryService', () => {
   let service: OrganizationHistoryService;
-  let prisma: PrismaService;
+  let _prisma: PrismaService;
 
   const mockPrismaService = {
     admins: {
@@ -39,7 +39,7 @@ describe('OrganizationHistoryService', () => {
     }).compile();
 
     service = module.get<OrganizationHistoryService>(OrganizationHistoryService);
-    prisma = module.get<PrismaService>(PrismaService);
+    _prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

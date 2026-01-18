@@ -6,7 +6,7 @@ import { certification_status } from '@prisma/auth-client';
 
 describe('CertificationService', () => {
   let service: CertificationService;
-  let prisma: PrismaService;
+  let _prisma: PrismaService;
 
   const mockPrismaService = {
     admins: {
@@ -41,7 +41,7 @@ describe('CertificationService', () => {
     }).compile();
 
     service = module.get<CertificationService>(CertificationService);
-    prisma = module.get<PrismaService>(PrismaService);
+    _prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

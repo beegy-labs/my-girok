@@ -6,7 +6,7 @@ import { assignment_type } from '@prisma/auth-client';
 
 describe('GlobalAssignmentService', () => {
   let service: GlobalAssignmentService;
-  let prisma: PrismaService;
+  let _prisma: PrismaService;
 
   const mockPrismaService = {
     admins: {
@@ -40,7 +40,7 @@ describe('GlobalAssignmentService', () => {
     }).compile();
 
     service = module.get<GlobalAssignmentService>(GlobalAssignmentService);
-    prisma = module.get<PrismaService>(PrismaService);
+    _prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

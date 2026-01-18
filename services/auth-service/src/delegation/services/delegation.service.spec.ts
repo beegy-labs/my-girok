@@ -16,7 +16,7 @@ import {
 
 describe('DelegationService', () => {
   let service: DelegationService;
-  let prisma: PrismaService;
+  let _prisma: PrismaService;
 
   const mockPrismaService = {
     admins: {
@@ -57,7 +57,7 @@ describe('DelegationService', () => {
     }).compile();
 
     service = module.get<DelegationService>(DelegationService);
-    prisma = module.get<PrismaService>(PrismaService);
+    _prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

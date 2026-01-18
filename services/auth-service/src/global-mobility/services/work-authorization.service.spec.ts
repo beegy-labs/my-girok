@@ -6,7 +6,7 @@ import { work_permit_type, visa_status } from '@prisma/auth-client';
 
 describe('WorkAuthorizationService', () => {
   let service: WorkAuthorizationService;
-  let prisma: PrismaService;
+  let _prisma: PrismaService;
 
   const mockPrismaService = {
     admins: {
@@ -44,7 +44,7 @@ describe('WorkAuthorizationService', () => {
     }).compile();
 
     service = module.get<WorkAuthorizationService>(WorkAuthorizationService);
-    prisma = module.get<PrismaService>(PrismaService);
+    _prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
