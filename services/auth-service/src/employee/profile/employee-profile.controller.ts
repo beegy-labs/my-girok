@@ -27,7 +27,7 @@ export class EmployeeProfileController {
     summary: 'Get own profile',
     description: 'Employee can view their own complete profile',
   })
-  @ApiOkResponse({ type: AdminDetailResponse })
+  @ApiOkResponse()
   async getMyProfile(@Req() req: EmployeeRequest): Promise<AdminDetailResponse> {
     return this.employeeProfileService.getMyProfile(req.employee.sub);
   }
@@ -41,7 +41,7 @@ export class EmployeeProfileController {
     summary: 'Update own profile',
     description: 'Employee can update limited fields: display name, contact info, preferences',
   })
-  @ApiOkResponse({ type: AdminDetailResponse })
+  @ApiOkResponse()
   async updateMyProfile(
     @Req() req: EmployeeRequest,
     @Body() dto: UpdateEmployeeProfileDto,

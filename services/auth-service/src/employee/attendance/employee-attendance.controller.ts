@@ -24,7 +24,6 @@ import {
   AttendanceResponseDto,
   AttendanceStatsDto,
 } from '../../attendance/dto/attendance.dto';
-import { Type } from 'class-transformer';
 
 @ApiTags('Employee Attendance')
 @ApiBearerAuth()

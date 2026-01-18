@@ -79,7 +79,7 @@ export class EmployeeLeaveService {
       adminId: employeeId,
       startDate,
       endDate,
-      status,
+      status: status as any,
       page,
       limit,
     });

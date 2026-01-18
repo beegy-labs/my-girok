@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsObject, MaxLength, IsPhoneNumber } from 'class-validator';
+import { IsOptional, IsString, IsObject, MaxLength } from 'class-validator';
 
 /**
  * Employee Profile Update DTO

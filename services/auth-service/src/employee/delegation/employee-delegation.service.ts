@@ -26,7 +26,7 @@ export class EmployeeDelegationService {
   ): Promise<{ data: DelegationResponseDto[]; total: number }> {
     return this.delegationService.findAll({
       delegateId: employeeId,
-      status,
+      status: status as any,
       page,
       limit,
     });
