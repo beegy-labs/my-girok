@@ -22,7 +22,8 @@
     "moduleResolution": "node",
     "paths": {
       "@/*": ["src/*"],
-      "@my-girok/types": ["../../packages/types/src"]
+      "@my-girok/types": ["../../packages/types/src"],
+      "@prisma/auth-client": ["node_modules/.prisma/auth-client"]
     }
   },
   "include": ["src/**/*", "test/**/*"],

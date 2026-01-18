@@ -55,13 +55,13 @@ describe('AttendanceService', () => {
       mockPrismaService.adminAttendance.findUnique.mockResolvedValue(null);
       mockPrismaService.adminAttendance.upsert.mockResolvedValue({
         id: 'attendance-1',
-        admin_id: adminId,
+        adminId: adminId,
         date: new Date('2026-01-17'),
-        clock_in: new Date(),
-        work_type: WorkType.OFFICE,
+        clockIn: new Date(),
+        workType: WorkType.OFFICE,
         status: AttendanceStatus.PRESENT,
-        created_at: new Date(),
-        updated_at: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.clockIn(adminId, dto);
@@ -81,9 +81,9 @@ describe('AttendanceService', () => {
 
       mockPrismaService.adminAttendance.findUnique.mockResolvedValue({
         id: 'attendance-1',
-        admin_id: adminId,
+        adminId: adminId,
         date: new Date('2026-01-17'),
-        clock_in: new Date(),
+        clockIn: new Date(),
       });
 
       await expect(service.clockIn(adminId, dto)).rejects.toThrow(ConflictException);
@@ -103,25 +103,25 @@ describe('AttendanceService', () => {
 
       mockPrismaService.adminAttendance.findUnique.mockResolvedValue({
         id: 'attendance-1',
-        admin_id: adminId,
+        adminId: adminId,
         date: new Date('2026-01-17'),
-        clock_in: clockInTime,
-        clock_out: null,
-        break_minutes: 60,
+        clockIn: clockInTime,
+        clockOut: null,
+        breakMinutes: 60,
       });
 
       mockPrismaService.adminAttendance.update.mockResolvedValue({
         id: 'attendance-1',
-        admin_id: adminId,
+        adminId: adminId,
         date: new Date('2026-01-17'),
-        clock_in: clockInTime,
-        clock_out: new Date(),
-        overtime_minutes: 60,
-        overtime_requested: true,
-        overtime_reason: 'Project deadline',
+        clockIn: clockInTime,
+        clockOut: new Date(),
+        overtimeMinutes: 60,
+        overtimeRequested: true,
+        overtimeReason: 'Project deadline',
         status: AttendanceStatus.PRESENT,
-        created_at: new Date(),
-        updated_at: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.clockOut(adminId, dto);
@@ -150,9 +150,9 @@ describe('AttendanceService', () => {
 
       mockPrismaService.adminAttendance.findUnique.mockResolvedValue({
         id: 'attendance-1',
-        admin_id: adminId,
+        adminId: adminId,
         date: new Date('2026-01-17'),
-        clock_in: null,
+        clockIn: null,
       });
 
       await expect(service.clockOut(adminId, dto)).rejects.toThrow(BadRequestException);
@@ -166,10 +166,10 @@ describe('AttendanceService', () => {
 
       mockPrismaService.adminAttendance.findUnique.mockResolvedValue({
         id: 'attendance-1',
-        admin_id: adminId,
+        adminId: adminId,
         date: new Date('2026-01-17'),
-        clock_in: new Date(),
-        clock_out: new Date(),
+        clockIn: new Date(),
+        clockOut: new Date(),
       });
 
       await expect(service.clockOut(adminId, dto)).rejects.toThrow(ConflictException);
@@ -187,21 +187,21 @@ describe('AttendanceService', () => {
 
       mockPrismaService.adminAttendance.findUnique.mockResolvedValue({
         id: attendanceId,
-        admin_id: 'admin-123',
-        overtime_requested: true,
-        overtime_minutes: 60,
+        adminId: 'admin-123',
+        overtimeRequested: true,
+        overtimeMinutes: 60,
       });
 
       mockPrismaService.adminAttendance.update.mockResolvedValue({
         id: attendanceId,
-        admin_id: 'admin-123',
-        overtime_requested: true,
-        overtime_approved: true,
-        overtime_approved_by: approverId,
-        overtime_approved_at: new Date(),
-        manager_notes: 'Approved for project work',
-        created_at: new Date(),
-        updated_at: new Date(),
+        adminId: 'admin-123',
+        overtimeRequested: true,
+        overtimeApproved: true,
+        overtimeApprovedBy: approverId,
+        overtimeApprovedAt: new Date(),
+        managerNotes: 'Approved for project work',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const result = await service.approveOvertime(attendanceId, approverId, dto);
@@ -222,7 +222,7 @@ describe('AttendanceService', () => {
     it('should throw BadRequestException if no overtime request', async () => {
       mockPrismaService.adminAttendance.findUnique.mockResolvedValue({
         id: 'attendance-1',
-        overtime_requested: false,
+        overtimeRequested: false,
       });
 
       await expect(
@@ -240,31 +240,31 @@ describe('AttendanceService', () => {
       const attendances = [
         {
           status: AttendanceStatus.PRESENT,
-          work_type: WorkType.OFFICE,
-          actual_minutes: 480,
-          overtime_minutes: 0,
-          late_minutes: 0,
+          workType: WorkType.OFFICE,
+          actualMinutes: 480,
+          overtimeMinutes: 0,
+          lateMinutes: 0,
         },
         {
           status: AttendanceStatus.PRESENT,
-          work_type: WorkType.REMOTE,
-          actual_minutes: 500,
-          overtime_minutes: 20,
-          late_minutes: 0,
+          workType: WorkType.REMOTE,
+          actualMinutes: 500,
+          overtimeMinutes: 20,
+          lateMinutes: 0,
         },
         {
           status: AttendanceStatus.LATE,
-          work_type: WorkType.OFFICE,
-          actual_minutes: 460,
-          overtime_minutes: 0,
-          late_minutes: 20,
+          workType: WorkType.OFFICE,
+          actualMinutes: 460,
+          overtimeMinutes: 0,
+          lateMinutes: 20,
         },
         {
           status: AttendanceStatus.ABSENT,
-          work_type: WorkType.OFFICE,
-          actual_minutes: 0,
-          overtime_minutes: 0,
-          late_minutes: 0,
+          workType: WorkType.OFFICE,
+          actualMinutes: 0,
+          overtimeMinutes: 0,
+          lateMinutes: 0,
         },
       ];
 
@@ -293,11 +293,11 @@ describe('AttendanceService', () => {
       const attendances = [
         {
           id: 'attendance-1',
-          admin_id: 'admin-123',
+          adminId: 'admin-123',
           date: new Date('2026-01-17'),
           status: AttendanceStatus.PRESENT,
-          created_at: new Date(),
-          updated_at: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ];
 

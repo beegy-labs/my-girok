@@ -68,14 +68,17 @@ COPY --chown=node:node --from=builder /app/services/personal-service/dist ./serv
 # Copy goose migrations
 COPY --chown=node:node --from=builder /app/services/personal-service/migrations ./services/personal-service/migrations
 
+# CRITICAL: Copy Prisma client from builder stage (fixes dual-generation issue)
+COPY --chown=node:node --from=builder /app/services/personal-service/node_modules/.prisma ./services/personal-service/node_modules/.prisma
+
 # Install production dependencies (skip lifecycle scripts like husky)
 ENV NODE_ENV=production
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 WORKDIR /app/services/personal-service
 
-# Generate Prisma Client
-RUN pnpm prisma:generate
+# DO NOT regenerate Prisma client - use the one from builder stage
+# The compiled dist/ files reference the builder's Prisma client
 
 # Create temp directory with proper permissions
 RUN mkdir -p /tmp && chown -R node:node /tmp
