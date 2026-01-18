@@ -1,14 +1,15 @@
 # CI/CD Quick Reference
 
-> GitHub Actions → Harbor → ArgoCD → Kubernetes | **Last Updated**: 2026-01-06
+> GitHub Actions → Gitea → ArgoCD → Kubernetes | **Last Updated**: 2026-01-18
 
 ## Pipeline
 
-| Component | Tool                      |
-| --------- | ------------------------- |
-| CI        | GitHub Actions            |
-| Registry  | Harbor (harbor.girok.dev) |
-| CD        | ArgoCD                    |
+| Component   | Tool                                |
+| ----------- | ----------------------------------- |
+| CI          | GitHub Actions                      |
+| Registry    | Gitea (gitea.girok.dev)             |
+| Proto Cache | Gitea Generic Packages (hash-based) |
+| CD          | ArgoCD                              |
 
 ## Image Tags
 
@@ -26,10 +27,22 @@
 | release/\* | my-girok-staging | Manual |
 | main       | my-girok-prod    | Manual |
 
+## Proto Caching
+
+| Aspect   | Detail                   |
+| -------- | ------------------------ |
+| Registry | Gitea Generic Packages   |
+| Hash     | SHA256 (12 chars)        |
+| Build    | 33s (when needed)        |
+| Download | 15s (cached)             |
+| Speedup  | 59-67% CI time reduction |
+
+**Proto policy**: `docs/llm/policies/proto-caching.md`
+
 ## Local Build
 
 ```bash
 docker build -t test/auth-service:local -f services/auth-service/Dockerfile .
 ```
 
-**SSOT**: `docs/llm/ci-cd.md`
+**SSOT**: `docs/llm/policies/github-actions-workflows.md`

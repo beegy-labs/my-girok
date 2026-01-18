@@ -139,6 +139,64 @@ jobs:
   4. Cleanup old images (keep last 10)
 - **Retry Logic**: 3 attempts with rebase on conflicts
 
+## Proto Build Caching
+
+### Strategy
+
+**Build Once, Download Many** - Pre-build proto files and cache in Gitea Generic Package Registry to avoid Buf Schema Registry rate limits and improve CI performance.
+
+**Workflow**: `.github/workflows/build-proto.yml`
+
+### Architecture
+
+1. **Hash Calculation**: SHA256 of proto source files (first 12 chars)
+2. **Package Check**: Query Gitea for existing package
+3. **Conditional Build**: Generate and upload only if package missing
+4. **Service Download**: All service CI jobs download pre-built package
+
+### Performance Impact
+
+| Metric           | Before               | After                | Improvement    |
+| ---------------- | -------------------- | -------------------- | -------------- |
+| Proto generation | 45s × 10 jobs = 450s | 33s × 1 job = 33s    | 93% reduction  |
+| Proto download   | N/A                  | 15s × 10 jobs = 150s | -              |
+| Total CI time    | 450s                 | 183s                 | **59% faster** |
+| Cache hit        | 450s                 | 150s                 | **67% faster** |
+
+**Package size**: ~100KB (gzip-compressed)
+
+### Implementation
+
+**Hash Calculation** (deterministic, reproducible):
+
+```bash
+HASH=$(find packages/proto -type f \( -name "*.proto" -o -name "buf.gen.yaml" -o -name "buf.yaml" \) \
+  -exec sha256sum {} \; | sort | sha256sum | cut -c1-12)
+```
+
+**Download in Service CI** (`.github/workflows/_service-ci.yml`):
+
+```yaml
+- name: Download proto files
+  env:
+    GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+  run: |
+    HASH=$(find packages/proto -type f \( -name "*.proto" -o -name "buf.gen.yaml" -o -name "buf.yaml" \) \
+      -exec sha256sum {} \; | sort | sha256sum | cut -c1-12)
+
+    mkdir -p packages/types/src/generated
+    curl -f -L \
+      -H "Authorization: token ${GITEA_TOKEN}" \
+      "https://gitea.girok.dev/api/packages/beegy-labs/generic/proto-generated/${HASH}/proto-generated.tar.gz" \
+      -o /tmp/proto-generated.tar.gz
+
+    tar -xzf /tmp/proto-generated.tar.gz -C packages/types/src/generated/
+```
+
+**Gitea API**: `/api/packages/{owner}/generic/{package}/{version}/{filename}`
+
+**Full details**: `docs/llm/policies/proto-caching.md`
+
 ## Optimization Strategies
 
 ### 1. Image Existence Check
@@ -371,6 +429,7 @@ jobs:
 
 ## Related Policies
 
+- **Proto Caching Policy**: `docs/llm/policies/proto-caching.md` ⭐
 - **Test Coverage Policy**: `docs/test-coverage.md`
 - **Docker Build Policy**: (TODO)
 - **GitOps Deployment**: (TODO)
