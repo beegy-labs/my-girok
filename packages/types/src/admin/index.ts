@@ -16,3 +16,9 @@ export * from './authorization.enums.js';
 export * from './admin.enums.js';
 export * from './admin.types.js';
 export * from './admin-auth.types.js';
+
+// Phase 6: HR Management Types
+export * from './hr-employee.types.js';
+export * from './hr-attendance.types.js';
+export * from './hr-leave.types.js';
+export * from './hr-delegation.types.js';

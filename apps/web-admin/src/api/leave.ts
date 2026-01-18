@@ -5,70 +5,15 @@
 
 import apiClient from './client';
 import { API_ENDPOINTS } from './endpoints';
-
-/**
- * Leave Types
- */
-export interface LeaveRequest {
-  id: string;
-  adminId: string;
-  leaveType: 'ANNUAL' | 'SICK' | 'PERSONAL' | 'MATERNITY' | 'PATERNITY' | 'UNPAID' | 'OTHER';
-  startDate: string;
-  endDate: string;
-  days: number;
-  reason?: string;
-  status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
-  approverId?: string;
-  approverComment?: string;
-  approvedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface LeaveBalance {
-  id: string;
-  adminId: string;
-  year: number;
-  totalDays: number;
-  usedDays: number;
-  remainingDays: number;
-  carriedForwardDays: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface LeaveRequestFilter {
-  adminId?: string;
-  startDate?: string;
-  endDate?: string;
-  status?: string;
-  leaveType?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface LeaveRequestListResponse {
-  data: LeaveRequest[];
-  total: number;
-}
-
-export interface CreateLeaveRequestDto {
-  leaveType: 'ANNUAL' | 'SICK' | 'PERSONAL' | 'MATERNITY' | 'PATERNITY' | 'UNPAID' | 'OTHER';
-  startDate: string;
-  endDate: string;
-  days: number;
-  reason?: string;
-}
-
-export interface ApproveLeaveRequestDto {
-  approved: boolean;
-  comment?: string;
-}
-
-export interface AdjustLeaveBalanceDto {
-  adjustment: number;
-  reason: string;
-}
+import type {
+  LeaveRequest,
+  LeaveBalance,
+  LeaveRequestFilter,
+  LeaveRequestListResponse,
+  CreateLeaveRequestDto,
+  ApproveLeaveRequestDto,
+  AdjustLeaveBalanceDto,
+} from '@my-girok/types';
 
 /**
  * Leave Request API Client

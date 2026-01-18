@@ -5,79 +5,15 @@
 
 import apiClient from './client';
 import { API_ENDPOINTS } from './endpoints';
-
-/**
- * Delegation Types
- */
-export interface Delegation {
-  id: string;
-  delegatorId: string;
-  delegateeId: string;
-  scope: 'ALL' | 'SPECIFIC_PERMISSIONS';
-  permissions?: string[];
-  startDate: string;
-  endDate: string;
-  reason?: string;
-  status: 'PENDING' | 'ACTIVE' | 'REVOKED' | 'EXPIRED';
-  autoRevoke: boolean;
-  constraints?: DelegationConstraints;
-  approverId?: string;
-  approvedAt?: string;
-  revokedAt?: string;
-  revokedBy?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DelegationConstraints {
-  allowedHours?: string[];
-  allowedIps?: string[];
-  maxActions?: number;
-  requireMfa?: boolean;
-}
-
-export interface DelegationLog {
-  id: string;
-  delegationId: string;
-  action: string;
-  timestamp: string;
-  metadata?: Record<string, unknown>;
-}
-
-export interface DelegationFilter {
-  delegatorId?: string;
-  delegateeId?: string;
-  status?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface DelegationListResponse {
-  data: Delegation[];
-  total: number;
-}
-
-export interface CreateDelegationDto {
-  delegateeId: string;
-  scope: 'ALL' | 'SPECIFIC_PERMISSIONS';
-  permissions?: string[];
-  startDate: string;
-  endDate: string;
-  reason?: string;
-  autoRevoke?: boolean;
-  constraints?: DelegationConstraints;
-}
-
-export interface UpdateDelegationDto {
-  endDate?: string;
-  reason?: string;
-  constraints?: DelegationConstraints;
-}
-
-export interface ApproveDelegationDto {
-  approved: boolean;
-  comment?: string;
-}
+import type {
+  Delegation,
+  DelegationLog,
+  DelegationFilter,
+  DelegationListResponse,
+  CreateDelegationDto,
+  UpdateDelegationDto,
+  ApproveDelegationDto,
+} from '@my-girok/types';
 
 /**
  * Delegation Management API Client

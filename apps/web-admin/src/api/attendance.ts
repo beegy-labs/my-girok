@@ -5,82 +5,15 @@
 
 import apiClient from './client';
 import { API_ENDPOINTS } from './endpoints';
-
-/**
- * Attendance Types
- */
-export interface Attendance {
-  id: string;
-  adminId: string;
-  date: string;
-  clockIn?: string;
-  clockOut?: string;
-  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY' | 'ON_LEAVE';
-  workHours?: number;
-  overtimeHours?: number;
-  overtimeApproved: boolean;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AttendanceStats {
-  totalDays: number;
-  presentDays: number;
-  absentDays: number;
-  lateDays: number;
-  totalWorkHours: number;
-  totalOvertimeHours: number;
-  averageWorkHours: number;
-}
-
-export interface AttendanceFilter {
-  adminId?: string;
-  startDate?: string;
-  endDate?: string;
-  status?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface AttendanceListResponse {
-  data: Attendance[];
-  total: number;
-}
-
-export interface WorkSchedule {
-  id: string;
-  adminId: string;
-  scheduleType: 'FIXED' | 'FLEXIBLE' | 'SHIFT';
-  startTime?: string;
-  endTime?: string;
-  workDays?: number[];
-  effectiveFrom: string;
-  effectiveTo?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateWorkScheduleDto {
-  adminId: string;
-  scheduleType: 'FIXED' | 'FLEXIBLE' | 'SHIFT';
-  startTime?: string;
-  endTime?: string;
-  workDays?: number[];
-  effectiveFrom: string;
-  effectiveTo?: string;
-}
-
-export interface UpdateWorkScheduleDto {
-  scheduleType?: 'FIXED' | 'FLEXIBLE' | 'SHIFT';
-  startTime?: string;
-  endTime?: string;
-  workDays?: number[];
-  effectiveFrom?: string;
-  effectiveTo?: string;
-  isActive?: boolean;
-}
+import type {
+  Attendance,
+  AttendanceStats,
+  AttendanceFilter,
+  AttendanceListResponse,
+  WorkSchedule,
+  CreateWorkScheduleDto,
+  UpdateWorkScheduleDto,
+} from '@my-girok/types';
 
 /**
  * Attendance Management API Client
