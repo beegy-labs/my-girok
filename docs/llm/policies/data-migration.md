@@ -118,6 +118,20 @@ WHERE scope = 'TENANT' AND identity_type = 'HUMAN';
 }
 ```
 
+### Resolution Service
+
+The **Identity Service** is responsible for resolving the dual-reference `manager` field:
+
+1. When a user profile is requested, Identity Service checks `manager.type`
+2. If `type = "account"`: Direct lookup in `identity_db.accounts`
+3. If `type = "admin"`: gRPC call to Auth Service for admin lookup
+4. Returns unified manager object with `id`, `display_name`, `email`
+
+```
+Client → Identity Service → accounts table (type=account)
+                         → Auth Service (gRPC) → admins table (type=admin)
+```
+
 ## Rollback Strategy
 
 | Level | Scope         | Method                           |

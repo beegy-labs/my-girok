@@ -37,6 +37,11 @@ const UserActivityPage = lazy(() => import('./pages/users/UserActivityPage'));
 const AuthorizationPage = lazy(() => import('./pages/authorization/AuthorizationPage'));
 const SharedSessionPage = lazy(() => import('./pages/shared/SharedSessionPage'));
 
+// HR Pages removed: Phase 1 of user model refactor (PR #585)
+// HR employees migrated from admins table to accounts table (identity_db)
+// HR management will be handled by dedicated hr-service, not web-admin
+// See: docs/llm/policies/data-migration.md
+
 // Page wrapper with Suspense and Error Boundary
 function PageWrapper() {
   return (

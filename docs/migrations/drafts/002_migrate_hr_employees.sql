@@ -45,6 +45,9 @@ SELECT
   a.password,
   COALESCE(a.username, a.email),
   a.external_id,
+  -- Status mapping: employment_status -> account status
+  -- Note: TERMINATED maps to DEACTIVATED (intentional semantic change)
+  -- Downstream systems expecting 'TERMINATED' should check enterprise_profile.employment_status
   CASE a.employment_status
     WHEN 'ACTIVE' THEN 'ACTIVE'
     WHEN 'SUSPENDED' THEN 'SUSPENDED'
@@ -76,9 +79,18 @@ SELECT
       'unit_id', a.organization_unit_id,
       'cost_center', a.cost_center
     ),
+    -- Manager type determined by whether manager was also migrated
+    -- Application code should check migration_admin_to_account table:
+    -- IF manager_admin_id IN migrated_ids THEN type='account' ELSE type='admin'
     'manager', jsonb_build_object(
       'id', a.manager_admin_id,
-      'type', 'admin'
+      'type', CASE
+        WHEN EXISTS (
+          SELECT 1 FROM migration_admin_to_account m
+          WHERE m.old_admin_id = a.manager_admin_id
+        ) THEN 'account'
+        ELSE 'admin'
+      END
     ),
     'dates', jsonb_build_object(
       'hire_date', a.hire_date,
