@@ -24,7 +24,8 @@
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.11.0",
-    "@protobuf-ts/runtime-rpc": "^2.11.0"
+    "@protobuf-ts/runtime-rpc": "^2.11.0",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "typescript": "catalog:"
