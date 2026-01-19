@@ -2,60 +2,15 @@
 
 > Monthly review checklist | **Last Updated**: 2026-01-18
 
-## Database
-
-| Do                   | Don't            |
-| -------------------- | ---------------- |
-| goose for migrations | `prisma migrate` |
-| UUIDv7 for IDs       | TEXT/varchar IDs |
-| TIMESTAMPTZ(6)       | TIMESTAMP        |
-
-## React 19+
-
-| Do                      | Don't                 |
-| ----------------------- | --------------------- |
-| React Compiler          | Manual memo/useMemo   |
-| `use()` for async       | useEffect fetch       |
-| Server Components (RSC) | Client-only rendering |
-| Design tokens (SSOT)    | Inline styles         |
-
-## State Management
-
-| Do                       | Don't                          |
-| ------------------------ | ------------------------------ |
-| Zustand (small/mid apps) | Redux everywhere               |
-| Context API (simple)     | Prop drilling                  |
-| Jotai (atomic state)     | Complex state for simple cases |
-
-## TypeScript
-
-| Do                     | Don't               |
-| ---------------------- | ------------------- |
-| Zod for API validation | Trust external data |
-| `unknown` over `any`   | `any` type abuse    |
-| Strict mode enabled    | Loose type checking |
-
-## Backend
-
-| Do                 | Don't               |
-| ------------------ | ------------------- |
-| `@Transactional()` | Manual transactions |
-| gRPC internal      | REST everywhere     |
-| class-validator    | Manual validation   |
-
-## Testing
-
-| Do            | Don't          |
-| ------------- | -------------- |
-| 80% coverage  | Skip tests     |
-| Test fixtures | Hardcoded data |
-
-## Git
-
-| Do                     | Don't             |
-| ---------------------- | ----------------- |
-| Squash: feat → develop | Merge on features |
-| Merge: develop → main  | Squash on release |
+| Category       | Do                                          | Don't                                       |
+| -------------- | ------------------------------------------- | ------------------------------------------- |
+| **Database**   | goose, UUIDv7, TIMESTAMPTZ(6)               | prisma migrate, TEXT IDs                    |
+| **React 19+**  | React Compiler, `use()`, RSC, Design tokens | Manual memo, useEffect fetch, inline styles |
+| **State**      | Zustand/Context/Jotai                       | Redux everywhere, prop drilling             |
+| **TypeScript** | Zod validation, `unknown`, strict mode      | `any` abuse, trust external data            |
+| **Backend**    | `@Transactional()`, gRPC, class-validator   | Manual transactions, REST everywhere        |
+| **Testing**    | 80% coverage, test fixtures                 | Skip tests, hardcoded data                  |
+| **Git**        | Squash feat→develop, Merge develop→main     | Merge on features, squash on release        |
 
 ## Anti-Patterns
 

@@ -1,489 +1,291 @@
 # Session Recording Features
 
-**Last Updated**: 2026-01-12
+```yaml
+updated: 2026-01-12
+scope: Tasks #4, #5, #6
+status: Implemented
+pr: '#542'
+```
 
-## Overview
+## Features Overview
 
-Session recording features provide comprehensive monitoring, analysis, and management capabilities for user sessions across the my-girok platform. This document describes the newly implemented features in Tasks #4, #5, and #6.
+| Feature                  | Location                                    | Purpose                               |
+| ------------------------ | ------------------------------------------- | ------------------------------------- |
+| Real-time Monitoring     | `LiveSessionsPage.tsx`                      | Monitor active sessions via WebSocket |
+| Session Heatmaps         | `SessionHeatmap.tsx`                        | Visualize clicks and scroll depth     |
+| Privacy Controls         | `PrivacyControls.tsx`                       | Configure data masking rules          |
+| Session Export           | `SessionExport.tsx`, `export.controller.ts` | Export and share session recordings   |
+| Authorization Versioning | `PoliciesTab.tsx`, `ModelDiff.tsx`          | Compare/rollback authorization models |
 
-## Features
-
-### 1. Real-time Session Monitoring
+## 1. Real-time Session Monitoring
 
 **Location**: `apps/web-admin/src/pages/system/session-recordings/LiveSessionsPage.tsx`
 
-**Purpose**: Monitor active user sessions in real-time with live statistics and filtering capabilities.
+### Configuration
 
-**Key Capabilities**:
+```yaml
+websocket:
+  url_env: VITE_WS_URL
+  url_default: ws://localhost:3000/admin/sessions/live
 
-- Real-time WebSocket connection to session events
-- Live session statistics (total sessions, by service, by device type)
-- Filtering by service (web-app, web-admin) and device type (desktop, mobile, tablet)
-- Connection status indicator with reconnection support
-- Session details including actor, location, device, browser, and activity
-
-**WebSocket Configuration**:
-
-```typescript
-// Environment variable for WebSocket URL
-VITE_WS_URL=ws://localhost:3000/admin/sessions/live
-
-// Reconnection configuration (optional)
-VITE_WS_RECONNECT_BASE_DELAY=1000      // Base delay: 1 second
-VITE_WS_RECONNECT_MAX_DELAY=30000      // Max delay: 30 seconds
-VITE_WS_RECONNECT_MAX_ATTEMPTS=10      // Max attempts: 10
+reconnection:
+  base_delay: 1000ms # VITE_WS_RECONNECT_BASE_DELAY
+  max_delay: 30000ms # VITE_WS_RECONNECT_MAX_DELAY
+  max_attempts: 10 # VITE_WS_RECONNECT_MAX_ATTEMPTS
+  strategy: Exponential backoff with jitter
 ```
 
-**WebSocket Events**:
+### WebSocket Events
 
-- `session_started`: New session initiated
-- `session_updated`: Session information updated
-- `session_ended`: Session terminated
-- `sessions_snapshot`: Complete session list
+| Event               | Trigger               |
+| ------------------- | --------------------- |
+| `session_started`   | New session initiated |
+| `session_updated`   | Session info updated  |
+| `session_ended`     | Session terminated    |
+| `sessions_snapshot` | Complete session list |
 
-**Reconnection Strategy**:
+### Capabilities
 
-- Exponential backoff with jitter to prevent thundering herd
-- Automatic reconnection with configurable retry limits
-- Manual reconnection trigger available
+- Live session statistics (total, by service, by device)
+- Filtering: service (web-app, web-admin), device (desktop, mobile, tablet)
+- Connection status with manual reconnect
+- Session details: actor, location, device, browser, activity
 
----
-
-### 2. Session Heatmaps and Analytics
+## 2. Session Heatmaps
 
 **Location**: `apps/web-admin/src/components/SessionHeatmap.tsx`
 
-**Purpose**: Visualize user interaction patterns through click tracking and scroll depth analysis.
-
-#### 2.1 Click Heatmap
-
-**Purpose**: Visualize click intensity across page elements.
-
-**Features**:
-
-- Canvas-based rendering with radial gradients
-- Configurable dimensions and radius
-- Intensity normalization
-- Background image overlay support
-- Statistics: total clicks, max clicks per point, average clicks
-
-**Usage**:
+### Click Heatmap
 
 ```typescript
 <ClickHeatmap
-  points={[
-    { x: 50, y: 50, intensity: 10 },  // x, y as percentage of viewport
-    { x: 75, y: 25, intensity: 5 },
-  ]}
+  points={[{ x: 50, y: 50, intensity: 10 }]}  // x, y as % of viewport
   backgroundImage="/screenshot.png"
   width={1024}
   height={768}
 />
 ```
 
-#### 2.2 Scroll Depth Heatmap
-
-**Purpose**: Analyze how far users scroll through pages.
-
 **Features**:
 
-- 20-bucket visualization of scroll depth distribution
-- Average scroll depth calculation
-- Total sessions count
-- Hover tooltips for detailed bucket information
+- Canvas-based rendering with radial gradients
+- Intensity normalization
+- Statistics: total clicks, max clicks/point, avg clicks
 
-**Usage**:
+### Scroll Depth Heatmap
 
 ```typescript
 <ScrollDepthHeatmap
-  depths={[10, 25, 50, 75, 90, 100]}  // Scroll depths as percentages
+  depths={[10, 25, 50, 75, 90, 100]}  // Percentages
   pageHeight={2000}
 />
 ```
 
----
-
-### 3. Privacy Controls for Session Recordings
-
-**Location**: `apps/web-admin/src/components/PrivacyControls.tsx`
-**Config**: `apps/web-admin/src/config/privacy-rules.config.ts`
-
-**Purpose**: Configure privacy masking rules to protect sensitive data in session recordings.
-
-#### 3.1 Privacy Masking Types
-
-| Type     | Description             | Use Case                       |
-| -------- | ----------------------- | ------------------------------ |
-| `block`  | Completely hide element | Passwords, credit cards, SSN   |
-| `blur`   | Obscure element content | General PII                    |
-| `redact` | Replace with asterisks  | Email addresses, phone numbers |
-
-#### 3.2 Preset Rules
-
-Centralized in `privacy-rules.config.ts`:
-
-```typescript
-PRIVACY_PRESET_RULES = [
-  { label: 'Passwords', selector: 'input[type="password"]', maskType: 'block' },
-  { label: 'Email Fields', selector: 'input[type="email"]', maskType: 'redact' },
-  { label: 'Credit Card Fields', selector: 'input[data-card]', maskType: 'block' },
-  { label: 'SSN Fields', selector: 'input[data-ssn]', maskType: 'block' },
-  { label: 'Phone Numbers', selector: 'input[type="tel"]', maskType: 'redact' },
-];
-```
-
-#### 3.3 PII Detection
-
-Automatic pattern-based detection for:
-
-- Email addresses: `/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g`
-- Phone numbers: `/\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g`
-- Credit cards: `/\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g`
-- SSN: `/\b\d{3}-\d{2}-\d{4}\b/g`
-
----
-
-### 4. Session Export and Sharing
-
-**Location**:
-
-- Frontend: `apps/web-admin/src/components/SessionExport.tsx`
-- Backend: `services/auth-bff/src/admin/session-recordings/export.controller.ts`
-
-**Purpose**: Export session recordings in various formats and generate shareable links.
-
-#### 4.1 Export Formats
-
-| Format      | Status         | Description                                    |
-| ----------- | -------------- | ---------------------------------------------- |
-| JSON        | ✅ Implemented | Complete session data with metadata and events |
-| Video (MP4) | 🚧 Planned     | Rendered video replay of session               |
-| PDF         | 🚧 Planned     | Summary report with screenshots and timeline   |
-
-#### 4.2 JSON Export Options
-
-- Include/exclude session metadata
-- Include/exclude event data
-- Configurable output file name
-
-#### 4.3 Share Links
-
-**Purpose**: Generate temporary shareable links for session recordings.
-
-**Configuration**:
-
-```bash
-# Backend configuration (auth-bff)
-SESSION_SHARE_LINK_PREFIX=session_share_link   # Redis key prefix
-SESSION_SHARE_LINK_MAX_TTL=2592000000         # 30 days in milliseconds
-```
-
-**Expiration Options**:
-
-- 1 hour
-- 24 hours
-- 7 days
-- 30 days
-- Never (up to max TTL)
-
-**Storage**: Redis/Valkey with automatic TTL-based expiration
-
-**API Endpoints**:
-
-```typescript
-POST /admin/session-recordings/share/:sessionId
-{
-  "expiresIn": "24h" | "7d" | "30d" | "never"
-}
-
-GET /admin/session-recordings/shared/:token
-// Returns session data if token is valid and not expired
-```
-
----
-
-### 5. Authorization Model Versioning UI
-
-**Location**: `apps/web-admin/src/pages/authorization/tabs/PoliciesTab.tsx`
-**Component**: `apps/web-admin/src/components/ModelDiff.tsx`
-
-**Purpose**: Compare and manage authorization model versions with rollback capability.
-
-#### 5.1 ModelDiff Component
-
 **Features**:
 
-- Line-by-line diff visualization using `diff` library
-- Color-coded additions (green) and deletions (red)
-- Side-by-side comparison with labels
-- Statistics showing total additions and deletions
-- Theme-aware styling
+- 20-bucket visualization
+- Average scroll depth
+- Hover tooltips
 
-**Usage**:
+## 3. Privacy Controls
+
+**Config**: `apps/web-admin/src/config/privacy-rules.config.ts`
+
+### Masking Types
+
+| Type     | Effect                  | Use Case              |
+| -------- | ----------------------- | --------------------- |
+| `block`  | Completely hide element | Passwords, SSN        |
+| `blur`   | Obscure content         | General PII           |
+| `redact` | Replace with asterisks  | Emails, phone numbers |
+
+### Preset Rules
+
+```yaml
+passwords: { selector: 'input[type="password"]', maskType: block }
+emails: { selector: 'input[type="email"]', maskType: redact }
+credit_cards: { selector: 'input[data-card]', maskType: block }
+ssn: { selector: 'input[data-ssn]', maskType: block }
+phone: { selector: 'input[type="tel"]', maskType: redact }
+```
+
+### PII Detection Patterns
+
+| Type        | Regex                                                     |
+| ----------- | --------------------------------------------------------- |
+| Email       | `/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z\|a-z]{2,}\b/g` |
+| Phone       | `/\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g`                        |
+| Credit Card | `/\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g`           |
+| SSN         | `/\b\d{3}-\d{2}-\d{4}\b/g`                                |
+
+## 4. Session Export & Sharing
+
+### Export Formats
+
+| Format | Status         | Description                     |
+| ------ | -------------- | ------------------------------- |
+| JSON   | ✅ Implemented | Complete session + metadata     |
+| MP4    | 🚧 Planned     | Rendered video replay           |
+| PDF    | 🚧 Planned     | Summary report with screenshots |
+
+### Share Links
+
+**Configuration** (auth-bff):
+
+```yaml
+redis_prefix: SESSION_SHARE_LINK_PREFIX (default: session_share_link)
+max_ttl: SESSION_SHARE_LINK_MAX_TTL (default: 2592000000ms = 30 days)
+
+expiration_options:
+  - 1h
+  - 24h
+  - 7d
+  - 30d
+  - never (up to max TTL)
+
+storage: Redis/Valkey with TTL-based expiration
+```
+
+**Endpoints**:
+
+```yaml
+create: POST /admin/session-recordings/share/:sessionId { expiresIn: "24h" }
+access: GET /admin/session-recordings/shared/:token
+```
+
+## 5. Authorization Model Versioning
+
+**Location**: `apps/web-admin/src/components/ModelDiff.tsx`
+
+### ModelDiff Component
 
 ```typescript
 <ModelDiff
-  oldContent={previousVersion.content}
-  newContent={currentVersion.content}
+  oldContent={v1.content}
+  newContent={v2.content}
   oldLabel="v1.0 (2026-01-10)"
   newLabel="v2.0 - Active (2026-01-12)"
 />
 ```
 
-#### 5.2 Version Management
+**Features**:
 
-**Capabilities**:
+- Line-by-line diff using `diff` library
+- Color-coded: green (additions), red (deletions)
+- Statistics: total additions/deletions
+- Theme-aware styling
 
-- View all model versions with timestamps and authors
-- Compare any version against active version
-- Rollback to previous versions
-- Confirmation dialogs for critical actions
-- Active version indicator
-
-**Workflow**:
+### Workflow
 
 1. View version history
 2. Click "View Diff" on any version
-3. Review changes in diff viewer
-4. Click "Rollback" if changes need to be reverted
-5. Confirm rollback action
-6. Selected version becomes active
+3. Review changes
+4. Click "Rollback" to revert
+5. Confirm action → Version becomes active
 
----
-
-### 6. Audit Service Refactoring (Task #5)
+## 6. Audit Service Refactoring
 
 **Location**: `services/audit-service/src/session-recordings/services/session-recording.service.ts`
 
-**Purpose**: Improve code organization by moving enum conversion logic from controller to service layer.
+**Purpose**: Move enum conversion logic from controller to service layer
 
-**Enum Conversion Methods**:
+### Enum Conversion Methods
 
 ```typescript
-// Device type conversions
 convertDeviceTypeToNumber(deviceType: string): number
 convertDeviceTypeToString(deviceType: number): string
-
-// Actor type conversions
 convertActorTypeToNumber(actorType: string): number
 convertActorTypeToString(actorType: number): string
-
-// Status conversions
 convertStatusToNumber(status: string): number
 ```
 
-**Benefits**:
-
-- Better separation of concerns
-- Improved testability
-- Reusable conversion logic
-- Cleaner controller code
-
----
+**Benefits**: Better separation, testability, reusability
 
 ## Architecture
 
-### Frontend Stack
+```yaml
+frontend:
+  stack: React 19.2, TypeScript 5.9, Canvas API, WebSocket, Vite
 
-- React 19.2 with TypeScript 5.9
-- Real-time updates via WebSocket
-- Canvas API for heatmap rendering
-- Vite for build tooling
+backend:
+  stack: NestJS 11, Redis/Valkey, gRPC, ClickHouse
 
-### Backend Stack
-
-- NestJS 11 with TypeScript
-- Redis/Valkey for share link storage
-- gRPC for internal service communication
-- ConfigService for centralized configuration
-
-### Data Flow
-
+data_flow: User Browser → (WebSocket) → LiveSessionsPage → useRealTimeSessionsWebSocket
+  → (gRPC) → Auth-BFF → Audit Service → ClickHouse
+  → (Redis) → Share Links (TTL expiration)
 ```
-User Browser
-    ↓ (WebSocket)
-LiveSessionsPage ← useRealTimeSessionsWebSocket
-    ↓ (gRPC)
-Auth-BFF → Audit Service → ClickHouse
-    ↓ (Redis)
-Share Links (TTL-based expiration)
-```
-
----
 
 ## Testing
 
-### Frontend Tests
+| Area                    | Test Count | Focus                                    |
+| ----------------------- | ---------- | ---------------------------------------- |
+| PrivacyControls         | 15+        | Rules, masking, PII detection            |
+| SessionExport           | 30+        | Export formats, share links, expiration  |
+| SessionHeatmap          | 30+        | Canvas rendering, click/scroll analytics |
+| useRealTimeSessions     | 20+        | WebSocket, reconnection, state           |
+| SessionRecordingService | 110+       | Enum conversion, service logic           |
+| ExportController        | 15+        | API integration, error handling          |
 
-- Component tests with @testing-library/react
-- Hook tests with renderHook
-- WebSocket mock testing
-- Canvas rendering validation
-- User interaction testing
+**Total**: 220+ test cases
 
-### Backend Tests
+## Security
 
-- Service unit tests with Vitest
-- Controller integration tests
-- Redis mock testing
-- gRPC communication tests
+```yaml
+privacy_masking:
+  defaults: block for highly sensitive data
+  patterns: Centralized PII configuration
+  customization: Per-service rules
 
-### Test Coverage
+share_links:
+  token: Cryptographically secure (32 bytes)
+  expiration: Automatic via Redis TTL
+  access: Token-based, no permanent public access
 
-- PrivacyControls: 15+ test cases
-- SessionExport: 30+ test cases
-- SessionHeatmap: 30+ test cases
-- useRealTimeSessions: 20+ test cases
-- SessionRecordingService: 110+ test cases
-- ExportController: 15+ test cases
-
-**Total**: 220+ test cases across all features
-
----
-
-## Security Considerations
-
-### Privacy Masking
-
-- All preset rules use secure defaults (block for highly sensitive data)
-- PII patterns configured centrally
-- User can customize rules per service
-
-### Share Links
-
-- Cryptographically secure tokens (32 bytes)
-- Automatic expiration via Redis TTL
-- Token-based access control
-- No permanent public access
-
-### WebSocket Security
-
-- Authentication required
-- Connection from admin panel only
-- Rate limiting on connection attempts
-- Automatic reconnection with backoff
-
----
-
-## Performance Optimizations
-
-### Canvas Rendering
-
-- Memoized canvas generation
-- Point intensity normalization
-- Efficient radial gradient rendering
-
-### WebSocket
-
-- Exponential backoff prevents thundering herd
-- Configurable reconnection limits
-- Connection state management
-
-### Redis Caching
-
-- TTL-based automatic cleanup
-- No manual garbage collection required
-- Distributed cache for multi-instance deployments
-
----
-
-## Configuration Reference
-
-### Environment Variables
-
-#### Frontend (web-admin)
-
-```bash
-# WebSocket connection
-VITE_WS_URL=ws://localhost:3000/admin/sessions/live
-
-# Reconnection configuration
-VITE_WS_RECONNECT_BASE_DELAY=1000      # 1 second
-VITE_WS_RECONNECT_MAX_DELAY=30000      # 30 seconds
-VITE_WS_RECONNECT_MAX_ATTEMPTS=10
+websocket:
+  auth: Required
+  source: Admin panel only
+  rate_limit: Connection attempts
+  reconnect: Automatic with backoff
 ```
 
-#### Backend (auth-bff)
+## Performance
 
-```bash
-# Share link configuration
-SESSION_SHARE_LINK_PREFIX=session_share_link
-SESSION_SHARE_LINK_MAX_TTL=2592000000  # 30 days in ms
+```yaml
+canvas:
+  - Memoized generation
+  - Point intensity normalization
+  - Efficient radial gradients
 
-# Auth BFF URL for share link generation
-AUTH_BFF_URL=https://auth.girok.dev
+websocket:
+  - Exponential backoff prevents thundering herd
+  - Configurable limits
+  - State management
+
+redis:
+  - TTL-based automatic cleanup
+  - No manual garbage collection
+  - Distributed cache
 ```
-
----
-
-## Future Enhancements
-
-### Planned Features
-
-1. **Video Export**: Render session replay as MP4 video using headless browser
-2. **PDF Reports**: Generate comprehensive PDF reports with screenshots and analysis
-3. **Advanced Heatmap Types**: Rage click detection, attention heatmaps
-4. **Real-time Alerts**: Notify admins of suspicious session patterns
-5. **Session Replay Player**: Interactive playback with timeline controls
-
-### Performance Improvements
-
-1. WebSocket message compression
-2. Heatmap data aggregation on server
-3. Progressive loading for large sessions
-4. Canvas offloading to Web Workers
-
----
 
 ## Troubleshooting
 
-### WebSocket Connection Issues
+| Issue                  | Solutions                                                     |
+| ---------------------- | ------------------------------------------------------------- |
+| WebSocket disconnected | Verify URL, check server, verify network allows WS            |
+| Share link expired     | Verify Redis running, check TTL, verify prefix matches        |
+| Heatmap not rendering  | Verify points array, check coordinates (0-100%), check canvas |
 
-**Symptom**: "Disconnected" status with connection error
+## Future Enhancements
 
-**Solutions**:
+- Video export (MP4 rendering via headless browser)
+- PDF reports with screenshots and analysis
+- Advanced heatmaps (rage click, attention)
+- Real-time alerts for suspicious patterns
+- Interactive replay player with timeline
 
-1. Verify `VITE_WS_URL` is correctly configured
-2. Check WebSocket server is running
-3. Verify network allows WebSocket connections
-4. Check browser console for detailed errors
-5. Try manual reconnection
+## References
 
-### Share Link Not Working
-
-**Symptom**: "Share link not found or expired"
-
-**Solutions**:
-
-1. Verify Redis/Valkey is running and accessible
-2. Check link hasn't exceeded expiration time
-3. Verify `SESSION_SHARE_LINK_PREFIX` matches on both ends
-4. Check Redis DB configuration
-
-### Heatmap Not Rendering
-
-**Symptom**: "No data" message or blank canvas
-
-**Solutions**:
-
-1. Verify points array is not empty
-2. Check point coordinates are valid percentages (0-100)
-3. Verify canvas context is available (not SSR)
-4. Check browser supports canvas API
-
----
-
-## Related Documentation
-
-- [Privacy Rules Configuration](../packages/privacy-rules.md)
+- [Privacy Rules](../packages/privacy-rules.md)
 - [WebSocket Architecture](../architecture/websocket.md)
-- [Redis/Valkey Caching](../policies/caching.md)
+- [Caching Policy](../policies/caching.md)
 - [Testing Standards](../policies/testing.md)
-
----
-
-## Contributors
-
-Implementation by Claude Sonnet 4.5 for Tasks #4, #5, #6 (PR #542)
-
-**Review Status**: Approved pending documentation
