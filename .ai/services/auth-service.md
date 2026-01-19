@@ -1,28 +1,27 @@
 # Auth Service
 
-> Admin & Operator authentication + MFA + Session + Legal + SCIM 2.0 + HR Backend (Phase 3-4) | Port: 3002 | DB: girok_auth
+> Admin & Operator authentication + MFA + Session + Legal + SCIM 2.0 | Port: 3002 | DB: girok_auth
 
 **Phase 4 Migration Applied**: Advanced Features (Delegation, Compliance, Global Mobility) - 15 new tables, 45+ endpoints
+**Phase 10 Applied**: HR Code Removal - All HR implementation removed from auth-service
 
-| Owns                     | Delegates         |
-| ------------------------ | ----------------- |
-| Admin Auth               | -                 |
-| Operator Auth            | -                 |
-| MFA (TOTP/Backup)        | -                 |
-| Session Management       | -                 |
-| Legal Documents          | -                 |
-| Consent Tracking         | -                 |
-| OAuth Config             | Phase 1           |
-| Admin Profile            | Phase 2           |
-| Admin Enterprise         | Phase 2           |
-| NHI Management           | Phase 2           |
-| Attendance               | Phase 3           |
-| Leave Management         | Phase 3           |
-| **Delegation**           | **Phase 4 (NEW)** |
-| **Compliance**           | **Phase 4 (NEW)** |
-| **Global Mobility**      | **Phase 4 (NEW)** |
-| **Country Config**       | **Phase 4 (NEW)** |
-| **Organization History** | **Phase 4 (NEW)** |
+| Owns                     | Delegates   |
+| ------------------------ | ----------- |
+| Admin Auth               | -           |
+| Operator Auth            | -           |
+| MFA (TOTP/Backup)        | -           |
+| Session Management       | -           |
+| Legal Documents          | -           |
+| Consent Tracking         | -           |
+| OAuth Config             | Phase 1     |
+| Admin Profile            | Phase 2     |
+| Admin Enterprise         | Phase 2     |
+| NHI Management           | Phase 2     |
+| **Delegation**           | **Phase 4** |
+| **Compliance**           | **Phase 4** |
+| **Global Mobility**      | **Phase 4** |
+| **Country Config**       | **Phase 4** |
+| **Organization History** | **Phase 4** |
 
 ## Phase 2: Enterprise Admin Management
 
@@ -70,9 +69,7 @@
 - `POST /admin/enterprise/:id/verify` - Verify identity
 - `GET /admin/enterprise/list` - List admins with filters
 
-## Phase 3: Core HR & Admin
-
-### Admin Account Management
+## Phase 3: Admin Account Management
 
 - CRUD operations for admin accounts with role-based access
 - Admin invitation system (email/direct)
@@ -84,31 +81,21 @@
 
 **Permissions:** `system_admin:create`, `system_admin:read`, `system_admin:update`, `system_admin:delete`
 
-### HR Backend (Attendance & Leave)
+## Phase 10: HR Code Removal
 
-**Note**: HR code will be removed in Phase 10 and migrated to a separate hr-service.
+**Status**: Completed
 
-### Attendance Management
+All HR implementation code has been removed from auth-service:
 
-- Clock-in/out tracking with IP/location logging
-- Overtime request & approval workflow
-- Work schedule management (STANDARD/SHIFT/FLEXIBLE)
-- Attendance statistics & reporting (present, late, absent, remote)
+- Attendance module (deleted)
+- Leave module (deleted)
+- Delegation module (deleted)
+- Employee module (deleted)
 
-### Leave Management
+**Note**: Phase 4 Delegation Management remains in compliance module, not the deleted HR delegation.
 
-- Multi-level approval workflow (first → second → final)
-- Leave balance tracking with carryover (max 5 days)
-- Tenure bonus calculation (3/5/10 years)
-- Leave types: ANNUAL, SICK, PARENTAL, UNPAID, COMPENSATORY, STUDY, BEREAVEMENT
-
-### Key Endpoints
-
-**Attendance:** `POST /attendance/clock-in`, `POST /attendance/clock-out`, `GET /attendance/me/stats`, `PATCH /attendance/:id/approve-overtime`
-
-**Leave:** `POST /leaves`, `POST /leaves/:id/submit`, `POST /leaves/:id/approve`, `GET /leaves/pending-approvals`
-
-**Balance:** `GET /leave-balances/me`, `PATCH /leave-balances/:adminId/:year/adjust`, `POST /leave-balances/:adminId/:year/recalculate`
+**HR Data**: HR tables remain in auth_db for historical reference.
+**Future HR**: When needed, HR will be implemented in a separate hr-service.
 
 ## Phase 4: Advanced Features (Delegation, Compliance, Global Mobility)
 
