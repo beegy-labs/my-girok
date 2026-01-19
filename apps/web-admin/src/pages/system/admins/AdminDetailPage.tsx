@@ -106,10 +106,6 @@ function AdminDetailContent({ adminId }: AdminDetailContentProps) {
               <p className="text-theme-text-primary font-medium">{admin.role.displayName}</p>
             </div>
             <div>
-              <p className="text-sm text-theme-text-tertiary">{t('admin.roleDescription')}</p>
-              <p className="text-theme-text-secondary">{admin.role.description || '-'}</p>
-            </div>
-            <div>
               <p className="text-sm text-theme-text-tertiary">{t('admin.roleLevel')}</p>
               <p className="text-theme-text-primary">{admin.role.level}</p>
             </div>

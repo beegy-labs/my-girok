@@ -9,7 +9,7 @@ import type {
   AdminRoleListResponse,
 } from '@my-girok/types';
 import { adminAccountsApi } from '../../../api/adminAccounts';
-import { createKeyedResourceCache, createResource } from '../../../utils/suspense';
+import { createKeyedResourceCache } from '../../../utils/suspense';
 import { toast } from 'sonner';
 
 // Resource caches
@@ -114,7 +114,7 @@ function AdminFormContent({ adminId, onSuccess }: AdminFormContentProps) {
         toast.success(t('admin.createSuccess'));
       }
       onSuccess();
-    } catch (error) {
+    } catch (_error) {
       toast.error(isEdit ? t('admin.updateError') : t('admin.createError'));
     } finally {
       setSubmitting(false);
