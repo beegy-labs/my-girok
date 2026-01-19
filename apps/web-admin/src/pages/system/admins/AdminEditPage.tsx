@@ -1,11 +1,25 @@
-import { useEffect, useState, useCallback } from 'react';
+import { use, useState, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
-import type { CreateAdminRequest, UpdateAdminRequest } from '@my-girok/types';
+import type {
+  CreateAdminRequest,
+  UpdateAdminRequest,
+  AdminAccountDetail,
+  AdminRoleListResponse,
+} from '@my-girok/types';
 import { adminAccountsApi } from '../../../api/adminAccounts';
-import { useApiError } from '../../../hooks/useApiError';
+import { createKeyedResourceCache, createResource } from '../../../utils/suspense';
 import { toast } from 'sonner';
+
+// Resource caches
+const adminDetailCache = createKeyedResourceCache<string, AdminAccountDetail>((adminId) => {
+  return adminAccountsApi.getById(adminId);
+});
+
+const rolesCache = createKeyedResourceCache<string, AdminRoleListResponse>((scope) => {
+  return adminAccountsApi.getRoles({ scope: scope as 'SYSTEM' | 'TENANT' });
+});
 
 interface FormData {
   email: string;
@@ -22,76 +36,33 @@ interface FormErrors {
   roleId?: string;
 }
 
-interface Role {
-  id: string;
-  name: string;
-  displayName: string;
-  level: number;
-  scope: 'SYSTEM' | 'TENANT';
+interface AdminFormContentProps {
+  adminId?: string;
+  onSuccess: () => void;
 }
 
-export default function AdminEditPage() {
+function AdminFormContent({ adminId, onSuccess }: AdminFormContentProps) {
   const { t } = useTranslation();
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const isEdit = !!id;
+  const isEdit = !!adminId;
 
-  const [formData, setFormData] = useState<FormData>({
-    email: '',
-    name: '',
+  // Fetch admin data if editing
+  const existingAdmin = adminId ? use(adminDetailCache.get(adminId).read()) : null;
+
+  // Initialize form with existing data or defaults
+  const [formData, setFormData] = useState<FormData>(() => ({
+    email: existingAdmin?.email || '',
+    name: existingAdmin?.name || '',
     tempPassword: '',
-    roleId: '',
-    scope: 'SYSTEM',
-  });
+    roleId: existingAdmin?.role.id || '',
+    scope: existingAdmin?.scope || 'SYSTEM',
+  }));
+
+  // Fetch roles for the selected scope
+  const rolesData = use(rolesCache.get(formData.scope).read());
+  const roles = rolesData.roles;
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [rolesLoading, setRolesLoading] = useState(false);
-
-  const { executeWithErrorHandling, isLoading: loading } = useApiError({
-    context: 'AdminEditPage',
-    retry: false,
-  });
-
-  const fetchRoles = useCallback(async () => {
-    setRolesLoading(true);
-    try {
-      const response = await adminAccountsApi.getRoles({ scope: formData.scope });
-      setRoles(response.roles);
-    } catch (error) {
-      toast.error(t('admin.rolesLoadError'));
-    } finally {
-      setRolesLoading(false);
-    }
-  }, [formData.scope, t]);
-
-  const fetchAdmin = useCallback(async () => {
-    if (!id) return;
-    const response = await executeWithErrorHandling(async () => {
-      return await adminAccountsApi.getById(id);
-    });
-    if (response) {
-      setFormData({
-        email: response.email,
-        name: response.name,
-        tempPassword: '',
-        roleId: response.role.id,
-        scope: response.scope,
-      });
-    }
-  }, [id, executeWithErrorHandling]);
-
-  useEffect(() => {
-    if (isEdit) {
-      fetchAdmin();
-    }
-  }, [isEdit, fetchAdmin]);
-
-  useEffect(() => {
-    if (!isEdit) {
-      fetchRoles();
-    }
-  }, [isEdit, fetchRoles]);
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -128,9 +99,9 @@ export default function AdminEditPage() {
     try {
       if (isEdit) {
         const updateData: UpdateAdminRequest = { name: formData.name };
-        await adminAccountsApi.update(id!, updateData);
+        await adminAccountsApi.update(adminId!, updateData);
+        adminDetailCache.invalidate(adminId!);
         toast.success(t('admin.updateSuccess'));
-        navigate(`/system/admins/${id}`);
       } else {
         const createData: CreateAdminRequest = {
           email: formData.email,
@@ -141,8 +112,8 @@ export default function AdminEditPage() {
         };
         await adminAccountsApi.create(createData);
         toast.success(t('admin.createSuccess'));
-        navigate('/system/admins');
       }
+      onSuccess();
     } catch (error) {
       toast.error(isEdit ? t('admin.updateError') : t('admin.createError'));
     } finally {
@@ -150,13 +121,160 @@ export default function AdminEditPage() {
     }
   };
 
-  if (isEdit && loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 animate-spin text-theme-text-tertiary" />
+  const handleScopeChange = (newScope: 'SYSTEM' | 'TENANT') => {
+    setFormData({ ...formData, scope: newScope, roleId: '' });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Email */}
+      <div>
+        <label className="block text-sm font-medium text-theme-text-primary mb-2">
+          {t('admin.email')}
+        </label>
+        <input
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          placeholder="admin@example.com"
+          disabled={isEdit}
+          className={`w-full px-4 py-2 bg-theme-bg-secondary border rounded-lg text-theme-text-primary text-sm ${
+            errors.email ? 'border-theme-status-error-text' : 'border-theme-border-default'
+          } ${isEdit ? 'opacity-50 cursor-not-allowed' : ''}`}
+        />
+        {errors.email && (
+          <p className="mt-1 text-xs text-theme-status-error-text">{errors.email}</p>
+        )}
       </div>
-    );
-  }
+
+      {/* Name */}
+      <div>
+        <label className="block text-sm font-medium text-theme-text-primary mb-2">
+          {t('admin.name')}
+        </label>
+        <input
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="John Doe"
+          className={`w-full px-4 py-2 bg-theme-bg-secondary border rounded-lg text-theme-text-primary text-sm ${
+            errors.name ? 'border-theme-status-error-text' : 'border-theme-border-default'
+          }`}
+        />
+        {errors.name && <p className="mt-1 text-xs text-theme-status-error-text">{errors.name}</p>}
+      </div>
+
+      {/* Create-only fields */}
+      {!isEdit && (
+        <>
+          {/* Temp Password */}
+          <div>
+            <label className="block text-sm font-medium text-theme-text-primary mb-2">
+              {t('admin.tempPassword')}
+            </label>
+            <input
+              type="password"
+              value={formData.tempPassword}
+              onChange={(e) => setFormData({ ...formData, tempPassword: e.target.value })}
+              placeholder="********"
+              className={`w-full px-4 py-2 bg-theme-bg-secondary border rounded-lg text-theme-text-primary text-sm ${
+                errors.tempPassword
+                  ? 'border-theme-status-error-text'
+                  : 'border-theme-border-default'
+              }`}
+            />
+            {errors.tempPassword && (
+              <p className="mt-1 text-xs text-theme-status-error-text">{errors.tempPassword}</p>
+            )}
+          </div>
+
+          {/* Scope */}
+          <div>
+            <label className="block text-sm font-medium text-theme-text-primary mb-2">
+              {t('admin.scope')}
+            </label>
+            <select
+              value={formData.scope}
+              onChange={(e) => handleScopeChange(e.target.value as 'SYSTEM' | 'TENANT')}
+              className="w-full px-4 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
+            >
+              <option value="SYSTEM">SYSTEM</option>
+              <option value="TENANT">TENANT</option>
+            </select>
+          </div>
+
+          {/* Role */}
+          <div>
+            <label className="block text-sm font-medium text-theme-text-primary mb-2">
+              {t('admin.role')}
+            </label>
+            <Suspense
+              fallback={
+                <select
+                  disabled
+                  className="w-full px-4 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm opacity-50"
+                >
+                  <option>{t('admin.loadingRoles')}</option>
+                </select>
+              }
+            >
+              <select
+                value={formData.roleId}
+                onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
+                className={`w-full px-4 py-2 bg-theme-bg-secondary border rounded-lg text-theme-text-primary text-sm ${
+                  errors.roleId ? 'border-theme-status-error-text' : 'border-theme-border-default'
+                }`}
+              >
+                <option value="">{t('admin.selectRole')}</option>
+                {roles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.displayName} (Level {role.level})
+                  </option>
+                ))}
+              </select>
+            </Suspense>
+            {errors.roleId && (
+              <p className="mt-1 text-xs text-theme-status-error-text">{errors.roleId}</p>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Buttons */}
+      <div className="flex justify-end gap-4 pt-4">
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="px-4 py-2 border border-theme-border-default rounded-lg text-theme-text-primary hover:bg-theme-bg-secondary transition-colors"
+        >
+          {t('common.cancel')}
+        </button>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+        >
+          {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+          {isEdit ? t('common.save') : t('common.create')}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+export default function AdminEditPage() {
+  const { t } = useTranslation();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const isEdit = !!id;
+
+  const handleSuccess = () => {
+    if (isEdit) {
+      navigate(`/system/admins/${id}`);
+    } else {
+      navigate('/system/admins');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -179,139 +297,15 @@ export default function AdminEditPage() {
           <h2 className="text-lg font-semibold text-theme-text-primary">{t('admin.basicInfo')}</h2>
         </div>
         <div className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-theme-text-primary mb-2">
-                {t('admin.email')}
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="admin@example.com"
-                disabled={isEdit}
-                className={`w-full px-4 py-2 bg-theme-bg-secondary border rounded-lg text-theme-text-primary text-sm ${
-                  errors.email ? 'border-theme-status-error-text' : 'border-theme-border-default'
-                } ${isEdit ? 'opacity-50 cursor-not-allowed' : ''}`}
-              />
-              {errors.email && (
-                <p className="mt-1 text-xs text-theme-status-error-text">{errors.email}</p>
-              )}
-            </div>
-
-            {/* Name */}
-            <div>
-              <label className="block text-sm font-medium text-theme-text-primary mb-2">
-                {t('admin.name')}
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="John Doe"
-                className={`w-full px-4 py-2 bg-theme-bg-secondary border rounded-lg text-theme-text-primary text-sm ${
-                  errors.name ? 'border-theme-status-error-text' : 'border-theme-border-default'
-                }`}
-              />
-              {errors.name && (
-                <p className="mt-1 text-xs text-theme-status-error-text">{errors.name}</p>
-              )}
-            </div>
-
-            {/* Create-only fields */}
-            {!isEdit && (
-              <>
-                {/* Temp Password */}
-                <div>
-                  <label className="block text-sm font-medium text-theme-text-primary mb-2">
-                    {t('admin.tempPassword')}
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.tempPassword}
-                    onChange={(e) => setFormData({ ...formData, tempPassword: e.target.value })}
-                    placeholder="********"
-                    className={`w-full px-4 py-2 bg-theme-bg-secondary border rounded-lg text-theme-text-primary text-sm ${
-                      errors.tempPassword
-                        ? 'border-theme-status-error-text'
-                        : 'border-theme-border-default'
-                    }`}
-                  />
-                  {errors.tempPassword && (
-                    <p className="mt-1 text-xs text-theme-status-error-text">
-                      {errors.tempPassword}
-                    </p>
-                  )}
-                </div>
-
-                {/* Role */}
-                <div>
-                  <label className="block text-sm font-medium text-theme-text-primary mb-2">
-                    {t('admin.role')}
-                  </label>
-                  <select
-                    value={formData.roleId}
-                    onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
-                    disabled={rolesLoading}
-                    className={`w-full px-4 py-2 bg-theme-bg-secondary border rounded-lg text-theme-text-primary text-sm ${
-                      errors.roleId
-                        ? 'border-theme-status-error-text'
-                        : 'border-theme-border-default'
-                    } ${rolesLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <option value="">
-                      {rolesLoading ? t('admin.loadingRoles') : t('admin.selectRole')}
-                    </option>
-                    {roles.map((role) => (
-                      <option key={role.id} value={role.id}>
-                        {role.displayName} (Level {role.level})
-                      </option>
-                    ))}
-                  </select>
-                  {errors.roleId && (
-                    <p className="mt-1 text-xs text-theme-status-error-text">{errors.roleId}</p>
-                  )}
-                </div>
-
-                {/* Scope */}
-                <div>
-                  <label className="block text-sm font-medium text-theme-text-primary mb-2">
-                    {t('admin.scope')}
-                  </label>
-                  <select
-                    value={formData.scope}
-                    onChange={(e) =>
-                      setFormData({ ...formData, scope: e.target.value as 'SYSTEM' | 'TENANT' })
-                    }
-                    className="w-full px-4 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
-                  >
-                    <option value="SYSTEM">SYSTEM</option>
-                    <option value="TENANT">TENANT</option>
-                  </select>
-                </div>
-              </>
-            )}
-
-            {/* Buttons */}
-            <div className="flex justify-end gap-4 pt-4">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="px-4 py-2 border border-theme-border-default rounded-lg text-theme-text-primary hover:bg-theme-bg-secondary transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                {isEdit ? t('common.save') : t('common.create')}
-              </button>
-            </div>
-          </form>
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-theme-text-tertiary" />
+              </div>
+            }
+          >
+            <AdminFormContent adminId={id} onSuccess={handleSuccess} />
+          </Suspense>
         </div>
       </div>
     </div>
