@@ -16,8 +16,6 @@ vi.mock('axios');
 
 describe('OtlpReceiverService', () => {
   let service: OtlpReceiverService;
-  let configService: ConfigService;
-  let cacheManager: any;
 
   const mockContext: TelemetryContext = {
     tenantId: 'tenant-123',
@@ -49,7 +47,6 @@ describe('OtlpReceiverService', () => {
       del: vi.fn((key: string) => cache.delete(key)),
       reset: vi.fn(() => cache.clear()),
     };
-    cacheManager = mockCacheManager;
 
     // Mock axios.create to return a mock HTTP client
     const mockHttpClient = {
@@ -69,7 +66,6 @@ describe('OtlpReceiverService', () => {
     }).compile();
 
     service = module.get<OtlpReceiverService>(OtlpReceiverService);
-    configService = module.get<ConfigService>(ConfigService);
 
     // Initialize the service
     service.onModuleInit();
