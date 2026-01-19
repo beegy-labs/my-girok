@@ -2,143 +2,42 @@
 
 > Admin & Operator authentication + MFA + Session + Legal + SCIM 2.0 | Port: 3002 | DB: girok_auth
 
-**Phase 4 Migration Applied**: Advanced Features (Delegation, Compliance, Global Mobility) - 15 new tables, 45+ endpoints
-**Phase 10 Applied**: HR Code Removal - All HR implementation removed from auth-service
+**Status**: Phase 10 Applied (HR Code Removed) | Phase 4 Applied (Advanced Features)
 
-| Owns                     | Delegates   |
-| ------------------------ | ----------- |
-| Admin Auth               | -           |
-| Operator Auth            | -           |
-| MFA (TOTP/Backup)        | -           |
-| Session Management       | -           |
-| Legal Documents          | -           |
-| Consent Tracking         | -           |
-| OAuth Config             | Phase 1     |
-| Admin Profile            | Phase 2     |
-| Admin Enterprise         | Phase 2     |
-| NHI Management           | Phase 2     |
-| **Delegation**           | **Phase 4** |
-| **Compliance**           | **Phase 4** |
-| **Global Mobility**      | **Phase 4** |
-| **Country Config**       | **Phase 4** |
-| **Organization History** | **Phase 4** |
+| Owns                              | Delegates  |
+| --------------------------------- | ---------- |
+| Admin/Operator Auth, MFA, Session | -          |
+| Legal Documents, Consent          | -          |
+| OAuth Config, Admin Profile       | Phase 1, 2 |
+| NHI, Enterprise Features          | Phase 2    |
+| Delegation, Compliance            | Phase 4    |
+| Global Mobility, Country Config   | Phase 4    |
 
-## Phase 2: Enterprise Admin Management
+## Phases
 
-### Profile Management
+| Phase | Features                         | Tables | Endpoints                                                     |
+| ----- | -------------------------------- | ------ | ------------------------------------------------------------- |
+| 2     | Enterprise Admin, NHI, Profile   | -      | OAuth(4), Profile(7), Enterprise(4)                           |
+| 3     | Admin Account CRUD, Invitations  | -      | Admins(9)                                                     |
+| 4     | Delegation, Compliance, Mobility | 15     | Delegation(4), Compliance(4), Mobility(3), Country(2), Org(2) |
+| 10    | HR Code Removal                  | 0      | 0                                                             |
 
-- SCIM 2.0 Core attributes (username, displayName, givenName, etc.)
-- Employee Info (employeeNumber, employeeType, employmentStatus)
-- Job & Organization (jobTitle, jobGrade, organizationUnit, manager)
-- Partner/Contractor info
-- JML Lifecycle (Joiner-Mover-Leaver: hire, promotion, termination dates)
-- Contact information (phone, mobile, emergency contact)
+**Permissions**: `system_admin:create`, `system_admin:read`, `system_admin:update`, `system_admin:delete`
 
-### Enterprise Features
+## Key Features
 
-- NHI (Non-Human Identity) creation & management
-- Service account lifecycle (credential rotation, expiry)
-- Physical & Tax/Legal location tracking
-- Access control (security clearance, data access level, IP restrictions)
-- Identity verification (KYC/AML levels)
-- JSONB extensions (skills, certifications, education, work history)
+| Feature             | Description                                              |
+| ------------------- | -------------------------------------------------------- |
+| **SCIM 2.0**        | Core attributes, employee info, job/org, JML lifecycle   |
+| **NHI**             | Service accounts, credential rotation                    |
+| **Delegation**      | Authority delegation with approval workflow, constraints |
+| **Compliance**      | Attestations, certifications, training tracking          |
+| **Global Mobility** | Assignments, work authorizations, country configs        |
 
-### API Endpoints
+## Notes
 
-**OAuth Configuration:**
-
-- `GET /oauth-config` - List all providers (MASTER)
-- `GET /oauth-config/enabled` - Get enabled providers (PUBLIC)
-- `PATCH /oauth-config/:provider` - Update credentials (MASTER)
-- `PATCH /oauth-config/:provider/toggle` - Enable/disable (MASTER)
-
-**Admin Profile:**
-
-- `GET /admin/profile/me` - Get own profile
-- `GET /admin/profile/:id` - Get admin profile
-- `PATCH /admin/profile/:id/scim` - Update SCIM Core
-- `PATCH /admin/profile/:id/employee` - Update employee info
-- `PATCH /admin/profile/:id/job` - Update job & organization
-- `PATCH /admin/profile/:id/joiner` - Update joiner info
-- `PATCH /admin/profile/:id/leaver` - Update leaver info
-
-**Enterprise:**
-
-- `POST /admin/enterprise/nhi` - Create NHI
-- `POST /admin/enterprise/:id/nhi/rotate` - Rotate NHI credentials
-- `POST /admin/enterprise/:id/verify` - Verify identity
-- `GET /admin/enterprise/list` - List admins with filters
-
-## Phase 3: Admin Account Management
-
-- CRUD operations for admin accounts with role-based access
-- Admin invitation system (email/direct)
-- Role assignment and permission management
-- Scope-based access (SYSTEM/TENANT)
-- Audit logging for all admin operations
-
-**Key Endpoints:** `POST /admin/admins`, `GET /admin/admins`, `GET /admin/admins/:id`, `PATCH /admin/admins/:id`, `DELETE /admin/admins/:id`, `POST /admin/admins/:id/reactivate`, `GET /admin/admins/roles`, `PATCH /admin/admins/:id/role`, `POST /admin/admins/invite`
-
-**Permissions:** `system_admin:create`, `system_admin:read`, `system_admin:update`, `system_admin:delete`
-
-## Phase 10: HR Code Removal
-
-**Status**: Completed
-
-All HR implementation code has been removed from auth-service:
-
-- Attendance module (deleted)
-- Leave module (deleted)
-- Delegation module (deleted)
-- Employee module (deleted)
-
-**Note**: Phase 4 Delegation Management remains in compliance module, not the deleted HR delegation.
-
-**HR Data**: HR tables remain in auth_db for historical reference.
-**Future HR**: When needed, HR will be implemented in a separate hr-service.
-
-## Phase 4: Advanced Features (Delegation, Compliance, Global Mobility)
-
-### Delegation Management
-
-- Authority delegation with approval workflow
-- Delegation logs for audit trail
-- Constraints: allowed hours, IPs, max actions
-- Auto-expiry and reminder notifications
-
-### Compliance Management
-
-- **Attestations**: Code of conduct, security policies, mandatory acknowledgments
-- **Certifications**: Professional credentials with verification
-- **Training**: Assignment, completion tracking, scoring, recurrence
-
-### Global Mobility
-
-- **Assignments**: International/domestic assignments with compensation tracking
-- **Work Authorizations**: Visas, work permits, residency with expiry alerts
-
-### Country Configuration
-
-- Country-specific HR policies (12 countries pre-populated)
-- Work hours, leave policies, holidays, tax years per country
-- Read-heavy service for global workforce management
-
-### Organization History
-
-- Track promotions, transfers, role changes
-- Approval workflow for organizational changes
-- Compensation and effective date tracking
-
-### Key Endpoints
-
-**Delegation:** `POST /delegations`, `POST /delegations/:id/approve`, `POST /delegations/:id/revoke`, `GET /delegations/:id/logs`
-
-**Compliance:** `POST /compliance/attestations`, `POST /compliance/certifications`, `POST /compliance/training`, `PATCH /compliance/training/:id/complete`
-
-**Global Mobility:** `POST /global-mobility/assignments`, `POST /global-mobility/work-authorizations`, `GET /global-mobility/work-authorizations/expiring`
-
-**Country Config:** `GET /country-configs`, `GET /country-configs/:code`
-
-**Org History:** `POST /organization-history`, `POST /organization-history/:id/approve`
+- **Phase 10**: All HR implementation removed (attendance, leave, delegation, employee modules)
+- **HR Tables**: Remain in auth_db for historical reference
+- **Future HR**: Will be implemented in separate hr-service
 
 **SSOT**: `docs/llm/services/auth-service.md`

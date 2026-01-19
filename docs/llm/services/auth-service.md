@@ -1,7 +1,5 @@
 # auth-service
 
-> **Service Boundary**: Handles authentication, authorization, session management, and enterprise identity (SCIM/JML/NHI) for all platform administrators.
-
 ```yaml
 port: 3002
 grpc: 50052
@@ -11,1098 +9,485 @@ events: auth.* (Redpanda)
 codebase: services/auth-service/
 ```
 
-## 1. Core Concepts
+## Core Concepts
 
-### 1.1. Standard Authentication
+| Concept                | Description                                                 |
+| ---------------------- | ----------------------------------------------------------- |
+| **Admin Auth**         | Login, bcrypt hashing, MFA (TOTP), JWT sessions             |
+| **Session Management** | Issue/validate/revoke sessions, support "revoke all"        |
+| **Legal Consent**      | Track admin consent for ToS, Privacy Policy                 |
+| **SCIM 2.0**           | `admins` table compatible with SCIM Core/Enterprise schemas |
+| **JML**                | Joiner-Mover-Leaver lifecycle tracking                      |
+| **NHI**                | Non-Human Identity (service accounts, API clients)          |
 
-- **Admin Auth**: Manages login, password hashing (bcrypt), MFA (TOTP), and session tokens (JWT) for human administrators.
-- **Session Management**: Issues, validates, and revokes sessions. Supports "revoke all" functionality.
-- **Legal Consent**: Tracks admin consent for legal documents like Terms of Service and Privacy Policy.
+## Database Schema
 
-### 1.2. Phase 2: Enterprise Identity Management
+### admins Table (83 fields)
 
-This service now includes comprehensive enterprise identity features based on industry standards.
+| Field Group         | Key Fields                                                                              | Purpose                      |
+| ------------------- | --------------------------------------------------------------------------------------- | ---------------------------- |
+| **Primary Info**    | id, email, password, name, is_active                                                    | Core authentication          |
+| **SCIM Core**       | username, externalId, displayName, givenName, familyName                                | Standard identity attributes |
+| **Employee Info**   | employeeNumber, employeeType, employmentStatus, lifecycleStatus                         | HR data (SCIM Enterprise)    |
+| **JML Lifecycle**   | hireDate, terminationDate, lastPromotionDate, probationStatus                           | Employee lifecycle dates     |
+| **Job & Org**       | jobTitle, jobGradeId, organizationUnitId, managerAdminId, costCenter                    | Company hierarchy            |
+| **NHI**             | identityType, ownerAdminId, serviceAccountType, credentialType, secretRotationDays      | Bot/service identity         |
+| **Location**        | primaryOfficeId, buildingId, floorId, deskCode, remoteWorkType                          | Physical location            |
+| **Tax/Legal**       | workCountryCode, taxResidenceCountry, payrollCountryCode, legalCountryCode              | Tax/legal tracking           |
+| **Access Control**  | securityClearance, dataAccessLevel, allowedIpRanges, accessEndDate                      | Security attributes          |
+| **Verification**    | identityVerified, verificationMethod, verificationLevel, backgroundCheckStatus          | KYC/AML status               |
+| **JSON Extensions** | skills, certifications, education, workHistory, customAttributes, preferences, metadata | Flexible JSONB storage       |
 
-- **SCIM 2.0 (System for Cross-domain Identity Management)**: The `admins` table is extended to act as a rich user profile store, compatible with the SCIM Core User and Enterprise User schemas. This includes attributes for personal info, employment data, and organizational structure.
-- **JML (Joiner-Mover-Leaver)**: The schema tracks the full employee lifecycle, from hiring (`Joiner`), through promotions and transfers (`Mover`), to termination (`Leaver`).
-- **NHI (Non-Human Identity)**: The service can create and manage service accounts, API clients, and other non-human identities. These are linked to a human owner and have their own lifecycle for credential rotation and expiry.
+**Migration**: `20260116000006_extend_admins_phase2_core.sql`
 
-## 2. Database Schema
+- Foreign key constraints removed (TEXT/UUID mismatch)
+- Referential integrity enforced at application level
 
-The schema is defined in `prisma/schema.prisma`. The most critical table is `admins`.
+### Additional Tables
 
-### 2.1. `admins` Table (Phase 2 Extended)
+| Table                        | Purpose                   | Relations                                             |
+| ---------------------------- | ------------------------- | ----------------------------------------------------- |
+| `admin_attendances`          | Clock in/out records      | admin_id → admins                                     |
+| `admin_work_schedules`       | Work schedule configs     | admin_id → admins                                     |
+| `admin_leaves`               | Leave requests            | admin_id → admins                                     |
+| `admin_leave_balances`       | Annual leave tracking     | admin_id → admins                                     |
+| `admin_delegations`          | Authority delegation      | delegator_id, delegate_id → admins                    |
+| `admin_delegation_logs`      | Delegation audit trail    | delegation_id → admin_delegations                     |
+| `admin_attestations`         | Compliance attestations   | admin_id → admins                                     |
+| `admin_certifications`       | Professional certs        | admin_id → admins                                     |
+| `admin_training_records`     | Training completion       | admin_id → admins                                     |
+| `global_assignments`         | International assignments | admin_id → admins                                     |
+| `work_authorizations`        | Visas/work permits        | admin_id → admins, assignment_id → global_assignments |
+| `country_configs`            | Country HR policies       | None (12 countries pre-populated)                     |
+| `admin_organization_history` | Org change tracking       | admin_id → admins                                     |
+| `job_grade`                  | Job levels/tracks         | None                                                  |
+| `organization_unit`          | Org hierarchy (tree)      | parent_id → self                                      |
+| `legal_entity`               | Legal companies           | None                                                  |
+| `office`                     | Physical offices          | legal_entity_id → legal_entity                        |
+| `building`                   | Buildings in offices      | office_id → office                                    |
+| `floor`                      | Floors in buildings       | building_id → building                                |
+| `partner_company`            | External partners         | None                                                  |
 
-The `admins` table has been extended with 83 fields to support Phase 2.
-
-| Field Group         | Sample Fields                                                                                         | Purpose                                                         |
-| :------------------ | :---------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------- |
-| **Primary Info**    | `id`, `email`, `password`, `name`, `is_active`                                                        | Core authentication and identification.                         |
-| **SCIM Core**       | `username`, `externalId`, `displayName`, `givenName`, `familyName`                                    | Standard identity attributes for interoperability.              |
-| **Employee Info**   | `employeeNumber`, `employeeType`, `employmentStatus`, `lifecycleStatus`                               | HR-specific data aligned with SCIM Enterprise schema.           |
-| **JML Lifecycle**   | `hireDate`, `terminationDate`, `lastPromotionDate`, `probationStatus`                                 | Tracks key dates in the employee lifecycle.                     |
-| **Job & Org**       | `jobTitle`, `jobGradeId`, `organizationUnitId`, `managerAdminId`, `costCenter`                        | Defines the admin's position in the company hierarchy.          |
-| **NHI**             | `identityType`, `ownerAdminId`, `serviceAccountType`, `credentialType`, `secretRotationDays`          | Differentiates humans from bots/services and manages them.      |
-| **Location**        | `primaryOfficeId`, `buildingId`, `floorId`, `deskCode`, `remoteWorkType`                              | Physical location tracking.                                     |
-| **Tax/Legal**       | `workCountryCode`, `taxResidenceCountry`, `payrollCountryCode`, `legalCountryCode`                    | Tax and legal location tracking.                                |
-| **Access Control**  | `securityClearance`, `dataAccessLevel`, `allowedIpRanges`, `accessEndDate`                            | Security and data access-related attributes.                    |
-| **Verification**    | `identityVerified`, `verificationMethod`, `verificationLevel`, `backgroundCheckStatus`                | KYC/AML-related identity verification status.                   |
-| **JSON Extensions** | `skills`, `certifications`, `education`, `workHistory`, `customAttributes`, `preferences`, `metadata` | Flexible JSONB fields for storing structured but non-core data. |
-
-### 2.2. Migration History
-
-- **20260116000006_extend_admins_phase2_core.sql**: Adds 83 enterprise fields to admins table
-  - **Note**: All foreign key constraints were removed due to TEXT/UUID type mismatch (policy requires TEXT for IDs)
-  - Referential integrity is enforced at application level
-
-## 3. Types & Enums
-
-Phase 2 introduces 11 new enum types defined in `packages/types/src/admin/`:
+## Enums
 
 ### Identity & Employment
 
-- **`IdentityType`**: HUMAN, SERVICE_ACCOUNT, BOT, API_CLIENT, INTEGRATION, SYSTEM, EXTERNAL
-- **`EmployeeType`**: REGULAR, CONTRACT, INTERN, PART_TIME, TEMPORARY, CONSULTANT, PARTNER, VENDOR, FREELANCE
-- **`EmploymentStatus`**: ACTIVE, ON_LEAVE, SUSPENDED, TERMINATED, RETIRED, RESIGNED
-- **`AccountLifecycleStatus`**: PENDING, ACTIVE, SUSPENDED, DEACTIVATED, ARCHIVED, DELETED
+```yaml
+IdentityType: [HUMAN, SERVICE_ACCOUNT, BOT, API_CLIENT, INTEGRATION, SYSTEM, EXTERNAL]
+EmployeeType:
+  [REGULAR, CONTRACT, INTERN, PART_TIME, TEMPORARY, CONSULTANT, PARTNER, VENDOR, FREELANCE]
+EmploymentStatus: [ACTIVE, ON_LEAVE, SUSPENDED, TERMINATED, RETIRED, RESIGNED]
+AccountLifecycleStatus: [PENDING, ACTIVE, SUSPENDED, DEACTIVATED, ARCHIVED, DELETED]
+```
 
 ### Service Accounts
 
-- **`ServiceAccountType`**: CI_CD, MONITORING, BACKUP, INTEGRATION, AUTOMATION, TESTING, DATA_PROCESSING, API_SERVICE
-- **`NhiCredentialType`**: API_KEY, OAUTH_CLIENT, SERVICE_PRINCIPAL, CERTIFICATE, SSH_KEY, TOKEN
+```yaml
+ServiceAccountType:
+  [CI_CD, MONITORING, BACKUP, INTEGRATION, AUTOMATION, TESTING, DATA_PROCESSING, API_SERVICE]
+NhiCredentialType: [API_KEY, OAUTH_CLIENT, SERVICE_PRINCIPAL, CERTIFICATE, SSH_KEY, TOKEN]
+```
 
-### Organization & Location
+### Organization
 
-- **`JobFamily`**: ENGINEERING, PRODUCT, DESIGN, MARKETING, SALES, SUPPORT, OPERATIONS, FINANCE, HR, LEGAL, EXECUTIVE
-- **`RemoteWorkType`**: OFFICE, REMOTE, HYBRID, FIELD
+```yaml
+JobFamily:
+  [
+    ENGINEERING,
+    PRODUCT,
+    DESIGN,
+    MARKETING,
+    SALES,
+    SUPPORT,
+    OPERATIONS,
+    FINANCE,
+    HR,
+    LEGAL,
+    EXECUTIVE,
+  ]
+OrgUnitType: [COMPANY, DIVISION, DEPARTMENT, TEAM, SQUAD, TRIBE, CHAPTER, GUILD]
+RemoteWorkType: [OFFICE, REMOTE, HYBRID, FIELD]
+OfficeType: [HEADQUARTERS, BRANCH, SATELLITE, REMOTE, COWORKING]
+PartnerType: [VENDOR, CONTRACTOR, CONSULTANT, AGENCY, SUPPLIER, PARTNER]
+```
 
 ### Access & Security
 
-- **`SecurityClearance`**: PUBLIC, INTERNAL, CONFIDENTIAL, SECRET, TOP_SECRET
-- **`DataAccessLevel`**: PUBLIC, TEAM, DEPARTMENT, COMPANY, RESTRICTED, CLASSIFIED
-
-### Verification
-
-- **`VerificationMethod`**: DOCUMENT, BIOMETRIC, VIDEO_CALL, IN_PERSON, THIRD_PARTY, BACKGROUND_CHECK
-- **`VerificationLevel`**: BASIC, STANDARD, ENHANCED, MAXIMUM
-
-## 4. REST API Endpoints
-
-### 4.1. Standard Auth & Session
-
-- `POST /auth/login`: Admin login with email/password.
-- `POST /auth/login/mfa`: Second-step MFA verification.
-- `POST /auth/refresh`: Refresh session using a refresh token.
-- `POST /auth/logout`: Invalidate current session.
-- `GET /auth/session`: Get current session details.
-
-### 4.2. OAuth Provider Configuration
-
-Dynamic OAuth provider management with encrypted credential storage.
-
-#### GET /oauth-config
-
-Get all OAuth provider configurations with masked secrets.
-
-**Access**: MASTER role only
-**Response**: `OAuthProviderResponseDto[]`
-
-```typescript
-[
-  {
-    provider: 'GOOGLE',
-    enabled: true,
-    clientId: 'your-client-id.apps.googleusercontent.com',
-    clientSecretMasked: '********cret', // Last 4 chars visible
-    callbackUrl: 'https://auth-bff.girok.dev/v1/oauth/google/callback',
-    displayName: 'Google',
-    description: 'Login with Google',
-    updatedAt: '2026-01-16T12:00:00Z',
-    updatedBy: 'admin-uuid',
-  },
-  // ... other providers
-];
+```yaml
+SecurityClearance: [PUBLIC, INTERNAL, CONFIDENTIAL, SECRET, TOP_SECRET]
+DataAccessLevel: [PUBLIC, TEAM, DEPARTMENT, COMPANY, RESTRICTED, CLASSIFIED]
+VerificationMethod: [DOCUMENT, BIOMETRIC, VIDEO_CALL, IN_PERSON, THIRD_PARTY, BACKGROUND_CHECK]
+VerificationLevel: [BASIC, STANDARD, ENHANCED, MAXIMUM]
 ```
 
-#### GET /oauth-config/enabled
+### Attendance & Leave
 
-Get list of enabled OAuth providers (public endpoint for dynamic UI rendering).
-
-**Access**: Public (no authentication required)
-**Response**: `EnabledProvidersResponseDto`
-
-```typescript
-{
-  providers: [
-    {
-      provider: 'GOOGLE',
-      displayName: 'Google',
-      description: 'Login with Google',
-    },
-    {
-      provider: 'KAKAO',
-      displayName: 'Kakao',
-      description: 'Login with Kakao',
-    },
-  ];
-}
+```yaml
+WorkType: [OFFICE, REMOTE, HYBRID, FIELD, BUSINESS_TRIP, CLIENT_SITE, TRAINING]
+LeaveType:
+  [
+    ANNUAL,
+    SICK,
+    PARENTAL,
+    MATERNITY,
+    PATERNITY,
+    BEREAVEMENT,
+    MARRIAGE,
+    UNPAID,
+    COMPENSATORY,
+    PUBLIC_HOLIDAY,
+    SABBATICAL,
+    JURY_DUTY,
+    MILITARY,
+    STUDY,
+    PERSONAL,
+    EMERGENCY,
+  ]
+LeaveStatus: [DRAFT, PENDING, APPROVED, REJECTED, CANCELLED]
+ScheduleType: [STANDARD, SHIFT, FLEXIBLE]
 ```
 
-#### PATCH /oauth-config/:provider
+### Delegation & Compliance
 
-Update OAuth provider credentials (clientId, clientSecret, callbackUrl).
-
-**Access**: MASTER role only
-**Request**: `UpdateCredentialsDto`
-
-```typescript
-{
-  clientId?: string;
-  clientSecret?: string; // Will be encrypted with AES-256-GCM
-  callbackUrl?: string;  // Validated against domain whitelist
-}
+```yaml
+DelegationType: [FULL, PARTIAL, VIEW_ONLY, APPROVAL_ONLY, EMERGENCY]
+DelegationScope: [ALL, TEAM, DEPARTMENT, SERVICE, SPECIFIC_RESOURCES]
+DelegationStatus: [PENDING, ACTIVE, EXPIRED, REVOKED, COMPLETED]
+DelegationReason:
+  [VACATION, SICK_LEAVE, BUSINESS_TRIP, PARENTAL_LEAVE, TRAINING, TEMPORARY_ASSIGNMENT, EMERGENCY]
+AttestationType:
+  [
+    CODE_OF_CONDUCT,
+    SECURITY_POLICY,
+    DATA_PRIVACY,
+    ACCEPTABLE_USE,
+    CONFLICT_OF_INTEREST,
+    INSIDER_TRADING,
+    EXPORT_CONTROL,
+    ANTI_BRIBERY,
+  ]
+AttestationStatus: [PENDING, COMPLETED, WAIVED, EXPIRED]
+CertificationStatus: [ACTIVE, EXPIRED, SUSPENDED, REVOKED]
+TrainingType:
+  [ONBOARDING, SECURITY, COMPLIANCE, TECHNICAL, SOFT_SKILLS, LEADERSHIP, SAFETY, PRODUCT]
+TrainingStatus: [NOT_STARTED, IN_PROGRESS, COMPLETED, FAILED, WAIVED]
 ```
 
-**Response**: `OAuthProviderResponseDto` with masked secret
+### Global Mobility
 
-**Security**:
-
-- Client secret encrypted before storage using AES-256-GCM
-- Callback URL validated against whitelist: localhost, girok.dev, auth.girok.dev, auth-bff.girok.dev
-- Changes logged via audit service
-
-#### PATCH /oauth-config/:provider/toggle
-
-Enable or disable an OAuth provider.
-
-**Access**: MASTER role only
-**Request**: `ToggleProviderDto`
-
-```typescript
-{
-  enabled: boolean;
-}
+```yaml
+AssignmentType:
+  [INTERNATIONAL, DOMESTIC, SHORT_TERM, LONG_TERM, PERMANENT_TRANSFER, TEMPORARY, ROTATIONAL]
+AssignmentStatus: [PLANNED, APPROVED, ACTIVE, COMPLETED, CANCELLED]
+VisaStatus: [NOT_REQUIRED, PENDING, APPROVED, REJECTED, EXPIRED, CANCELLED]
+WorkPermitType: [VISA, WORK_PERMIT, RESIDENCE_PERMIT, PERMANENT_RESIDENCE, CITIZENSHIP, EXEMPTION]
+OrgChangeType:
+  [
+    PROMOTION,
+    DEMOTION,
+    TRANSFER,
+    ROLE_CHANGE,
+    DEPARTMENT_CHANGE,
+    LOCATION_CHANGE,
+    MANAGER_CHANGE,
+    COMPENSATION_CHANGE,
+    JOB_TITLE_CHANGE,
+  ]
+OrgChangeStatus: [PENDING, APPROVED, REJECTED, CANCELLED]
 ```
 
-**Response**: Updated provider configuration
+## REST API
 
-**Note**: LOCAL provider cannot be disabled.
+### Auth & Session
 
-#### GET /oauth-config/:provider/status
+| Endpoint          | Method | Access        | Purpose                   |
+| ----------------- | ------ | ------------- | ------------------------- |
+| `/auth/login`     | POST   | Public        | Admin login (step 1)      |
+| `/auth/login/mfa` | POST   | Public        | MFA verification (step 2) |
+| `/auth/refresh`   | POST   | Authenticated | Refresh session token     |
+| `/auth/logout`    | POST   | Authenticated | Invalidate session        |
+| `/auth/session`   | GET    | Authenticated | Get session details       |
 
-Check if a specific OAuth provider is enabled (public endpoint).
+### OAuth Configuration
 
-**Access**: Public
-**Response**:
+| Endpoint                         | Method | Access | Purpose                                             |
+| -------------------------------- | ------ | ------ | --------------------------------------------------- |
+| `/oauth-config`                  | GET    | MASTER | List all OAuth providers (masked secrets)           |
+| `/oauth-config/enabled`          | GET    | Public | List enabled providers (for UI)                     |
+| `/oauth-config/:provider`        | PATCH  | MASTER | Update provider credentials (AES-256-GCM encrypted) |
+| `/oauth-config/:provider/toggle` | PATCH  | MASTER | Enable/disable provider                             |
+| `/oauth-config/:provider/status` | GET    | Public | Check if provider enabled                           |
 
-```typescript
-{
-  provider: 'GOOGLE',
-  enabled: true
-}
+**Security**: Client secrets encrypted with AES-256-GCM, callback URL whitelist (localhost, girok.dev, auth.girok.dev, auth-bff.girok.dev)
+
+### Admin Profile (21 endpoints)
+
+| Endpoint                      | Method | Purpose                         |
+| ----------------------------- | ------ | ------------------------------- |
+| `/admin/profile/me`           | GET    | Get own profile (all 83 fields) |
+| `/admin/profile/:id`          | GET    | Get admin profile by ID         |
+| `/admin/profile/:id`          | PATCH  | Bulk update multiple sections   |
+| `/admin/profile/:id/scim`     | PATCH  | Update SCIM attributes          |
+| `/admin/profile/:id/employee` | PATCH  | Update employee info            |
+| `/admin/profile/:id/job`      | PATCH  | Update job/org details          |
+| `/admin/profile/:id/partner`  | PATCH  | Update partner info             |
+| `/admin/profile/:id/joiner`   | PATCH  | Update joiner attributes        |
+| `/admin/profile/:id/mover`    | PATCH  | Update mover attributes         |
+| `/admin/profile/:id/leaver`   | PATCH  | Update leaver attributes        |
+| `/admin/profile/:id/contact`  | PATCH  | Update contact info             |
+
+### Admin Enterprise (11 endpoints)
+
+| Endpoint                                      | Method | Purpose                                  |
+| --------------------------------------------- | ------ | ---------------------------------------- |
+| `/admin/enterprise/list`                      | GET    | List/search admins (paginated, filtered) |
+| `/admin/enterprise/nhi`                       | POST   | Create Non-Human Identity                |
+| `/admin/enterprise/:id/nhi`                   | PATCH  | Update NHI attributes                    |
+| `/admin/enterprise/:id/nhi/rotate`            | POST   | Rotate NHI credentials                   |
+| `/admin/enterprise/:id/location/physical`     | PATCH  | Update physical location                 |
+| `/admin/enterprise/:id/location/tax-legal`    | PATCH  | Update tax/legal location                |
+| `/admin/enterprise/:id/access-control`        | PATCH  | Update security clearance/access         |
+| `/admin/enterprise/:id/identity-verification` | PATCH  | Update verification status               |
+| `/admin/enterprise/:id/verify`                | POST   | Perform identity verification            |
+| `/admin/enterprise/:id/extensions`            | PATCH  | Update JSONB extensions                  |
+| `/admin/enterprise/:id`                       | PATCH  | Bulk update enterprise sections          |
+
+### Organization (41 endpoints)
+
+| Entity              | Endpoints                                                                                                                                                                                   | Key Features                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| **Job Grade**       | `POST /job-grades`, `GET /job-grades`, `GET /job-grades/:id`, `GET /job-grades/code/:code`, `PATCH /job-grades/:id`, `DELETE /job-grades/:id`                                               | Code uniqueness, JobFamily filter                               |
+| **Org Unit**        | `POST /org-units`, `GET /org-units`, `GET /org-units/tree`, `GET /org-units/:id`, `GET /org-units/:id/children`, `PATCH /org-units/:id`, `DELETE /org-units/:id`                            | Hierarchical tree, parent validation, no-delete if has children |
+| **Legal Entity**    | `POST /legal-entities`, `GET /legal-entities`, `GET /legal-entities/:id`, `PATCH /legal-entities/:id`, `DELETE /legal-entities/:id`                                                         | Country filter                                                  |
+| **Office**          | `POST /offices`, `GET /offices`, `GET /offices/:id`, `GET /offices/:id/buildings`, `PATCH /offices/:id`, `DELETE /offices/:id`                                                              | Legal entity validation, OfficeType filter                      |
+| **Building**        | `POST /buildings`, `GET /buildings`, `GET /buildings/:id`, `GET /buildings/:id/floors`, `PATCH /buildings/:id`, `DELETE /buildings/:id`                                                     | Office validation                                               |
+| **Floor**           | `POST /floors`, `GET /floors`, `GET /floors/:id`, `PATCH /floors/:id`, `DELETE /floors/:id`                                                                                                 | Building validation, floor_number sort                          |
+| **Partner Company** | `POST /partner-companies`, `GET /partner-companies`, `GET /partner-companies/:id`, `GET /partner-companies/:id/agreements`, `PATCH /partner-companies/:id`, `DELETE /partner-companies/:id` | PartnerType filter                                              |
+
+### Attendance (8 endpoints)
+
+| Endpoint                           | Method | Purpose                                                       |
+| ---------------------------------- | ------ | ------------------------------------------------------------- |
+| `/attendance/clock-in`             | POST   | Clock in (date, workType, location, notes)                    |
+| `/attendance/clock-out`            | POST   | Clock out (date, overtimeMinutes, location)                   |
+| `/attendance/me`                   | GET    | Get own attendance (page, limit, status, workType, dateRange) |
+| `/attendance/me/stats`             | GET    | Get stats (totalDays, presentDays, lateDays, avgWorkMinutes)  |
+| `/attendance/:id/approve-overtime` | PATCH  | Approve overtime (manager)                                    |
+| `/work-schedules`                  | POST   | Create work schedule                                          |
+| `/work-schedules/me`               | GET    | Get own schedules                                             |
+| `/work-schedules/me/active`        | GET    | Get active schedule                                           |
+
+### Leave (13 endpoints)
+
+| Endpoint                                     | Method | Purpose                                                 |
+| -------------------------------------------- | ------ | ------------------------------------------------------- |
+| `/leaves`                                    | POST   | Create leave request (draft)                            |
+| `/leaves/:id/submit`                         | POST   | Submit for approval (firstApproverId, secondApproverId) |
+| `/leaves/:id/approve`                        | POST   | Approve/reject (manager)                                |
+| `/leaves/:id/cancel`                         | POST   | Cancel leave (cancellationReason)                       |
+| `/leaves/me`                                 | GET    | Get own leave requests                                  |
+| `/leaves/pending-approvals`                  | GET    | Get pending approvals (manager)                         |
+| `/leave-balances`                            | POST   | Create balance (HR)                                     |
+| `/leave-balances/me`                         | GET    | Get own balance (current year)                          |
+| `/leave-balances/me/:year`                   | GET    | Get balance by year                                     |
+| `/leave-balances/:adminId/:year`             | GET    | Get admin balance (HR/Manager)                          |
+| `/leave-balances/:adminId/:year/adjust`      | PATCH  | Adjust balance (HR)                                     |
+| `/leave-balances/:adminId/:year/recalculate` | POST   | Recalculate from approved leaves                        |
+| `/leave-balances/:adminId/:year/initialize`  | POST   | Initialize for new year                                 |
+
+### Delegation (9 endpoints)
+
+| Endpoint                    | Method | Purpose                                                               |
+| --------------------------- | ------ | --------------------------------------------------------------------- |
+| `/delegations`              | POST   | Create delegation (delegatorId, delegateId, type, scope, constraints) |
+| `/delegations`              | GET    | List delegations (filter: status, type, dateRange)                    |
+| `/delegations/me/delegated` | GET    | Get delegations I created                                             |
+| `/delegations/me/received`  | GET    | Get delegations I received                                            |
+| `/delegations/:id`          | GET    | Get by ID                                                             |
+| `/delegations/:id`          | PATCH  | Update (endDate, permissions, constraints)                            |
+| `/delegations/:id/approve`  | POST   | Approve/reject delegation                                             |
+| `/delegations/:id/revoke`   | POST   | Revoke (revocationReason)                                             |
+| `/delegations/:id/logs`     | GET    | Get usage logs                                                        |
+
+**Features**: Overlap detection, auto-expiry, action count limits, time/IP constraints, audit logging
+
+### Compliance (18 endpoints)
+
+| Entity             | Endpoints                                                                                 | Key Features                                 |
+| ------------------ | ----------------------------------------------------------------------------------------- | -------------------------------------------- |
+| **Attestations**   | `POST`, `GET`, `GET /:id`, `PATCH /:id/complete`, `PATCH /:id/waive`                      | Recurrence, digital signature, waiver expiry |
+| **Certifications** | `POST`, `GET`, `GET /:id`, `PATCH /:id/verify`, `PATCH /:id/renew`                        | Verification workflow, renewal tracking      |
+| **Training**       | `POST`, `GET`, `GET /:id`, `PATCH /:id/start`, `PATCH /:id/complete`, `PATCH /:id/assign` | Scoring, certificate URLs, mandatory flag    |
+
+### Global Mobility (17 endpoints)
+
+| Entity          | Endpoints                                                                                                                                | Key Features                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| **Assignments** | `POST`, `GET`, `GET /:id`, `PATCH /:id`, `POST /:id/approve`, `POST /:id/start`, `POST /:id/complete`, `POST /:id/cancel`, `DELETE /:id` | Lifecycle (planned→approved→active→completed), compensation tracking, dependent support |
+| **Work Auth**   | `POST`, `GET`, `GET /expiring`, `GET /:id`, `PATCH /:id`, `POST /:id/renew`, `POST /:id/expire`, `DELETE /:id`                           | Expiry alerts (90 days), renewal tracking, visa status                                  |
+
+### Country Config (3 endpoints)
+
+| Endpoint                        | Method | Purpose                                                           |
+| ------------------------------- | ------ | ----------------------------------------------------------------- |
+| `/country-configs`              | GET    | List all countries (12 pre-populated)                             |
+| `/country-configs/:countryCode` | GET    | Get config (work hours, leave entitlement, fiscal year, timezone) |
+| `/country-configs/:countryCode` | PATCH  | Update config (admin only)                                        |
+
+**Data**: US, UK, CA, AU, DE, FR, JP, KR, SG, IN, CN, BR
+
+### Organization History (5 endpoints)
+
+| Endpoint                               | Method | Purpose                                                     |
+| -------------------------------------- | ------ | ----------------------------------------------------------- |
+| `/organization-history`                | POST   | Record org change (promotion, transfer, compensation)       |
+| `/organization-history`                | GET    | List all history (filter: adminId, type, status, dateRange) |
+| `/organization-history/admin/:adminId` | GET    | Get history for admin                                       |
+| `/organization-history/:id`            | GET    | Get by ID                                                   |
+| `/organization-history/:id/approve`    | POST   | Approve change (approverId, approvalNotes)                  |
+
+**Features**: Before/after state, approval workflow, effective date, compensation history
+
+### Employee Self-Service (17 endpoints)
+
+| Module         | Endpoints                                                                                                                                                                                                                                                                | Restrictions                                                                                                                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Profile**    | `GET /employee/profile/me`, `PATCH /employee/profile/me`                                                                                                                                                                                                                 | Limited fields: displayName, nickname, preferredLanguage, locale, timezone, profileUrl, photoUrl, contact info. CANNOT update: email, username, employeeNumber, jobTitle, salary |
+| **Attendance** | `POST /employee/attendance/clock-in`, `POST /employee/attendance/clock-out`, `GET /employee/attendance/me`, `GET /employee/attendance/me/stats`                                                                                                                          | Own data only, GPS/IP tracking, overtime request                                                                                                                                 |
+| **Leave**      | `POST /employee/leave/requests`, `POST /employee/leave/requests/:id/submit`, `POST /employee/leave/requests/:id/cancel`, `GET /employee/leave/requests/me`, `GET /employee/leave/requests/:id`, `GET /employee/leave/balance/me`, `GET /employee/leave/balance/me/:year` | Own data only, multi-level approval, balance deduction/restoration                                                                                                               |
+| **Delegation** | `GET /employee/delegations/received`, `GET /employee/delegations/received/:id`                                                                                                                                                                                           | Read-only, own delegations only                                                                                                                                                  |
+
+**Security**: EmployeeAuthGuard enforces JWT `sub` claim = employee ID, no cross-employee access
+
+## Services
+
+### AdminProfileService
+
+```yaml
+location: src/admin/services/admin-profile.service.ts
+methods:
+  - getAdminDetail(adminId): Fetch profile with relations
+  - mapAdminToDetailResponse(admin): Public mapper (reusable)
+  - updateScimCore(adminId, dto): Update SCIM (username uniqueness check)
+  - updateEmployeeInfo(adminId, dto)
+  - updateJobOrganization(adminId, dto)
+  - updatePartnerInfo(adminId, dto)
+  - updateJoinerInfo(adminId, dto)
+  - updateMoverInfo(adminId, dto)
+  - updateLeaverInfo(adminId, dto)
+  - updateContactInfo(adminId, dto)
+  - updateProfile(adminId, dto): Bulk update (single transaction)
+optimization:
+  - Single query with relations (no post-UPDATE SELECT)
+  - Direct mapping via mapAdminToDetailResponse
+  - Bulk updates use Object.assign (1 query)
 ```
 
-### 4.3. Admin Profile Management (Phase 2)
+### AdminEnterpriseService
 
-#### GET /admin/profile/me
-
-Get the profile of the currently authenticated admin.
-
-**Response**: `AdminDetailResponse` (all 83 fields + relations)
-
-#### GET /admin/profile/:id
-
-Get the detailed profile of any admin by ID.
-
-**Response**: `AdminDetailResponse`
-
-#### PATCH /admin/profile/:id/scim
-
-Update SCIM core attributes.
-
-**Request**: `UpdateScimCoreDto`
-
-```typescript
-{
-  username?: string;
-  externalId?: string;
-  displayName?: string;
-  givenName?: string;
-  familyName?: string;
-  nativeGivenName?: string;
-  nativeFamilyName?: string;
-  nickname?: string;
-  preferredLanguage?: string;
-  locale?: string;
-  timezone?: string;
-  profileUrl?: string;
-  profilePhotoUrl?: string;
-}
+```yaml
+location: src/admin/services/admin-enterprise.service.ts
+methods:
+  - createNhi(dto, createdBy): Create NHI (prevents HUMAN type, validates owner)
+  - updateNhiAttributes(adminId, dto)
+  - rotateNhiCredentials(adminId): Update lastCredentialRotation
+  - updatePhysicalLocation(adminId, dto)
+  - updateTaxLegalLocation(adminId, dto)
+  - updateAccessControl(adminId, dto)
+  - updateIdentityVerification(adminId, dto)
+  - verifyIdentity(adminId, dto, verifiedBy): Audit trail in metadata
+  - updateExtensions(adminId, dto): JSONB fields
+  - updateEnterprise(adminId, dto): Bulk update
+  - listAdmins(query): Paginated search with filters
+  - getDefaultNhiRoleId(): Private helper
+  - getAdminMetadata(adminId): Private helper
+optimization:
+  - listAdmins uses $transaction (2 queries: findMany + count)
+  - All updates include relations in single query
+  - NHI credential rotation enforces identity type check
 ```
 
-#### PATCH /admin/profile/:id/employee
+### Organization Services (7 services)
 
-Update employee information.
-
-**Request**: `UpdateEmployeeInfoDto`
-
-```typescript
-{
-  employeeNumber?: string;
-  employeeType?: EmployeeType;
-  employmentStatus?: EmploymentStatus;
-  lifecycleStatus?: AccountLifecycleStatus;
-}
+```yaml
+location: src/organization/services/
+services:
+  - JobGradeService: code uniqueness, jobFamily/track filter
+  - OrgUnitService: tree structure (recursive buildTree), parent validation, no-delete if has children
+  - LegalEntityService: code uniqueness, countryCode filter
+  - OfficeService: legalEntity validation, findBuildings relation
+  - BuildingService: office validation, findFloors relation
+  - FloorService: building validation, floorNumber sort
+  - PartnerCompanyService: code uniqueness, findAgreements relation
+common_patterns:
+  - Snake_case DB, camelCase DTOs
+  - Private mapToResponse method
+  - Code uniqueness check (ConflictException)
+  - findOne throws NotFoundException
+  - All inject PrismaService
 ```
 
-#### PATCH /admin/profile/:id/job
+### Attendance & Leave Services
 
-Update job and organization details.
-
-**Request**: `UpdateJobOrganizationDto`
-
-```typescript
-{
-  jobGradeId?: string;
-  jobTitle?: string;
-  jobTitleEn?: string;
-  jobCode?: string;
-  jobFamily?: JobFamily;
-  organizationUnitId?: string;
-  costCenter?: string;
-  managerAdminId?: string;
-  dottedLineManagerId?: string;
-  directReportsCount?: number;
-}
+```yaml
+AttendanceService:
+  location: src/attendance/services/attendance.service.ts
+  methods: [clockIn, clockOut, approveOvertime, getAttendanceByDate, listAttendances, getStats]
+  features: Conflict detection, auto work minutes, overtime tracking, IP/location logging
+WorkScheduleService:
+  location: src/attendance/services/work-schedule.service.ts
+  methods: [create, findByAdmin, findActiveByAdmin, findOne, update, remove]
+  features: Auto-deactivate previous, Standard/Shift/Flexible types
+LeaveService:
+  location: src/leave/services/leave.service.ts
+  methods: [create, submit, approve, cancel, findOne, list, getPendingApprovals]
+  features: Overlap detection, multi-level approval, balance deduction/restoration, status transitions
+LeaveBalanceService:
+  location: src/leave/services/leave-balance.service.ts
+  methods: [create, getBalance, getCurrentBalance, adjust, recalculate, initializeForNewYear]
+  features: Carryover (max 5 days), tenure bonus (3/5/10 years), auto recalculation
 ```
 
-#### PATCH /admin/profile/:id/partner
+### Phase 4 Services
 
-Update partner/contractor information.
-
-**Request**: `UpdatePartnerInfoDto`
-
-```typescript
-{
-  partnerCompanyId?: string;
-  partnerEmployeeId?: string;
-  partnerContractEndDate?: string; // ISO date
-}
+```yaml
+DelegationService: CRUD + approval + logging + constraints (time/IP/action count)
+AttestationService: Lifecycle + recurrence + digital signature
+CertificationService: Verification workflow + renewal
+TrainingService: Assignment + completion + scoring
+GlobalAssignmentService: Lifecycle + compensation + dependent tracking
+WorkAuthorizationService: Visa management + expiry alerts (90 days)
+CountryConfigService: Read-heavy (12 countries), HR policy lookups
+OrganizationHistoryService: Org change tracking + approval workflow
 ```
 
-#### PATCH /admin/profile/:id/joiner
+### Phase 5 Services
 
-Update JML joiner attributes.
-
-**Request**: `UpdateJoinerInfoDto`
-
-```typescript
-{
-  hireDate?: string;
-  originalHireDate?: string;
-  startDate?: string;
-  onboardingCompletedAt?: string;
-  probationEndDate?: string;
-  probationStatus?: ProbationStatus;
-}
+```yaml
+EmployeeProfileService: Wraps AdminProfileService, limited fields (displayName, contact)
+EmployeeAttendanceService: Wraps AttendanceService, own data only
+EmployeeLeaveService: Wraps LeaveService + LeaveBalanceService, own data only
+EmployeeDelegationService: Wraps DelegationService, read-only, delegations received
+EmployeeAuthGuard: JWT validation + employee access control (enforces sub claim)
 ```
 
-#### PATCH /admin/profile/:id/mover
+## Performance
 
-Update JML mover attributes.
+### Query Optimization (2026-01-16)
 
-**Request**: `UpdateMoverInfoDto`
+| Operation                 | Before                             | After                         | Reduction |
+| ------------------------- | ---------------------------------- | ----------------------------- | --------- |
+| listAdmins(20)            | 21 queries (1 + 20×getAdminDetail) | 2 queries (findMany + count)  | 91%       |
+| updateScimCore            | 2 queries (UPDATE + SELECT)        | 1 query (UPDATE with include) | 50%       |
+| updateProfile(3 sections) | 4 queries (3 UPDATEs + SELECT)     | 1 query (merged UPDATE)       | 75%       |
 
-```typescript
-{
-  lastRoleChangeAt?: string;
-  lastPromotionDate?: string;
-  lastTransferDate?: string;
-}
-```
+**Techniques**:
 
-#### PATCH /admin/profile/:id/leaver
+- N+1 elimination: $transaction + direct mapping
+- Single UPDATE with include for relations
+- Bulk updates via Object.assign
 
-Update JML leaver attributes.
-
-**Request**: `UpdateLeaverInfoDto`
-
-```typescript
-{
-  terminationDate?: string;
-  lastWorkingDay?: string;
-  terminationReason?: string;
-  terminationType?: string;
-  eligibleForRehire?: boolean;
-  exitInterviewCompleted?: boolean;
-}
-```
-
-#### PATCH /admin/profile/:id/contact
-
-Update contact information.
-
-**Request**: `UpdateContactInfoDto`
-
-```typescript
-{
-  phoneNumber?: string;
-  phoneCountryCode?: string;
-  mobileNumber?: string;
-  mobileCountryCode?: string;
-  workPhone?: string;
-  emergencyContact?: Record<string, any>;
-}
-```
-
-#### PATCH /admin/profile/:id
-
-Update multiple profile sections at once.
-
-**Request**: `UpdateAdminProfileDto`
-
-```typescript
-{
-  scim?: UpdateScimCoreDto;
-  employee?: UpdateEmployeeInfoDto;
-  job?: UpdateJobOrganizationDto;
-  partner?: UpdatePartnerInfoDto;
-  joiner?: UpdateJoinerInfoDto;
-  mover?: UpdateMoverInfoDto;
-  leaver?: UpdateLeaverInfoDto;
-  contact?: UpdateContactInfoDto;
-}
-```
-
-### 4.4. Admin Enterprise Management (Phase 2)
-
-#### GET /admin/enterprise/list
-
-List and search for admins with advanced filters.
-
-**Query Parameters**: `AdminListQueryDto`
-
-```typescript
-{
-  page?: number;              // Default: 1
-  limit?: number;             // Default: 20, Max: 100
-  search?: string;            // Searches name, email, username
-  employeeType?: EmployeeType;
-  identityType?: IdentityType;
-  organizationUnitId?: string;
-  managerAdminId?: string;
-  isActive?: boolean;
-  sortBy?: string;            // Default: 'createdAt'
-  sortOrder?: 'asc' | 'desc'; // Default: 'desc'
-}
-```
-
-**Response**:
-
-```typescript
-{
-  data: AdminDetailResponse[];
-  total: number;
-  page: number;
-  limit: number;
-}
-```
-
-#### POST /admin/enterprise/nhi
-
-Create a new Non-Human Identity.
-
-**Request**: `CreateNhiDto`
-
-```typescript
-{
-  email: string;
-  name: string;
-  identityType: IdentityType;  // Not HUMAN
-  ownerAdminId: string;
-  secondaryOwnerId?: string;
-  nhiPurpose: string;
-  serviceAccountType?: ServiceAccountType;
-  credentialType?: NhiCredentialType;
-  secretRotationDays?: number; // 1-365, default: 90
-  nhiExpiryDate?: string;      // ISO date
-  nhiConfig?: Record<string, any>;
-}
-```
-
-#### PATCH /admin/enterprise/:id/nhi
-
-Update attributes of an NHI.
-
-**Request**: `UpdateNhiAttributesDto`
-
-```typescript
-{
-  identityType?: IdentityType;
-  ownerAdminId?: string;
-  secondaryOwnerId?: string;
-  nhiPurpose?: string;
-  serviceAccountType?: ServiceAccountType;
-  credentialType?: NhiCredentialType;
-  secretRotationDays?: number;
-  nhiExpiryDate?: string;
-  lastCredentialRotation?: string;
-  nhiConfig?: Record<string, any>;
-}
-```
-
-#### POST /admin/enterprise/:id/nhi/rotate
-
-Trigger credential rotation for an NHI.
-
-**Response**:
-
-```typescript
-{
-  rotatedAt: Date;
-}
-```
-
-#### PATCH /admin/enterprise/:id/location/physical
-
-Update physical location details.
-
-**Request**: `UpdatePhysicalLocationDto`
-
-```typescript
-{
-  legalEntityId?: string;
-  primaryOfficeId?: string;
-  buildingId?: string;
-  floorId?: string;
-  deskCode?: string;
-  remoteWorkType?: RemoteWorkType;
-}
-```
-
-#### PATCH /admin/enterprise/:id/location/tax-legal
-
-Update tax and legal location details.
-
-**Request**: `UpdateTaxLegalLocationDto`
-
-```typescript
-{
-  legalCountryCode?: string;
-  workCountryCode?: string;
-  taxResidenceCountry?: string;
-  payrollCountryCode?: string;
-}
-```
-
-#### PATCH /admin/enterprise/:id/access-control
-
-Update security clearance and access levels.
-
-**Request**: `UpdateAccessControlDto`
-
-```typescript
-{
-  securityClearance?: SecurityClearance;
-  dataAccessLevel?: DataAccessLevel;
-  accessEndDate?: string;
-  allowedIpRanges?: string[];
-}
-```
-
-#### PATCH /admin/enterprise/:id/identity-verification
-
-Update identity verification status.
-
-**Request**: `UpdateIdentityVerificationDto`
-
-```typescript
-{
-  identityVerified?: boolean;
-  identityVerifiedAt?: string;
-  verificationMethod?: VerificationMethod;
-  verificationLevel?: VerificationLevel;
-  backgroundCheckStatus?: string;
-  backgroundCheckDate?: string;
-}
-```
-
-#### POST /admin/enterprise/:id/verify
-
-Perform an identity verification action.
-
-**Request**: `VerifyAdminIdentityDto`
-
-```typescript
-{
-  method: VerificationMethod;
-  level: VerificationLevel;
-  documentId?: string;
-  notes?: Record<string, any>;
-}
-```
-
-**Behavior**: Sets `identityVerified` to true, records timestamp, and stores verification details in metadata.
-
-#### PATCH /admin/enterprise/:id/extensions
-
-Update JSONB extension attributes.
-
-**Request**: `UpdateExtensionAttributesDto`
-
-```typescript
-{
-  skills?: Array<{
-    name: string;
-    level?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
-    yearsOfExperience?: number;
-    certifiedAt?: string;
-  }>;
-  certifications?: Array<{
-    name: string;
-    issuer: string;
-    issuedAt?: string;
-    expiresAt?: string;
-    credentialId?: string;
-    url?: string;
-  }>;
-  education?: Array<{
-    institution: string;
-    degree?: string;
-    fieldOfStudy?: string;
-    startDate?: string;
-    endDate?: string;
-    gpa?: number;
-  }>;
-  workHistory?: Array<{
-    company: string;
-    title: string;
-    startDate?: string;
-    endDate?: string;
-    description?: string;
-    location?: string;
-  }>;
-  customAttributes?: Record<string, any>;
-  preferences?: Record<string, any>;
-  metadata?: Record<string, any>;
-}
-```
-
-#### PATCH /admin/enterprise/:id
-
-Update multiple enterprise sections at once.
-
-**Request**: `UpdateAdminEnterpriseDto`
-
-```typescript
-{
-  nhi?: UpdateNhiAttributesDto;
-  physicalLocation?: UpdatePhysicalLocationDto;
-  taxLegalLocation?: UpdateTaxLegalLocationDto;
-  accessControl?: UpdateAccessControlDto;
-  identityVerification?: UpdateIdentityVerificationDto;
-  extensions?: UpdateExtensionAttributesDto;
-}
-```
-
-### 4.5. Organization Management (Phase 2)
-
-This service manages organizational entities that define company structure and relationships.
-
-#### Organization Entities
-
-The organization module provides CRUD APIs for 7 entity types:
-
-| Entity                | Purpose                                         | Key Relations                          |
-| :-------------------- | :---------------------------------------------- | :------------------------------------- |
-| **Job Grade**         | Define job levels and career tracks             | Used by admins table                   |
-| **Organization Unit** | Hierarchical org structure (departments, teams) | Parent-child tree, used by admins      |
-| **Legal Entity**      | Legal companies/subsidiaries                    | Has offices, used by admins            |
-| **Office**            | Physical office locations                       | Belongs to legal entity, has buildings |
-| **Building**          | Buildings within offices                        | Belongs to office, has floors          |
-| **Floor**             | Floors within buildings                         | Belongs to building, used by admins    |
-| **Partner Company**   | External partner organizations                  | Has service agreements                 |
-
-#### Job Grade API
-
-**Endpoints**:
-
-- `POST /organization/job-grades`: Create job grade
-- `GET /organization/job-grades`: List all (filter by jobFamily, track, isActive)
-- `GET /organization/job-grades/:id`: Get by ID
-- `GET /organization/job-grades/code/:code`: Get by code
-- `PATCH /organization/job-grades/:id`: Update job grade
-- `DELETE /organization/job-grades/:id`: Delete job grade
-
-**JobFamily Enum**: `ENGINEERING`, `PRODUCT`, `DESIGN`, `MARKETING`, `SALES`, `SUPPORT`, `OPERATIONS`, `FINANCE`, `HR`, `LEGAL`, `EXECUTIVE`
-
-**Example Request** (`CreateJobGradeDto`):
-
-```typescript
-{
-  code: 'IC5',
-  name: 'Senior Engineer',
-  jobFamily: 'ENGINEERING',
-  level: 5,              // 1-10
-  track: 'IC',           // IC or M
-  description?: string,
-  isActive?: boolean
-}
-```
-
-#### Organization Unit API
-
-**Endpoints**:
-
-- `POST /organization/org-units`: Create organization unit
-- `GET /organization/org-units`: List all (filter by orgType, parentId, isActive)
-- `GET /organization/org-units/tree`: Get hierarchical tree structure
-- `GET /organization/org-units/:id`: Get by ID
-- `GET /organization/org-units/:id/children`: Get direct children
-- `PATCH /organization/org-units/:id`: Update organization unit
-- `DELETE /organization/org-units/:id`: Delete (only if no children)
-
-**OrgUnitType Enum**: `COMPANY`, `DIVISION`, `DEPARTMENT`, `TEAM`, `SQUAD`, `TRIBE`, `CHAPTER`, `GUILD`
-
-**Example Request** (`CreateOrgUnitDto`):
-
-```typescript
-{
-  code: 'ENG',
-  name: 'Engineering',
-  orgType: 'DEPARTMENT',
-  parentId?: string,           // Parent org unit ID
-  managerAdminId?: string,     // Manager admin ID
-  description?: string,
-  isActive?: boolean
-}
-```
-
-**Tree Response** (`OrgUnitTreeNodeDto`):
-
-```typescript
-{
-  id: string,
-  code: string,
-  name: string,
-  orgType: OrgUnitType,
-  parentId?: string,
-  managerAdminId?: string,
-  children: OrgUnitTreeNodeDto[] // Recursive
-}
-```
-
-#### Legal Entity API
-
-**Endpoints**:
-
-- `POST /organization/legal-entities`: Create legal entity
-- `GET /organization/legal-entities`: List all (filter by countryCode, isActive)
-- `GET /organization/legal-entities/:id`: Get by ID
-- `PATCH /organization/legal-entities/:id`: Update legal entity
-- `DELETE /organization/legal-entities/:id`: Delete legal entity
-
-**Example Request** (`CreateLegalEntityDto`):
-
-```typescript
-{
-  code: 'BEEGY-KR',
-  name: 'Beegy Korea Inc.',
-  legalName: 'Beegy Korea Inc.',
-  countryCode: 'KR',
-  taxId?: string,
-  registeredAddress?: string,
-  description?: string,
-  isActive?: boolean
-}
-```
-
-#### Office API
-
-**Endpoints**:
-
-- `POST /organization/offices`: Create office
-- `GET /organization/offices`: List all (filter by officeType, legalEntityId, countryCode, isActive)
-- `GET /organization/offices/:id`: Get by ID
-- `GET /organization/offices/:id/buildings`: Get buildings for this office
-- `PATCH /organization/offices/:id`: Update office
-- `DELETE /organization/offices/:id`: Delete office
-
-**OfficeType Enum**: `HEADQUARTERS`, `BRANCH`, `SATELLITE`, `REMOTE`, `COWORKING`
-
-**Example Request** (`CreateOfficeDto`):
-
-```typescript
-{
-  code: 'SEL-HQ',
-  name: 'Seoul Headquarters',
-  officeType: 'HEADQUARTERS',
-  legalEntityId: string,    // Must exist
-  countryCode: 'KR',
-  city?: string,
-  address?: string,
-  phoneNumber?: string,
-  description?: string,
-  isActive?: boolean
-}
-```
-
-#### Building API
-
-**Endpoints**:
-
-- `POST /organization/buildings`: Create building
-- `GET /organization/buildings`: List all (filter by officeId, isActive)
-- `GET /organization/buildings/:id`: Get by ID
-- `GET /organization/buildings/:id/floors`: Get floors for this building
-- `PATCH /organization/buildings/:id`: Update building
-- `DELETE /organization/buildings/:id`: Delete building
-
-**Example Request** (`CreateBuildingDto`):
-
-```typescript
-{
-  code: 'SEL-A',
-  name: 'Building A',
-  officeId: string,      // Must exist
-  address?: string,
-  totalFloors?: number,
-  description?: string,
-  isActive?: boolean
-}
-```
-
-#### Floor API
-
-**Endpoints**:
-
-- `POST /organization/floors`: Create floor
-- `GET /organization/floors`: List all (filter by buildingId, isActive)
-- `GET /organization/floors/:id`: Get by ID
-- `PATCH /organization/floors/:id`: Update floor
-- `DELETE /organization/floors/:id`: Delete floor
-
-**Example Request** (`CreateFloorDto`):
-
-```typescript
-{
-  code: 'SEL-A-5F',
-  name: '5th Floor',
-  buildingId: string,     // Must exist
-  floorNumber: number,
-  floorArea?: number,
-  description?: string,
-  isActive?: boolean
-}
-```
-
-#### Partner Company API
-
-**Endpoints**:
-
-- `POST /organization/partner-companies`: Create partner company
-- `GET /organization/partner-companies`: List all (filter by partnerType, isActive)
-- `GET /organization/partner-companies/:id`: Get by ID
-- `GET /organization/partner-companies/:id/agreements`: Get service agreements
-- `PATCH /organization/partner-companies/:id`: Update partner company
-- `DELETE /organization/partner-companies/:id`: Delete partner company
-
-**PartnerType Enum**: `VENDOR`, `CONTRACTOR`, `CONSULTANT`, `AGENCY`, `SUPPLIER`, `PARTNER`
-
-**Example Request** (`CreatePartnerCompanyDto`):
-
-```typescript
-{
-  code: 'ACME',
-  name: 'ACME Corporation',
-  partnerType: 'VENDOR',
-  contactEmail?: string,
-  contactPhone?: string,
-  contactPerson?: string,
-  taxId?: string,
-  address?: string,
-  description?: string,
-  isActive?: boolean
-}
-```
-
-### 4.6. AdminDetailResponse Structure
-
-All profile and enterprise endpoints return `AdminDetailResponse`:
-
-```typescript
-{
-  // Core fields (10)
-  id: string;
-  email: string;
-  name: string;
-  scope: string;
-  tenantId: string | null;
-  roleId: string;
-  isActive: boolean;
-  lastLoginAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-  accountMode: string;
-  countryCode: string | null;
-
-  // SCIM Core (12)
-  username?: string;
-  externalId?: string;
-  displayName?: string;
-  givenName?: string;
-  familyName?: string;
-  nativeGivenName?: string;
-  nativeFamilyName?: string;
-  nickname?: string;
-  preferredLanguage?: string;
-  locale?: string;
-  timezone?: string;
-  profileUrl?: string;
-  profilePhotoUrl?: string;
-
-  // Employee Info (4)
-  employeeNumber?: string;
-  employeeType?: EmployeeType;
-  employmentStatus?: EmploymentStatus;
-  lifecycleStatus?: AccountLifecycleStatus;
-
-  // Job & Organization (10)
-  jobGradeId?: string;
-  jobTitle?: string;
-  jobTitleEn?: string;
-  jobCode?: string;
-  jobFamily?: JobFamily;
-  organizationUnitId?: string;
-  costCenter?: string;
-  managerAdminId?: string;
-  dottedLineManagerId?: string;
-  directReportsCount?: number;
-
-  // Partner (3)
-  partnerCompanyId?: string;
-  partnerEmployeeId?: string;
-  partnerContractEndDate?: Date;
-
-  // JML - Joiner (6)
-  hireDate?: Date;
-  originalHireDate?: Date;
-  startDate?: Date;
-  onboardingCompletedAt?: Date;
-  probationEndDate?: Date;
-  probationStatus?: ProbationStatus;
-
-  // JML - Mover (3)
-  lastRoleChangeAt?: Date;
-  lastPromotionDate?: Date;
-  lastTransferDate?: Date;
-
-  // JML - Leaver (6)
-  terminationDate?: Date;
-  lastWorkingDay?: Date;
-  terminationReason?: string;
-  terminationType?: string;
-  eligibleForRehire?: boolean;
-  exitInterviewCompleted?: boolean;
-
-  // Contact (6)
-  phoneNumber?: string;
-  phoneCountryCode?: string;
-  mobileNumber?: string;
-  mobileCountryCode?: string;
-  workPhone?: string;
-  emergencyContact?: Record<string, any>;
-
-  // Relations (3)
-  role?: {
-    id: string;
-    name: string;
-    displayName: string;
-    level: number;
-  };
-  tenant?: {
-    id: string;
-    name: string;
-    slug: string;
-    type: string;
-    status: string;
-  };
-  manager?: {
-    id: string;
-    name: string;
-    email: string;
-    jobTitle?: string;
-  };
-}
-```
-
-## 5. Services Architecture
-
-### 5.1. AdminProfileService
-
-Located at: `src/admin/services/admin-profile.service.ts`
-
-**Methods** (9):
-
-- `getAdminDetail(adminId)`: Fetch complete admin profile with relations
-- `mapAdminToDetailResponse(admin)`: Public mapper method for converting Prisma result to DTO
-- `updateScimCore(adminId, dto)`: Update SCIM attributes with username uniqueness check
-- `updateEmployeeInfo(adminId, dto)`: Update employee information
-- `updateJobOrganization(adminId, dto)`: Update job and org details
-- `updatePartnerInfo(adminId, dto)`: Update partner information
-- `updateJoinerInfo(adminId, dto)`: Update joiner lifecycle attributes
-- `updateMoverInfo(adminId, dto)`: Update mover lifecycle attributes
-- `updateLeaverInfo(adminId, dto)`: Update leaver lifecycle attributes
-- `updateContactInfo(adminId, dto)`: Update contact information
-- `updateProfile(adminId, dto)`: Bulk update multiple sections in single transaction
-
-**Key Features**:
-
-- All update methods use single query with `include` for relations
-- Direct mapping eliminates unnecessary SELECT after UPDATE
-- `mapAdminToDetailResponse` is public for reuse by other services
-
-### 5.2. AdminEnterpriseService
-
-Located at: `src/admin/services/admin-enterprise.service.ts`
-
-**Methods** (12):
-
-- `createNhi(dto, createdBy)`: Create new NHI with validation (prevents HUMAN type)
-- `updateNhiAttributes(adminId, dto)`: Update NHI attributes
-- `rotateNhiCredentials(adminId)`: Rotate credentials and update timestamp
-- `updatePhysicalLocation(adminId, dto)`: Update physical location
-- `updateTaxLegalLocation(adminId, dto)`: Update tax/legal location
-- `updateAccessControl(adminId, dto)`: Update access control settings
-- `updateIdentityVerification(adminId, dto)`: Update verification status
-- `verifyIdentity(adminId, dto, verifiedBy)`: Perform verification action with audit trail
-- `updateExtensions(adminId, dto)`: Update JSONB extension attributes
-- `updateEnterprise(adminId, dto)`: Bulk update multiple enterprise sections
-- `listAdmins(query)`: List/search admins with pagination and filters
-- `getDefaultNhiRoleId()`: Private helper to get NHI default role
-- `getAdminMetadata(adminId)`: Private helper to retrieve metadata for merging
-
-**Key Features**:
-
-- NHI creation validates owner exists and auto-generates random password
-- Credential rotation enforces identity type check (NHI only)
-- `listAdmins` uses `$transaction` for atomic read of data and count
-- All updates include relations in single query (optimized)
-- `verifyIdentity` merges verification details into metadata JSONB
-
-### 5.3. Organization Services (Phase 2)
-
-Located at: `src/organization/services/`
-
-The organization module provides 7 services for managing organizational entities:
-
-#### JobGradeService
-
-**Methods**: `create`, `findAll`, `findOne`, `findByCode`, `update`, `remove`
-
-**Features**:
-
-- Code uniqueness validation
-- Filter by jobFamily, track, isActive
-- Sort by level ascending, then track
-
-#### OrgUnitService
-
-**Methods**: `create`, `findAll`, `findTree`, `findOne`, `findChildren`, `update`, `remove`
-
-**Features**:
-
-- Hierarchical tree structure with recursive `buildTree` method
-- Parent-child validation (no self-parent, no circular references)
-- Cannot delete unit with children
-- Filter by orgType, parentId, isActive
-
-#### LegalEntityService
-
-**Methods**: `create`, `findAll`, `findOne`, `update`, `remove`
-
-**Features**:
-
-- Code uniqueness validation
-- Filter by countryCode, isActive
-
-#### OfficeService
-
-**Methods**: `create`, `findAll`, `findOne`, `findBuildings`, `update`, `remove`
-
-**Features**:
-
-- Validates legalEntity exists before creating
-- `findBuildings` returns related buildings
-- Filter by officeType, legalEntityId, countryCode, isActive
-
-#### BuildingService
-
-**Methods**: `create`, `findAll`, `findOne`, `findFloors`, `update`, `remove`
-
-**Features**:
-
-- Validates office exists before creating
-- `findFloors` returns related floors
-- Filter by officeId, isActive
-
-#### FloorService
-
-**Methods**: `create`, `findAll`, `findOne`, `update`, `remove`
-
-**Features**:
-
-- Validates building exists before creating
-- Sorted by floor_number ascending
-- Filter by buildingId, isActive
-
-#### PartnerCompanyService
-
-**Methods**: `create`, `findAll`, `findOne`, `findAgreements`, `update`, `remove`
-
-**Features**:
-
-- Code uniqueness validation
-- `findAgreements` returns partner service agreements
-- Filter by partnerType, isActive
-
-**Common Patterns**:
-
-- All services use snake_case for database fields, camelCase for DTOs
-- All services have private `mapToResponse` method for DB-to-DTO conversion
-- All create methods check for duplicate codes (ConflictException)
-- All findOne methods throw NotFoundException when not found
-- All services inject PrismaService for database operations
-
-## 6. Performance Optimizations
-
-### 6.1. Query Optimization (Applied: 2026-01-16)
-
-**N+1 Query Elimination in `listAdmins`**:
-
-- **Before**: 21+ queries for 20 items (1 initial + 20 × getAdminDetail)
-- **After**: 2 queries (1 findMany with relations + 1 count)
-- **Method**: Use `$transaction` and direct mapping via `mapAdminToDetailResponse`
-
-**Unnecessary SELECT Removal**:
-
-- **Before**: All `update*` methods called `getAdminDetail` after UPDATE (2 queries each)
-- **After**: Single UPDATE with `include` for relations, direct mapping (1 query each)
-- **Methods affected**: All 9 AdminProfileService + 7 AdminEnterpriseService update methods
-
-**Bulk Update Consolidation**:
-
-- **Before**: `updateProfile` with 3 sections = 4 queries (3 updates + 1 final select)
-- **After**: Single UPDATE merging all sections with `Object.assign` = 1 query
-- **Methods**: `updateProfile`, `updateEnterprise`
-
-**Performance Gains**:
-
-- `listAdmins(20 items)`: 91% reduction (21→2 queries)
-- `updateScimCore`: 50% reduction (2→1 query)
-- `updateProfile(3 sections)`: 75% reduction (4→1 query)
-
-### 6.2. Prisma Configuration
+### Prisma Config
 
 ```prisma
 generator client {
@@ -1112,1314 +497,272 @@ generator client {
 }
 ```
 
-- **relationJoins**: Enables optimized SQL JOINs instead of N+1 queries
-- **typedSql**: Future-proofing for raw SQL with type safety
+**Features**: relationJoins (optimized JOINs), typedSql (future-proofing)
 
-### 6.3. Database Indexes
+### Database Indexes
 
-Critical indexes on `admins` table:
+```yaml
+admins:
+  - username (UNIQUE): SCIM lookup
+  - employee_number (UNIQUE): Employee lookup
+  - manager_admin_id: Hierarchy queries
+  - organization_unit_id: Org filtering
+  - identity_type: NHI filtering
+```
 
-- `username` (UNIQUE): Fast username lookup for SCIM
-- `employee_number` (UNIQUE): Fast employee number lookup
-- `manager_admin_id`: Optimizes hierarchy queries
-- `organization_unit_id`: Optimizes org unit filtering
-- `identity_type`: Optimizes NHI filtering
+## gRPC
 
-## 7. gRPC Interface
+```yaml
+proto: packages/proto/auth/v1/auth.proto
+methods:
+  - AdminLogin: Step 1
+  - AdminLoginMfa: Step 2
+  - AdminValidateSession: Validate token
+  - AdminRefreshSession: Refresh expired
+  - AdminLogout: Invalidate
+```
 
-This service exposes gRPC methods for high-performance internal communication.
+## Events (Outbox Pattern)
 
-Proto: `packages/proto/auth/v1/auth.proto`
+| Event                     | Trigger               | Payload                     |
+| ------------------------- | --------------------- | --------------------------- |
+| `admin.created`           | New admin account     | ID, email, name, scope      |
+| `admin.updated`           | Profile updated       | ID, updated fields          |
+| `admin.terminated`        | Employment terminated | ID, terminationDate, reason |
+| `nhi.created`             | New NHI created       | ID, ownerID, purpose, type  |
+| `nhi.credentials.rotated` | Credentials rotated   | ID, rotatedAt               |
 
-| Method                 | Description                       |
-| :--------------------- | :-------------------------------- |
-| `AdminLogin`           | Admin login (Step 1).             |
-| `AdminLoginMfa`        | MFA verification (Step 2).        |
-| `AdminValidateSession` | Validate a session token.         |
-| `AdminRefreshSession`  | Refresh an expired session.       |
-| `AdminLogout`          | Log out and invalidate a session. |
+## Testing
 
-## 8. Events (Outbound)
+### Coverage Summary
 
-The service uses the outbox pattern to publish events to Redpanda.
+```yaml
+total_tests: 1359+
+total_suites: 50+
+coverage_target: 80%
+status: 100% passing
 
-| Event                     | Trigger                                 | Payload                            |
-| :------------------------ | :-------------------------------------- | :--------------------------------- |
-| `admin.created`           | A new admin account is created.         | Admin ID, email, name, scope       |
-| `admin.updated`           | An admin's profile is updated.          | Admin ID, updated fields           |
-| `admin.terminated`        | An admin's employment is terminated.    | Admin ID, termination date, reason |
-| `nhi.created`             | A new non-human identity is created.    | NHI ID, owner ID, purpose, type    |
-| `nhi.credentials.rotated` | An NHI's credentials have been rotated. | NHI ID, rotation timestamp         |
+modules:
+  admin:
+    profile: 11 tests
+    enterprise: 15 tests
+  organization: 73 tests (84.22% coverage)
+  attendance: 63 tests (80%+)
+  leave: 66 tests (80%+)
+  delegation: 18 tests (80%+)
+  compliance: 22 tests (80%+)
+  global_mobility: 17 tests (80%+)
+  country_config: 9 tests (80%+)
+  org_history: 11 tests (80%+)
+  employee_self_service: 30 tests (100% passing)
+```
 
-## 9. Testing
-
-### 9.1. Test Coverage
-
-**Admin Module**: 26 tests across 2 test suites
-
-- `admin-profile.service.spec.ts`: 11 tests
-- `admin-enterprise.service.spec.ts`: 15 tests
-
-**Organization Module**: 73 tests across 7 test suites
-
-- `job-grade.service.spec.ts`: 14 tests
-- `org-unit.service.spec.ts`: 16 tests
-- `legal-entity.service.spec.ts`: 11 tests
-- `office.service.spec.ts`: 9 tests
-- `building.service.spec.ts`: 7 tests
-- `floor.service.spec.ts`: 7 tests
-- `partner-company.service.spec.ts`: 9 tests
-
-**Total**: 99 tests across 9 test suites
-
-**Coverage Status**: ✅ All tests passing
-
-- Organization services: 84.22% overall coverage (exceeds 80% target)
-- Individual service coverage: 62-97% (varies by service)
-
-**Test Categories**:
+### Test Categories
 
 - Service initialization
-- CRUD operations for all sections
-- Code uniqueness validation (ConflictException)
+- CRUD operations
+- Code uniqueness (ConflictException)
 - Foreign key validation (NotFoundException)
-- Hierarchical tree operations (OrgUnitService)
-- Relationship queries (findBuildings, findFloors, findAgreements)
-- Filter and query parameter validation
+- Hierarchical operations (tree)
+- Relationship queries
+- Filter/query validation
 - Error handling (NotFoundException, ConflictException, BadRequestException)
 
-### 9.2. Test Files
+### Mock Strategy
 
-**Admin Tests**: `src/admin/services/`
+```yaml
+mocks:
+  - PrismaService (all DB ops)
+  - AdminProfileService (cross-service dependencies)
+  - All organization entity tables
+framework: Vitest
+```
 
-- `admin-profile.service.spec.ts`
-- `admin-enterprise.service.spec.ts`
+## Security
 
-**Organization Tests**: `src/organization/services/`
+### NHI Security
 
-- `job-grade.service.spec.ts`
-- `org-unit.service.spec.ts`
-- `legal-entity.service.spec.ts`
-- `office.service.spec.ts`
-- `building.service.spec.ts`
-- `floor.service.spec.ts`
-- `partner-company.service.spec.ts`
+- Cannot create with HUMAN identity type
+- Credential rotation interval (default: 90 days)
+- Must have human owner (ownerAdminId required)
 
-### 9.3. Mock Strategy
+### Access Control
 
-Tests use Vitest mocks for:
+- AdminAuthGuard on all endpoints
+- EmployeeAuthGuard for self-service endpoints (JWT sub claim enforcement)
+- Security clearance enforcement at app level
+- IP range restrictions (allowedIpRanges array)
+- Access end dates (accessEndDate)
 
-- PrismaService (all database operations)
-- AdminProfileService (for cross-service dependencies)
-- All organization entity tables (job_grade, organization_unit, legal_entity, office, building, floor, partner_company)
+### Identity Verification
 
-## 10. Security Considerations
+- KYC/AML status (method, level, backgroundCheck)
+- Verification audit trail (metadata JSONB)
 
-### 10.1. NHI Security
+### OAuth Configuration
 
-- NHI cannot be created with `HUMAN` identity type (validation enforced)
-- NHI credentials must be rotated within configured interval (default: 90 days)
-- NHI must have human owner (enforced via `ownerAdminId`)
+- Client secrets encrypted (AES-256-GCM)
+- Callback URL whitelist (localhost, girok.dev, auth.girok.dev, auth-bff.girok.dev)
+- Audit logging for credential changes
 
-### 10.2. Access Control
-
-- All endpoints require AdminAuthGuard
-- Security clearance levels enforced at application level
-- IP range restrictions stored in `allowedIpRanges` array
-- Access end dates enforced via `accessEndDate`
-
-### 10.3. Identity Verification
-
-- KYC/AML verification status tracked with method and level
-- Background check status and dates recorded
-- Verification audit trail stored in metadata JSONB
-
-## 11. Implementation Files
+## Implementation Files
 
 ### Admin Module
 
-**Controllers**:
-
-- `src/admin/controllers/admin-profile.controller.ts`: 10 profile endpoints
-- `src/admin/controllers/admin-enterprise.controller.ts`: 11 enterprise endpoints
-
-**Services**:
-
-- `src/admin/services/admin-profile.service.ts`: Profile management logic
-- `src/admin/services/admin-enterprise.service.ts`: Enterprise/NHI management logic
-
-**DTOs**:
-
-- `src/admin/dto/admin-profile.dto.ts`: Profile request/response DTOs
-- `src/admin/dto/admin-enterprise.dto.ts`: Enterprise request/response DTOs
-
-**Tests**:
-
-- `src/admin/services/admin-profile.service.spec.ts`: 11 tests
-- `src/admin/services/admin-enterprise.service.spec.ts`: 15 tests
+```yaml
+controllers:
+  [admin-profile.controller.ts (10 endpoints), admin-enterprise.controller.ts (11 endpoints)]
+services: [admin-profile.service.ts, admin-enterprise.service.ts]
+dtos: [admin-profile.dto.ts, admin-enterprise.dto.ts]
+tests: [admin-profile.service.spec.ts (11), admin-enterprise.service.spec.ts (15)]
+```
 
 ### Organization Module
 
-**Module Registration**:
-
-- `src/organization/organization.module.ts`: Module definition with 7 services and 7 controllers
-- Registered in `src/app.module.ts`
-
-**Controllers**: `src/organization/controllers/` (41 endpoints total)
-
-- `job-grade.controller.ts`: 6 endpoints
-- `org-unit.controller.ts`: 7 endpoints (includes tree and children)
-- `legal-entity.controller.ts`: 5 endpoints
-- `office.controller.ts`: 6 endpoints (includes buildings relation)
-- `building.controller.ts`: 6 endpoints (includes floors relation)
-- `floor.controller.ts`: 5 endpoints
-- `partner-company.controller.ts`: 6 endpoints (includes agreements relation)
-
-**Services**: `src/organization/services/`
-
-- `job-grade.service.ts`: JobGrade CRUD with code lookup
-- `org-unit.service.ts`: OrgUnit CRUD with tree structure
-- `legal-entity.service.ts`: LegalEntity CRUD
-- `office.service.ts`: Office CRUD with buildings relation
-- `building.service.ts`: Building CRUD with floors relation
-- `floor.service.ts`: Floor CRUD
-- `partner-company.service.ts`: PartnerCompany CRUD with agreements relation
-
-**DTOs**: `src/organization/dto/`
-
-- `job-grade.dto.ts`: JobGrade DTOs with JobFamily enum
-- `org-unit.dto.ts`: OrgUnit DTOs with OrgUnitType enum and tree structure
-- `legal-entity.dto.ts`: LegalEntity DTOs
-- `office.dto.ts`: Office DTOs with OfficeType enum
-- `building.dto.ts`: Building DTOs
-- `floor.dto.ts`: Floor DTOs
-- `partner-company.dto.ts`: PartnerCompany DTOs with PartnerType enum
-
-**Tests**: `src/organization/services/` (73 tests total)
-
-- `job-grade.service.spec.ts`: 14 tests
-- `org-unit.service.spec.ts`: 16 tests
-- `legal-entity.service.spec.ts`: 11 tests
-- `office.service.spec.ts`: 9 tests
-- `building.service.spec.ts`: 7 tests
-- `floor.service.spec.ts`: 7 tests
-- `partner-company.service.spec.ts`: 9 tests
-
-### 4.6. Attendance Management (Phase 3)
-
-Manage admin clock-in/out, work schedules, and overtime.
-
-#### POST /attendance/clock-in
-
-Clock in for the day.
-
-**Request**: `ClockInDto`
-
-```typescript
-{
-  date: Date;
-  workType?: 'OFFICE' | 'REMOTE' | 'HYBRID' | 'FIELD' | 'BUSINESS_TRIP' | 'CLIENT_SITE' | 'TRAINING';
-  officeId?: string;
-  remoteLocation?: string;
-  location?: { lat: number; lng: number; address?: string };
-  notes?: string;
-}
+```yaml
+module: organization.module.ts (registered in app.module.ts)
+controllers: [job-grade (6), org-unit (7), legal-entity (5), office (6), building (6), floor (5), partner-company (6)] = 41 endpoints
+services: [job-grade, org-unit, legal-entity, office, building, floor, partner-company].service.ts
+dtos: [job-grade, org-unit, legal-entity, office, building, floor, partner-company].dto.ts
+tests: [job-grade (14), org-unit (16), legal-entity (11), office (9), building (7), floor (7), partner-company (9)] = 73 tests
 ```
 
-**Response**: `AttendanceResponseDto`
+### Attendance & Leave Modules
 
-#### POST /attendance/clock-out
-
-Clock out for the day.
-
-**Request**: `ClockOutDto`
-
-```typescript
-{
-  date: Date;
-  overtimeMinutes?: number;
-  overtimeReason?: string;
-  location?: { lat: number; lng: number; address?: string };
-  notes?: string;
-}
+```yaml
+attendance:
+  controllers: [attendance.controller.ts, work-schedule.controller.ts]
+  services: [attendance.service.ts, work-schedule.service.ts]
+  tests: [attendance.service.spec.ts (45), work-schedule.service.spec.ts (18)]
+leave:
+  controllers: [leave.controller.ts, leave-balance.controller.ts]
+  services: [leave.service.ts, leave-balance.service.ts]
+  tests: [leave.service.spec.ts (42), leave-balance.service.spec.ts (24)]
 ```
 
-#### GET /attendance/me
+### Phase 4 Modules
 
-Get my attendance records with pagination.
-
-**Query**: `AdminAttendanceQueryDto` (page, limit, status, workType, startDate, endDate)
-
-#### GET /attendance/me/stats
-
-Get my attendance statistics.
-
-**Query**: `startDate`, `endDate`
-
-**Response**: `AttendanceStatsDto` (totalDays, presentDays, absentDays, lateDays, remoteDays, totalOvertimeMinutes, averageWorkMinutes)
-
-#### PATCH /attendance/:id/approve-overtime
-
-Approve overtime request (manager).
-
-**Request**: `ApproveOvertimeDto`
-
-```typescript
-{
-  approved: boolean;
-  managerNotes?: string;
-}
+```yaml
+modules: [delegation, compliance, global-mobility, country-config, organization-history]
+tests: [delegation (18), attestation (7), certification (7), training (8), global-assignment (8), work-authorization (9), country-config (9), org-history (11)] = 77 tests
 ```
 
-#### Work Schedule APIs
+### Phase 5 Modules
 
-- `POST /work-schedules`: Create work schedule
-- `GET /work-schedules/me`: Get my work schedules
-- `GET /work-schedules/me/active`: Get my active schedule
-- `GET /work-schedules/:id`: Get schedule by ID
-- `PATCH /work-schedules/:id`: Update schedule
-- `DELETE /work-schedules/:id`: Delete schedule
-
-### 4.7. Leave Management (Phase 3)
-
-Manage leave requests, approvals, and balances.
-
-#### POST /leaves
-
-Create a new leave request (draft).
-
-**Request**: `CreateLeaveDto`
-
-```typescript
-{
-  leaveType: 'ANNUAL' | 'SICK' | 'PARENTAL' | 'MATERNITY' | 'PATERNITY' | 'BEREAVEMENT' | 'MARRIAGE' | 'UNPAID' | 'COMPENSATORY' | 'PUBLIC_HOLIDAY' | 'SABBATICAL' | 'JURY_DUTY' | 'MILITARY' | 'STUDY' | 'PERSONAL' | 'EMERGENCY';
-  startDate: Date;
-  endDate: Date;
-  startHalf?: 'AM' | 'PM';
-  endHalf?: 'AM' | 'PM';
-  daysCount: number;  // 0.5 for half day
-  reason?: string;
-  emergencyContact?: string;
-  handoverTo?: string;
-  handoverNotes?: string;
-  attachmentUrls?: string[];
-}
+```yaml
+module: employee.module.ts
+submodules: [employee-profile, employee-attendance, employee-leave, employee-delegation]
+guards: [employee-auth.guard.ts]
+tests: [guard (7), profile (4), attendance (6), leave (8), delegation (5)] = 30 tests
+endpoints: 17 (profile: 2, attendance: 4, leave: 7, delegation: 2)
 ```
-
-#### POST /leaves/:id/submit
-
-Submit a leave request for approval.
-
-**Request**: `SubmitLeaveDto`
-
-```typescript
-{
-  firstApproverId?: string;
-  secondApproverId?: string;
-}
-```
-
-#### POST /leaves/:id/approve
-
-Approve or reject a leave request (manager).
-
-**Request**: `ApproveLeaveDto`
-
-```typescript
-{
-  approvalStatus: 'APPROVED' | 'REJECTED';
-  rejectionReason?: string;
-}
-```
-
-#### POST /leaves/:id/cancel
-
-Cancel a leave request.
-
-**Request**: `CancelLeaveDto`
-
-```typescript
-{
-  cancellationReason: string;
-}
-```
-
-#### GET /leaves/me
-
-Get my leave requests with pagination.
-
-#### GET /leaves/pending-approvals
-
-Get pending leave approvals for me (manager).
-
-#### Leave Balance APIs
-
-- `POST /leave-balances`: Create leave balance (HR)
-- `GET /leave-balances/me`: Get my current leave balance
-- `GET /leave-balances/me/:year`: Get my balance for specific year
-- `GET /leave-balances/:adminId/:year`: Get admin balance (HR/Manager)
-- `PATCH /leave-balances/:adminId/:year/adjust`: Adjust balance (HR)
-- `POST /leave-balances/:adminId/:year/recalculate`: Recalculate based on approved leaves
-- `POST /leave-balances/:adminId/:year/initialize`: Initialize for new year
-
-## 12. Attendance Module Implementation
-
-### Attendance Service
-
-**Location**: `src/attendance/services/attendance.service.ts`
-
-**Methods**: `clockIn`, `clockOut`, `approveOvertime`, `getAttendanceByDate`, `listAttendances`, `getStats`
-
-**Features**:
-
-- Conflict detection (already clocked in/out)
-- Automatic work minutes calculation
-- Overtime request tracking
-- IP address and location logging
-- Statistics aggregation
-
-### Work Schedule Service
-
-**Location**: `src/attendance/services/work-schedule.service.ts`
-
-**Methods**: `create`, `findByAdmin`, `findActiveByAdmin`, `findOne`, `update`, `remove`
-
-**Features**:
-
-- Auto-deactivate previous schedules
-- Support for Standard, Shift, and Flexible schedules
-- Configurable weekly hours and core hours
-
-### Tests (Attendance Module)
-
-**Coverage**: 80%+ across all services
-
-- `attendance.service.spec.ts`: 45 tests
-- `work-schedule.service.spec.ts`: 18 tests
-
-## 13. Leave Module Implementation
-
-### Leave Service
-
-**Location**: `src/leave/services/leave.service.ts`
-
-**Methods**: `create`, `submit`, `approve`, `cancel`, `findOne`, `list`, `getPendingApprovals`
-
-**Features**:
-
-- Overlap detection (prevents double-booking)
-- Multi-level approval workflow (first + second approver)
-- Automatic leave balance deduction on approval
-- Balance restoration on cancellation
-- Leave status transitions (Draft → Pending → Approved/Rejected/Cancelled)
-
-### Leave Balance Service
-
-**Location**: `src/leave/services/leave-balance.service.ts`
-
-**Methods**: `create`, `getBalance`, `getCurrentBalance`, `adjust`, `recalculate`, `initializeForNewYear`
-
-**Features**:
-
-- Annual, sick, compensatory, special leave tracking
-- Carryover from previous year (max 5 days)
-- Tenure bonus calculation (3/5/10 years)
-- Manual adjustment with audit trail
-- Automatic recalculation based on approved leaves
-
-### Tests (Leave Module)
-
-**Coverage**: 80%+ across all services
-
-- `leave.service.spec.ts`: 42 tests
-- `leave-balance.service.spec.ts`: 24 tests
 
 ### Shared Types
 
-- `packages/types/src/admin/admin.enums.ts`: 11 admin enum types
-- `packages/types/src/admin/admin.types.ts`: Admin interface (83 fields)
+```yaml
+location: packages/types/src/admin/
+files: [admin.enums.ts (11 enums), admin.types.ts (Admin interface, 83 fields)]
+```
 
 ### Migrations
 
-- `migrations/20260116000006_extend_admins_phase2_core.sql`: Phase 2 schema (83 fields)
-- `migrations/20260117000007_add_attendance.sql`: Phase 3 attendance tables (admin_attendances, admin_work_schedules)
-- `migrations/20260117000008_add_leave_management.sql`: Phase 3 leave tables (admin_leaves, admin_leave_balances, leave_policies, public_holidays)
-
-## 5. Phase 4: Advanced Features (Delegation, Compliance, Global Mobility)
-
-Phase 4 introduces 5 new modules to support advanced HR and enterprise governance features.
-
-### 5.1. Delegation Management
-
-**Purpose**: Enable temporary delegation of administrative authority with approval workflows, constraints, and audit trails.
-
-**Tables**: `admin_delegations`, `admin_delegation_logs`
-
-**Enums**:
-
-- `delegation_type`: FULL, PARTIAL, VIEW_ONLY, APPROVAL_ONLY, EMERGENCY
-- `delegation_scope`: ALL, TEAM, DEPARTMENT, SERVICE, SPECIFIC_RESOURCES
-- `delegation_status`: PENDING, ACTIVE, EXPIRED, REVOKED, COMPLETED
-- `delegation_reason`: VACATION, SICK_LEAVE, BUSINESS_TRIP, PARENTAL_LEAVE, TRAINING, TEMPORARY_ASSIGNMENT, EMERGENCY
-
-#### API Endpoints (Delegation)
-
-**POST /delegations** - Create delegation
-
-```typescript
-{
-  delegatorId: string;          // Admin delegating authority
-  delegateId: string;           // Admin receiving authority
-  delegationType: delegation_type;
-  delegationScope: delegation_scope;
-  delegationReason: delegation_reason;
-  specificPermissions: string[];
-  specificRoleIds?: string[];
-  resourceIds?: string[];
-  startDate: Date;
-  endDate: Date;
-  requiresApproval?: boolean;   // Default: true
-  maxActions?: number;          // Limit number of actions
-  allowedHours?: string[];      // e.g., ["09:00-18:00"]
-  allowedIps?: string[];        // IP whitelist
-  notifyOnUse?: boolean;        // Default: true
-  notifyOnExpiry?: boolean;     // Default: true
-  expiryReminderDays?: number[]; // Default: [7, 1]
-  notes?: string;
-}
+```yaml
+phase2: 20260116000006_extend_admins_phase2_core.sql (83 fields)
+phase3:
+  - 20260117000007_add_attendance.sql (admin_attendances, admin_work_schedules)
+  - 20260117000008_add_leave_management.sql (admin_leaves, admin_leave_balances, leave_policies, public_holidays)
+phase4: 20260118000009_add_phase4_tables.sql (15 tables, 15 enums)
+phase5: No new tables (reuses existing admin/attendance/leave)
 ```
 
-**GET /delegations** - List delegations (with filters)
+## AdminDetailResponse Structure
 
-Query params: `delegatorId`, `delegateId`, `status`, `delegationType`, `startDate`, `endDate`, `page`, `limit`
-
-**GET /delegations/me/delegated** - Get delegations I created
-
-**GET /delegations/me/received** - Get delegations I received
-
-**GET /delegations/:id** - Get delegation by ID
-
-**PATCH /delegations/:id** - Update delegation (endDate, permissions, constraints)
-
-**POST /delegations/:id/approve** - Approve or reject delegation
-
-```typescript
-{
-  approved: boolean;
-  rejectionReason?: string;
-}
+```yaml
+core_fields:
+  [
+    id,
+    email,
+    name,
+    scope,
+    tenantId,
+    roleId,
+    isActive,
+    lastLoginAt,
+    createdAt,
+    updatedAt,
+    accountMode,
+    countryCode,
+  ]
+scim_core:
+  [
+    username,
+    externalId,
+    displayName,
+    givenName,
+    familyName,
+    nativeGivenName,
+    nativeFamilyName,
+    nickname,
+    preferredLanguage,
+    locale,
+    timezone,
+    profileUrl,
+    profilePhotoUrl,
+  ]
+employee_info: [employeeNumber, employeeType, employmentStatus, lifecycleStatus]
+job_org:
+  [
+    jobGradeId,
+    jobTitle,
+    jobTitleEn,
+    jobCode,
+    jobFamily,
+    organizationUnitId,
+    costCenter,
+    managerAdminId,
+    dottedLineManagerId,
+    directReportsCount,
+  ]
+partner: [partnerCompanyId, partnerEmployeeId, partnerContractEndDate]
+jml_joiner:
+  [hireDate, originalHireDate, startDate, onboardingCompletedAt, probationEndDate, probationStatus]
+jml_mover: [lastRoleChangeAt, lastPromotionDate, lastTransferDate]
+jml_leaver:
+  [
+    terminationDate,
+    lastWorkingDay,
+    terminationReason,
+    terminationType,
+    eligibleForRehire,
+    exitInterviewCompleted,
+  ]
+contact:
+  [phoneNumber, phoneCountryCode, mobileNumber, mobileCountryCode, workPhone, emergencyContact]
+relations:
+  role: { id, name, displayName, level }
+  tenant: { id, name, slug, type, status }
+  manager: { id, name, email, jobTitle }
 ```
 
-**POST /delegations/:id/revoke** - Revoke active delegation
+## Version History
 
-```typescript
-{
-  revocationReason: string;
-}
+```yaml
+version: Phase 5 (2026-01-18)
+last_updated: Employee Self-Service APIs
+phases:
+  phase0: Backup HR service structure
+  phase1: HR cleanup & schema design
+  phase2: Enterprise identity (SCIM, JML, NHI) - 83 fields
+  phase3: Attendance & leave management - 6 tables, 129 tests
+  phase4: Delegation, compliance, global mobility - 15 tables, 77 tests
+  phase5: Employee self-service - 17 endpoints, 30 tests, no new tables
+total_endpoints: 150+
+total_tests: 1359+
+total_tables: 24
+total_enums: 30+
+test_status: 100% passing
 ```
-
-**DELETE /delegations/:id** - Delete delegation (only if not active)
-
-**GET /delegations/:id/logs** - Get delegation usage logs
-
-**Features**:
-
-- Overlap detection (prevents conflicting delegations)
-- Auto-expiry on end date
-- Delegation logs for every action taken by delegate
-- Constraints: time-based (allowed hours), IP-based, action count limits
-
-### 5.2. Compliance Management
-
-**Purpose**: Track compliance requirements including attestations, certifications, and training.
-
-**Tables**: `admin_attestations`, `admin_certifications`, `admin_training_records`
-
-**Enums**:
-
-- `attestation_type`: CODE_OF_CONDUCT, SECURITY_POLICY, DATA_PRIVACY, ACCEPTABLE_USE, CONFLICT_OF_INTEREST, INSIDER_TRADING, EXPORT_CONTROL, ANTI_BRIBERY
-- `attestation_status`: PENDING, COMPLETED, WAIVED, EXPIRED
-- `certification_status`: ACTIVE, EXPIRED, SUSPENDED, REVOKED
-- `training_type`: ONBOARDING, SECURITY, COMPLIANCE, TECHNICAL, SOFT_SKILLS, LEADERSHIP, SAFETY, PRODUCT
-- `training_status`: NOT_STARTED, IN_PROGRESS, COMPLETED, FAILED, WAIVED
-
-#### API Endpoints (Compliance - Attestations)
-
-**POST /compliance/attestations** - Create attestation
-
-```typescript
-{
-  adminId: string;
-  attestationType: attestation_type;
-  documentVersion?: string;
-  documentUrl?: string;
-  documentHash?: string;
-  dueDate?: Date;
-  recurrenceMonths?: number;    // Default: 12 (annual)
-  metadata?: Record<string, any>;
-}
-```
-
-**GET /compliance/attestations** - List attestations
-
-Query params: `adminId`, `attestationType`, `status`, `page`, `limit`
-
-**GET /compliance/attestations/:id** - Get attestation by ID
-
-**PATCH /compliance/attestations/:id/complete** - Complete attestation
-
-```typescript
-{
-  ipAddress?: string;
-  userAgent?: string;
-  signatureData?: string;
-}
-```
-
-**PATCH /compliance/attestations/:id/waive** - Waive attestation
-
-```typescript
-{
-  waiverId: string;
-  waiverReason: string;
-  waiverExpiry?: Date;
-}
-```
-
-#### API Endpoints (Compliance - Certifications)
-
-**POST /compliance/certifications** - Create certification
-
-```typescript
-{
-  adminId: string;
-  name: string;
-  issuingOrganization: string;
-  credentialId?: string;
-  credentialUrl?: string;
-  issueDate: Date;
-  expiryDate?: Date;
-  metadata?: Record<string, any>;
-}
-```
-
-**GET /compliance/certifications** - List certifications
-
-Query params: `adminId`, `issuingOrganization`, `status`, `page`, `limit`
-
-**GET /compliance/certifications/:id** - Get certification by ID
-
-**PATCH /compliance/certifications/:id/verify** - Verify certification
-
-```typescript
-{
-  verifierId: string;
-  verificationUrl?: string;
-}
-```
-
-**PATCH /compliance/certifications/:id/renew** - Renew certification
-
-```typescript
-{
-  newExpiryDate: Date;
-}
-```
-
-#### API Endpoints (Compliance - Training)
-
-**POST /compliance/training** - Create training record
-
-```typescript
-{
-  adminId: string;
-  trainingType: training_type;
-  name: string;
-  description?: string;
-  provider?: string;
-  assignedAt?: Date;
-  dueDate?: Date;
-  passingScore?: number;
-  isMandatory?: boolean;
-  recurrenceMonths?: number;
-  metadata?: Record<string, any>;
-}
-```
-
-**GET /compliance/training** - List training records
-
-Query params: `adminId`, `trainingType`, `status`, `isMandatory`, `page`, `limit`
-
-**GET /compliance/training/:id** - Get training by ID
-
-**PATCH /compliance/training/:id/start** - Start training
-
-**PATCH /compliance/training/:id/complete** - Complete training
-
-```typescript
-{
-  score?: number;
-  certificateUrl?: string;
-}
-```
-
-**PATCH /compliance/training/:id/assign** - Assign training to admin
-
-```typescript
-{
-  adminId: string;
-  dueDate?: Date;
-  isMandatory?: boolean;
-}
-```
-
-**Features**:
-
-- Automatic recurrence calculation for periodic attestations/training
-- Digital signature capture for attestations
-- Certification verification workflow
-- Training completion with scoring and certificate management
-- Waiver support with expiry tracking
-
-### 5.3. Global Mobility
-
-**Purpose**: Manage international assignments and work authorizations for global workforce.
-
-**Tables**: `global_assignments`, `work_authorizations`
-
-**Enums**:
-
-- `assignment_type`: INTERNATIONAL, DOMESTIC, SHORT_TERM, LONG_TERM, PERMANENT_TRANSFER, TEMPORARY, ROTATIONAL
-- `assignment_status`: PLANNED, APPROVED, ACTIVE, COMPLETED, CANCELLED
-- `visa_status`: NOT_REQUIRED, PENDING, APPROVED, REJECTED, EXPIRED, CANCELLED
-- `work_permit_type`: VISA, WORK_PERMIT, RESIDENCE_PERMIT, PERMANENT_RESIDENCE, CITIZENSHIP, EXEMPTION
-
-#### API Endpoints (Global Mobility - Assignments)
-
-**POST /global-mobility/assignments** - Create assignment
-
-```typescript
-{
-  adminId: string;
-  assignmentType: assignment_type;
-  homeCountryCode: string;
-  hostCountryCode: string;
-  homeLocationId?: string;
-  hostLocationId?: string;
-  startDate: Date;
-  expectedEndDate: Date;
-  purposeDescription?: string;
-  costCenterAllocation?: string;
-  hostingDepartmentId?: string;
-  localManager?: string;
-  compensationNotes?: string;
-  housingAllowance?: number;
-  transportAllowance?: number;
-  educationAllowance?: number;
-  hardshipAllowance?: number;
-  taxEqualizationApplied?: boolean;
-  relocationPackageOffered?: boolean;
-  dependentsIncluded?: boolean;
-  numberOfDependents?: number;
-  metadata?: Record<string, any>;
-}
-```
-
-**GET /global-mobility/assignments** - List assignments
-
-Query params: `adminId`, `assignmentType`, `status`, `homeCountryCode`, `hostCountryCode`, `page`, `limit`
-
-**GET /global-mobility/assignments/:id** - Get assignment by ID
-
-**PATCH /global-mobility/assignments/:id** - Update assignment
-
-**POST /global-mobility/assignments/:id/approve** - Approve assignment
-
-```typescript
-{
-  approverId: string;
-}
-```
-
-**POST /global-mobility/assignments/:id/start** - Start assignment (activates)
-
-**POST /global-mobility/assignments/:id/complete** - Complete assignment
-
-```typescript
-{
-  actualEndDate?: Date;
-  completionNotes?: string;
-}
-```
-
-**POST /global-mobility/assignments/:id/cancel** - Cancel assignment
-
-```typescript
-{
-  cancellationReason: string;
-}
-```
-
-**DELETE /global-mobility/assignments/:id** - Delete assignment (only if not active)
-
-#### API Endpoints (Global Mobility - Work Authorizations)
-
-**POST /global-mobility/work-authorizations** - Create work authorization
-
-```typescript
-{
-  adminId: string;
-  assignmentId?: string;
-  countryCode: string;
-  workPermitType: work_permit_type;
-  visaStatus: visa_status;
-  applicationNumber?: string;
-  applicationDate?: Date;
-  approvalNumber?: string;
-  approvalDate?: Date;
-  startDate: Date;
-  expiryDate: Date;
-  sponsorOrganization?: string;
-  dependentsIncluded?: boolean;
-  numberOfDependents?: number;
-  renewalEligible?: boolean;
-  renewalNoticeMonths?: number;
-  restrictionsNotes?: string;
-  metadata?: Record<string, any>;
-}
-```
-
-**GET /global-mobility/work-authorizations** - List work authorizations
-
-Query params: `adminId`, `assignmentId`, `countryCode`, `workPermitType`, `visaStatus`, `page`, `limit`
-
-**GET /global-mobility/work-authorizations/expiring** - Get expiring authorizations (within 90 days)
-
-**GET /global-mobility/work-authorizations/:id** - Get authorization by ID
-
-**PATCH /global-mobility/work-authorizations/:id** - Update authorization
-
-**POST /global-mobility/work-authorizations/:id/renew** - Renew authorization
-
-```typescript
-{
-  newExpiryDate: Date;
-  newApprovalNumber?: string;
-}
-```
-
-**POST /global-mobility/work-authorizations/:id/expire** - Mark as expired
-
-**DELETE /global-mobility/work-authorizations/:id** - Delete authorization (only if not active)
-
-**Features**:
-
-- Assignment lifecycle management (planned → approved → active → completed)
-- Compensation and allowance tracking
-- Work authorization linked to assignments
-- Expiry alerts for visas and permits
-- Dependent tracking for family relocations
-
-### 5.4. Country Configuration
-
-**Purpose**: Store country-specific HR policies and regulations for global workforce management.
-
-**Table**: `country_configs`
-
-**Data**: 12 countries pre-populated (US, UK, CA, AU, DE, FR, JP, KR, SG, IN, CN, BR)
-
-#### API Endpoints (Country Config)
-
-**GET /country-configs** - List all country configurations
-
-**GET /country-configs/:countryCode** - Get config by country code (e.g., "US", "KR")
-
-```typescript
-{
-  countryCode: string;
-  countryName: string;
-  standardWorkHoursPerWeek: number;
-  standardWorkDaysPerWeek: number;
-  workWeekStartDay: string;        // "MONDAY"
-  workDayStartTime: string;        // "09:00"
-  workDayEndTime: string;          // "18:00"
-  annualLeaveEntitlement: number;  // Base days
-  sickLeaveEntitlement?: number;
-  publicHolidaysPerYear?: number;
-  fiscalYearStartMonth: number;    // 1-12
-  taxYearStartMonth: number;
-  currencyCode: string;            // "USD", "KRW"
-  timezoneIana: string;            // "America/New_York"
-  weekendDays: string[];           // ["SATURDAY", "SUNDAY"]
-  probationPeriodMonths?: number;
-  noticePeriodWeeks?: number;
-  overtimeMultiplier?: number;     // 1.5
-  nightShiftMultiplier?: number;
-  holidayWorkMultiplier?: number;
-  metadata?: Record<string, any>;
-}
-```
-
-**PATCH /country-configs/:countryCode** - Update config (admin only)
-
-**Features**:
-
-- Read-heavy service (configs rarely change)
-- Used by attendance, leave, and payroll modules
-- Supports multi-country organizations
-- Timezone and currency conversion data
-
-### 5.5. Organization History
-
-**Purpose**: Track organizational changes (promotions, transfers, role changes) with approval workflow.
-
-**Table**: `admin_organization_history`
-
-**Enums**:
-
-- `org_change_type`: PROMOTION, DEMOTION, TRANSFER, ROLE_CHANGE, DEPARTMENT_CHANGE, LOCATION_CHANGE, MANAGER_CHANGE, COMPENSATION_CHANGE, JOB_TITLE_CHANGE
-- `org_change_status`: PENDING, APPROVED, REJECTED, CANCELLED
-
-#### API Endpoints (Organization History)
-
-**POST /organization-history** - Record organizational change
-
-```typescript
-{
-  adminId: string;
-  changeType: org_change_type;
-  effectiveDate: Date;
-  previousJobTitle?: string;
-  newJobTitle?: string;
-  previousDepartmentId?: string;
-  newDepartmentId?: string;
-  previousManagerId?: string;
-  newManagerId?: string;
-  previousJobGrade?: string;
-  newJobGrade?: string;
-  previousLocationId?: string;
-  newLocationId?: string;
-  previousCompensation?: number;
-  newCompensation?: number;
-  compensationCurrency?: string;
-  changeReason?: string;
-  requestedBy: string;
-  approvalRequired?: boolean;
-  notes?: string;
-  metadata?: Record<string, any>;
-}
-```
-
-**GET /organization-history** - List all history records
-
-Query params: `adminId`, `changeType`, `status`, `startDate`, `endDate`, `page`, `limit`
-
-**GET /organization-history/admin/:adminId** - Get history for specific admin
-
-**GET /organization-history/:id** - Get history record by ID
-
-**POST /organization-history/:id/approve** - Approve change
-
-```typescript
-{
-  approverId: string;
-  approvalNotes?: string;
-}
-```
-
-**DELETE /organization-history/:id** - Delete record (only if not approved)
-
-**Features**:
-
-- Complete audit trail of organizational changes
-- Before/after state tracking
-- Compensation change history
-- Approval workflow integration
-- Effective date tracking for future changes
-
-### 5.6. Phase 4 Database Schema
-
-**New Tables** (15 total):
-
-1. `admin_delegations` - Authority delegation records
-2. `admin_delegation_logs` - Delegation usage audit logs
-3. `admin_attestations` - Compliance attestations
-4. `admin_certifications` - Professional certifications
-5. `admin_training_records` - Training completion tracking
-6. `global_assignments` - International assignments
-7. `work_authorizations` - Visas and work permits
-8. `country_configs` - Country-specific HR policies
-9. `admin_organization_history` - Organizational change tracking
-
-**New Enums** (15 total):
-
-- `delegation_type`, `delegation_scope`, `delegation_status`, `delegation_reason`
-- `attestation_type`, `attestation_status`
-- `certification_status`
-- `training_type`, `training_status`
-- `assignment_type`, `assignment_status`
-- `visa_status`, `work_permit_type`
-- `org_change_type`, `org_change_status`
-
-### 5.7. Phase 4 Implementation Details
-
-**Services**:
-
-- `DelegationService` - CRUD + approval workflow + logging
-- `AttestationService` - Attestation lifecycle + recurrence
-- `CertificationService` - Certification verification + renewal
-- `TrainingService` - Training assignment + completion tracking
-- `GlobalAssignmentService` - Assignment lifecycle + compensation
-- `WorkAuthorizationService` - Work permit management + expiry alerts
-- `CountryConfigService` - Country policy management (read-heavy)
-- `OrganizationHistoryService` - Org change tracking + approval
-
-**Tests**: 77 new unit tests (100% passing)
-
-- `delegation.service.spec.ts`: 18 tests
-- `attestation.service.spec.ts`: 7 tests
-- `certification.service.spec.ts`: 7 tests
-- `training.service.spec.ts`: 8 tests
-- `global-assignment.service.spec.ts`: 8 tests
-- `work-authorization.service.spec.ts`: 9 tests
-- `country-config.service.spec.ts`: 9 tests
-- `organization-history.service.spec.ts`: 11 tests
-
-## 6. Phase 5: Employee Self-Service APIs
-
-### 6.1. Overview
-
-Phase 5 implements the **Employee Self-Service Portal** backend, allowing employees to manage their own data without admin intervention.
-
-**Key Features**:
-
-1. **Employee Profile** - View/edit own profile (limited fields)
-2. **Employee Attendance** - Clock in/out, view own records
-3. **Employee Leave** - Submit leave requests, view balance
-4. **Employee Delegation** - View delegations assigned to them (read-only)
-
-**Security Model**:
-
-- Employees can only access their OWN data (enforced by `EmployeeAuthGuard`)
-- Employees cannot view other employees' data
-- Employees cannot access admin-only endpoints
-- Limited update permissions (cannot change job title, salary, etc.)
-
-### 6.2. Employee Profile
-
-**Purpose**: Allow employees to view and update limited profile fields.
-
-**Module**: `EmployeeProfileModule`
-
-**Services**: `EmployeeProfileService` (wraps `AdminProfileService`)
-
-#### API Endpoints (Employee Profile)
-
-**GET /employee/profile/me** - Get own profile
-
-Returns complete profile with all fields (read-only).
-
-**PATCH /employee/profile/me** - Update own profile
-
-Allowed fields (limited):
-
-```typescript
-{
-  // SCIM Core (limited)
-  displayName?: string;
-  nickname?: string;
-  preferredLanguage?: string;  // ISO 639-1
-  locale?: string;              // BCP 47
-  timezone?: string;            // IANA timezone
-  profileUrl?: string;
-  profilePhotoUrl?: string;
-
-  // Contact Info
-  phoneNumber?: string;
-  phoneCountryCode?: string;
-  mobileNumber?: string;
-  mobileCountryCode?: string;
-  emergencyContact?: Record<string, any>;
-}
-```
-
-**Restricted fields** (employees CANNOT update):
-
-- `email`, `username` (identity fields)
-- `employeeNumber`, `jobTitle`, `organizationUnitId` (HR fields)
-- `employmentStatus`, `hireDate`, `salary` (JML fields)
-
-### 6.3. Employee Attendance
-
-**Purpose**: Allow employees to clock in/out and view their own attendance records.
-
-**Module**: `EmployeeAttendanceModule`
-
-**Services**: `EmployeeAttendanceService` (wraps `AttendanceService`)
-
-#### API Endpoints (Employee Attendance)
-
-**POST /employee/attendance/clock-in** - Clock in
-
-```typescript
-{
-  date: Date;                    // "2026-01-18"
-  workType?: WorkType;           // OFFICE, REMOTE, HYBRID, FIELD
-  officeId?: string;
-  remoteLocation?: string;
-  location?: {                   // GPS coordinates
-    lat: number;
-    lng: number;
-    address?: string;
-  };
-  notes?: string;
-}
-```
-
-**POST /employee/attendance/clock-out** - Clock out
-
-```typescript
-{
-  date: Date;
-  overtimeMinutes?: number;
-  overtimeReason?: string;
-  location?: {
-    lat: number;
-    lng: number;
-    address?: string;
-  };
-  notes?: string;
-}
-```
-
-**GET /employee/attendance/me** - Get own attendance records
-
-Query params: `startDate`, `endDate`, `page`, `limit`
-
-Returns paginated list of attendance records.
-
-**GET /employee/attendance/me/stats** - Get own attendance statistics
-
-Query params: `startDate` (required), `endDate` (required)
-
-Returns:
-
-```typescript
-{
-  totalDays: number;
-  presentDays: number;
-  absentDays: number;
-  lateDays: number;
-  totalWorkMinutes: number;
-  averageWorkMinutes: number;
-  totalOvertimeMinutes: number;
-  approvedOvertimeMinutes: number;
-}
-```
-
-**Features**:
-
-- IP address and GPS location tracking
-- Duplicate clock-in prevention
-- Overtime request (requires manager approval)
-- Work type tracking (office/remote/hybrid/field)
-
-### 6.4. Employee Leave
-
-**Purpose**: Allow employees to submit leave requests and view their leave balance.
-
-**Module**: `EmployeeLeaveModule`
-
-**Services**: `EmployeeLeaveService` (wraps `LeaveService` + `LeaveBalanceService`)
-
-#### API Endpoints (Employee Leave)
-
-**POST /employee/leave/requests** - Create leave request (DRAFT)
-
-```typescript
-{
-  leaveType: LeaveType;          // ANNUAL, SICK, COMPENSATORY, SPECIAL, etc.
-  startDate: Date;
-  endDate: Date;
-  startHalf?: 'MORNING' | 'AFTERNOON';
-  endHalf?: 'MORNING' | 'AFTERNOON';
-  daysCount: number;
-  reason?: string;
-  emergencyContact?: Record<string, any>;
-  handoverTo?: string;
-  handoverNotes?: string;
-  attachmentUrls?: string[];
-}
-```
-
-**POST /employee/leave/requests/:id/submit** - Submit leave request for approval
-
-```typescript
-{
-  firstApproverId: string;       // Manager who will approve
-  secondApproverId?: string;     // Optional second approver
-}
-```
-
-**POST /employee/leave/requests/:id/cancel** - Cancel own leave request
-
-```typescript
-{
-  cancellationReason: string;
-}
-```
-
-**GET /employee/leave/requests/me** - Get own leave requests
-
-Query params: `startDate`, `endDate`, `status`, `page`, `limit`
-
-**GET /employee/leave/requests/:id** - Get leave request by ID
-
-**GET /employee/leave/balance/me** - Get own leave balance (current year)
-
-Returns:
-
-```typescript
-{
-  adminId: string;
-  year: number;
-  annualEntitled: number;
-  annualUsed: number;
-  annualPending: number;
-  annualRemaining: number;
-  sickEntitled: number;
-  sickUsed: number;
-  sickRemaining: number;
-  compensatoryEntitled: number;
-  compensatoryUsed: number;
-  compensatoryRemaining: number;
-  specialEntitled: number;
-  specialUsed: number;
-  specialRemaining: number;
-  carryoverFromPrevious: number;
-  lastCalculatedAt: Date;
-}
-```
-
-**GET /employee/leave/balance/me/:year** - Get leave balance for specific year
-
-**Features**:
-
-- Leave request workflow (DRAFT → PENDING → APPROVED/REJECTED)
-- Automatic balance deduction/restoration
-- Multi-level approval support
-- Overlap detection
-- Half-day leave support
-
-### 6.5. Employee Delegation
-
-**Purpose**: Allow employees to view delegations assigned TO them (read-only).
-
-**Module**: `EmployeeDelegationModule`
-
-**Services**: `EmployeeDelegationService` (wraps `DelegationService`)
-
-#### API Endpoints (Employee Delegation)
-
-**GET /employee/delegations/received** - Get delegations assigned to employee
-
-Query params: `status`, `page`, `limit`
-
-Returns delegations where `delegateId` matches the employee's ID.
-
-**GET /employee/delegations/received/:id** - Get delegation by ID
-
-Returns delegation details.
-
-**Features**:
-
-- Read-only access (employees cannot create or approve delegations)
-- Only shows delegations assigned TO the employee
-- Useful for employees to know what permissions they temporarily have
-
-### 6.6. Phase 5 Implementation Details
-
-**Modules**:
-
-- `EmployeeModule` - Parent module
-- `EmployeeProfileModule` - Profile management
-- `EmployeeAttendanceModule` - Attendance tracking
-- `EmployeeLeaveModule` - Leave management
-- `EmployeeDelegationModule` - Delegation viewing
-
-**Guards**:
-
-- `EmployeeAuthGuard` - JWT validation + employee access control
-
-**Tests**: 30 new unit tests (100% passing)
-
-- `employee-auth.guard.spec.ts`: 7 tests
-- `employee-profile.service.spec.ts`: 4 tests
-- `employee-attendance.service.spec.ts`: 6 tests
-- `employee-leave.service.spec.ts`: 8 tests
-- `employee-delegation.service.spec.ts`: 5 tests
-
-**Total API Endpoints**: 17 new endpoints
-
-- Profile: 2 endpoints (GET /me, PATCH /me)
-- Attendance: 4 endpoints (clock-in, clock-out, list, stats)
-- Leave: 7 endpoints (create, submit, cancel, list, get, balance, balance by year)
-- Delegation: 2 endpoints (list received, get by ID)
-- All endpoints prefixed with `/employee/*`
-
-**Security Features**:
-
-- Employees can only access their own data (enforced by JWT `sub` claim)
-- Limited update permissions (cannot change HR/admin fields)
-- Read-only access to delegations
-- IP address and location tracking for attendance
 
 ---
 
-**Version**: Phase 5 (2026-01-18)
-**Last Updated**: Employee Self-Service APIs implemented (Profile, Attendance, Leave, Delegation)
-**Status**:
-
-- Admin Profile & Enterprise APIs: Complete (26 tests, 100% passing)
-- Organization APIs: Complete (73 tests, 84.22% coverage, 100% passing)
-- Attendance APIs: Complete (63 tests, 80%+ coverage)
-- Leave Management APIs: Complete (66 tests, 80%+ coverage)
-- Delegation APIs: Complete (18 tests, 80%+ coverage)
-- Compliance APIs: Complete (22 tests, 80%+ coverage)
-- Global Mobility APIs: Complete (17 tests, 80%+ coverage)
-- Country Config APIs: Complete (9 tests, 80%+ coverage)
-- Organization History APIs: Complete (11 tests, 80%+ coverage)
-- **Employee Self-Service APIs: Complete (30 tests, 100% passing)** ✨ NEW
-- Total: 1,359+ tests passing across entire auth-service
-
-**Phase 5 Highlights**:
-
-- 17 new employee self-service endpoints
-- 30 new tests (100% passing)
-- Employee profile management with limited update permissions
-- Employee attendance tracking (clock in/out, view records, stats)
-- Employee leave management (create, submit, view balance)
-- Employee delegation viewing (read-only access)
-- Security: Employees can only access their own data
-- No new database tables (reuses existing admin, attendance, leave tables)
-
-**Phase 4 Highlights**:
-
-- 15 new tables: delegation, compliance (3 tables), global mobility (2 tables), country configs, org history
-- 45+ new endpoints for advanced HR features
-- 77 new tests (Phase 4 modules)
-- Authority delegation with constraints and audit logging
-- Comprehensive compliance tracking (attestations, certifications, training)
-- Global workforce management (assignments, work authorizations)
-- Country-specific HR policies for 12 countries
-- Organizational change tracking with approval workflows
-
-**Phase 3 Highlights**:
-
-- 6 new tables: admin_attendances, admin_work_schedules, admin_leaves, admin_leave_balances, leave_policies, public_holidays
-- 30+ new endpoints for attendance and leave management
-- 129 new tests (attendance + leave)
-- Comprehensive approval workflows with multi-level authorization
-- Automatic balance calculation and carryover management
-
-_This document is the Single Source of Truth for the auth-service. For a quick summary, see `.ai/services/auth-service.md`._
+_This is the Single Source of Truth (SSOT) for auth-service. For quick reference, see `.ai/services/auth-service.md`._
