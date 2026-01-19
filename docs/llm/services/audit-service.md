@@ -40,6 +40,8 @@ GET/PUT /v1/retention/policies
 
 **Purpose**: Secure gateway for external telemetry data (traces, metrics, logs) to internal OTEL Collector
 
+**Deployment Guide**: [telemetry-gateway-deployment.md](../guides/telemetry-gateway-deployment.md)
+
 ```
 POST /v1/telemetry/traces   - Accept OTLP trace data
 POST /v1/telemetry/metrics  - Accept OTLP metric data

@@ -2,12 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
+import { RedisThrottlerStorage } from '@my-girok/nest-common';
 import { OtlpReceiverController } from './controllers/otlp-receiver.controller';
 import { OtlpReceiverService } from './services/otlp-receiver.service';
 import { TenantAuthGuard } from './guards/tenant-auth.guard';
-import { RedisThrottlerStorage } from './storage/redis-throttler-storage';
 
 /**
  * Telemetry Module
@@ -35,17 +33,38 @@ import { RedisThrottlerStorage } from './storage/redis-throttler-storage';
     }),
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService, cacheManager: Cache) => ({
-        throttlers: [
-          {
-            ttl: 60000, // 1 minute
-            limit: configService.get<number>('telemetry.rateLimits.traces', 1000),
-          },
-        ],
-        // Use Valkey (Redis) for distributed rate limiting
-        storage: new RedisThrottlerStorage(cacheManager),
-      }),
-      inject: [ConfigService, CACHE_MANAGER],
+      useFactory: async (configService: ConfigService) => {
+        // Build Redis URL from Valkey config
+        const valkeyConfig = {
+          host: configService.get<string>('valkey.host', 'localhost'),
+          port: configService.get<number>('valkey.port', 6379),
+          password: configService.get<string>('valkey.password', ''),
+          db: configService.get<number>('valkey.db', 3),
+        };
+
+        const redisUrl = valkeyConfig.password
+          ? `redis://:${valkeyConfig.password}@${valkeyConfig.host}:${valkeyConfig.port}/${valkeyConfig.db}`
+          : `redis://${valkeyConfig.host}:${valkeyConfig.port}/${valkeyConfig.db}`;
+
+        return {
+          throttlers: [
+            {
+              ttl: 60000, // 1 minute
+              limit: configService.get<number>('telemetry.rateLimits.traces', 1000),
+            },
+          ],
+          // Use shared RedisThrottlerStorage from nest-common
+          // Provides: circuit breaker, sliding window, health checks
+          storage: new RedisThrottlerStorage({
+            url: redisUrl,
+            keyPrefix: 'throttle:telemetry:',
+            enableFallback: true,
+            circuitBreakerThreshold: 5,
+            circuitBreakerResetTime: 30000,
+          }),
+        };
+      },
+      inject: [ConfigService],
     }),
   ],
   controllers: [OtlpReceiverController],
