@@ -33,11 +33,12 @@
 
 ## Quick Links
 
-| Topic          | File                                                         |
-| -------------- | ------------------------------------------------------------ |
-| Database       | [database.md](database.md) → `docs/llm/policies/database.md` |
-| Testing        | [testing.md](testing.md) → `docs/llm/policies/testing.md`    |
-| Error Handling | `docs/llm/guides/frontend-error-handling.md`                 |
-| E2E Tests      | `apps/web-admin/e2e/README.md`                               |
+| Topic             | File                                                         |
+| ----------------- | ------------------------------------------------------------ |
+| Database          | [database.md](database.md) → `docs/llm/policies/database.md` |
+| Testing           | [testing.md](testing.md) → `docs/llm/policies/testing.md`    |
+| Error Handling    | `docs/llm/guides/frontend-error-handling.md`                 |
+| E2E Tests         | `apps/web-admin/e2e/README.md`                               |
+| Telemetry Gateway | `docs/llm/guides/telemetry-gateway-deployment.md`            |
 
 **SSOT Policy**: `docs/llm/policies/documentation-architecture.md`

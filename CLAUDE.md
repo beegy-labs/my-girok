@@ -113,15 +113,16 @@ my-girok/
 
 ## Policies & Guides
 
-| Topic                 | Path                                       |
-| --------------------- | ------------------------------------------ |
-| Best Practices (2026) | `docs/llm/policies/best-practices-2026.md` |
-| Database/Migrations   | `docs/llm/policies/database.md`            |
-| Security              | `docs/llm/policies/security.md`            |
-| Testing Standards     | `docs/llm/policies/testing.md`             |
-| Performance           | `docs/llm/policies/performance.md`         |
-| Deployment            | `docs/llm/policies/deployment.md`          |
-| External Resources    | `docs/llm/policies/external-resources.md`  |
+| Topic                 | Path                                              |
+| --------------------- | ------------------------------------------------- |
+| Best Practices (2026) | `docs/llm/policies/best-practices-2026.md`        |
+| Database/Migrations   | `docs/llm/policies/database.md`                   |
+| Security              | `docs/llm/policies/security.md`                   |
+| Testing Standards     | `docs/llm/policies/testing.md`                    |
+| Performance           | `docs/llm/policies/performance.md`                |
+| Deployment            | `docs/llm/policies/deployment.md`                 |
+| External Resources    | `docs/llm/policies/external-resources.md`         |
+| Telemetry Gateway     | `docs/llm/guides/telemetry-gateway-deployment.md` |
 
 **Token Optimization**: Read `.ai/` for coding (patterns, APIs), refer to `docs/llm/` for policies.
 

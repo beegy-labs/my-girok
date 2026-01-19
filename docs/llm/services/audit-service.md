@@ -10,14 +10,17 @@ codebase: services/audit-service/
 
 ## Boundaries
 
-| Owns       | Not                |
-| ---------- | ------------------ |
-| UI Events  | Business analytics |
-| API Logs   | Session mgmt       |
-| Data Audit | Authorization      |
-| Compliance | User data          |
+| Owns              | Not                |
+| ----------------- | ------------------ |
+| UI Events         | Business analytics |
+| API Logs          | Session mgmt       |
+| Data Audit        | Authorization      |
+| Compliance        | User data          |
+| Telemetry Gateway |                    |
 
 ## REST
+
+### Audit API
 
 ```
 GET /v1/audit/ui-events[/:id]
@@ -32,6 +35,37 @@ GET /v1/audit/stats/overview
 POST/GET /v1/exports[/:id/download]
 GET/PUT /v1/retention/policies
 ```
+
+### Telemetry Gateway
+
+**Purpose**: Secure gateway for external telemetry data (traces, metrics, logs) to internal OTEL Collector
+
+**Deployment Guide**: [telemetry-gateway-deployment.md](../guides/telemetry-gateway-deployment.md)
+
+```
+POST /v1/telemetry/traces   - Accept OTLP trace data
+POST /v1/telemetry/metrics  - Accept OTLP metric data
+POST /v1/telemetry/logs     - Accept OTLP log data
+```
+
+**Authentication**:
+
+- JWT (Frontend): `Authorization: Bearer <token>` with tenantId in payload
+- API Key (Backend): `x-api-key: <key>` + `x-tenant-id: <tenant-id>` headers
+
+**Rate Limits** (per tenant, per minute):
+
+- Traces: 1000 requests
+- Metrics: 2000 requests
+- Logs: 5000 requests
+
+**Features**:
+
+- PII Redaction: Automatically redacts email, SSN, phone, IP, credit card from telemetry data
+- Tenant Enrichment: Adds tenant.id, user.id, telemetry.source attributes
+- Cost Tracking: Tracks bytes and request counts per tenant per signal type
+- Audit Log Categorization: Identifies and marks audit logs for special handling
+- gRPC Forwarding: Forwards enriched data to internal OTEL Collector
 
 ## gRPC (50054)
 
@@ -99,6 +133,15 @@ CLICKHOUSE_DATABASE=audit_db
 CLICKHOUSE_WAIT_FOR_ASYNC_INSERT=true
 VALKEY_HOST=localhost
 VALKEY_DB=3
+
+# Telemetry Gateway
+OTEL_COLLECTOR_ENDPOINT=http://platform-monitoring-otel-collector.monitoring:4317
+OTEL_GATEWAY_ENABLED=true
+OTEL_FORWARD_TIMEOUT=30000
+TELEMETRY_API_KEYS=<comma-separated-keys>
+RATE_LIMIT_TRACES=1000
+RATE_LIMIT_METRICS=2000
+RATE_LIMIT_LOGS=5000
 ```
 
 ---
