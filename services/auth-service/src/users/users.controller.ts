@@ -21,17 +21,13 @@ export class UsersController {
 
   // Protected endpoints below
   @UseGuards(JwtAuthGuard)
-
   @Get('me')
   async getProfile(@CurrentUser() user: any) {
     return this.usersService.findById(user.id);
   }
 
   @Patch('me')
-  async updateProfile(
-    @CurrentUser() user: any,
-    @Body() data: { name?: string; avatar?: string },
-  ) {
+  async updateProfile(@CurrentUser() user: any, @Body() data: { name?: string; avatar?: string }) {
     return this.usersService.updateProfile(user.id, data);
   }
 
@@ -39,14 +35,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Change user password' })
   @ApiResponse({ status: 200, description: 'Password changed successfully' })
   @ApiResponse({ status: 401, description: 'Current password is incorrect' })
-  async changePassword(
-    @CurrentUser() user: any,
-    @Body() dto: ChangePasswordDto,
-  ) {
-    return this.usersService.changePassword(
-      user.id,
-      dto.currentPassword,
-      dto.newPassword,
-    );
+  async changePassword(@CurrentUser() user: any, @Body() dto: ChangePasswordDto) {
+    return this.usersService.changePassword(user.id, dto.currentPassword, dto.newPassword);
   }
 }

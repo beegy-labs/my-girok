@@ -67,7 +67,7 @@ export function base62Decode(str: string): number {
 export function generateRandomBase62(length: number): string {
   const bytes = crypto.randomBytes(length);
   return Array.from(bytes)
-    .map(byte => BASE62_CHARS[byte % 62])
+    .map((byte) => BASE62_CHARS[byte % 62])
     .join('');
 }
 
@@ -118,7 +118,7 @@ export function generateExternalId(): string {
  * @throws Error if unable to generate unique ID after MAX_RETRY_ATTEMPTS
  */
 export async function generateUniqueExternalId(
-  checkUniqueness: (id: string) => Promise<boolean>
+  checkUniqueness: (id: string) => Promise<boolean>,
 ): Promise<string> {
   for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
     const externalId = generateExternalId();
@@ -132,13 +132,13 @@ export async function generateUniqueExternalId(
 
     // Log collision (rare event, worth monitoring)
     console.warn(
-      `External ID collision detected: ${externalId} (attempt ${attempt}/${MAX_RETRY_ATTEMPTS})`
+      `External ID collision detected: ${externalId} (attempt ${attempt}/${MAX_RETRY_ATTEMPTS})`,
     );
   }
 
   // This should be extremely rare (probability: 1 in 3,844 per millisecond)
   throw new Error(
-    `Failed to generate unique external ID after ${MAX_RETRY_ATTEMPTS} attempts. This indicates a serious system issue.`
+    `Failed to generate unique external ID after ${MAX_RETRY_ATTEMPTS} attempts. This indicates a serious system issue.`,
   );
 }
 
@@ -176,5 +176,5 @@ export function isValidExternalId(externalId: string): boolean {
   if (externalId.length !== 10) return false;
 
   // Check if all characters are in Base62 charset
-  return externalId.split('').every(char => BASE62_CHARS.includes(char));
+  return externalId.split('').every((char) => BASE62_CHARS.includes(char));
 }
