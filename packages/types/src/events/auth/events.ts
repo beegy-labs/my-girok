@@ -177,6 +177,126 @@ export interface PhoneChangedEvent extends BaseDomainEvent {
 }
 
 // ============================================================================
+// Admin Account Management Events
+// ============================================================================
+
+/**
+ * Admin account created event
+ * Fired when a new admin account is created
+ */
+export interface AdminCreatedEvent extends BaseDomainEvent {
+  eventType: 'ADMIN_CREATED';
+  aggregateType: 'Admin';
+  actor: EventActor;
+  payload: {
+    /** Admin ID */
+    adminId: string;
+    /** Admin email */
+    email: string;
+    /** Admin name */
+    name: string;
+    /** Assigned role ID */
+    roleId: string;
+    /** Admin scope */
+    scope: 'SYSTEM' | 'TENANT';
+    /** Tenant ID if scope is TENANT */
+    tenantId?: string;
+  };
+}
+
+/**
+ * Admin account updated event
+ * Fired when an admin account is updated
+ */
+export interface AdminUpdatedEvent extends BaseDomainEvent {
+  eventType: 'ADMIN_UPDATED';
+  aggregateType: 'Admin';
+  actor: EventActor;
+  payload: {
+    /** Admin ID */
+    adminId: string;
+    /** Fields that were changed */
+    changedFields: string[];
+  };
+}
+
+/**
+ * Admin account deactivated event
+ * Fired when an admin account is deactivated
+ */
+export interface AdminDeactivatedEvent extends BaseDomainEvent {
+  eventType: 'ADMIN_DEACTIVATED';
+  aggregateType: 'Admin';
+  actor: EventActor;
+  payload: {
+    /** Admin ID */
+    adminId: string;
+    /** Admin email */
+    email: string;
+    /** Reason for deactivation */
+    reason?: string;
+  };
+}
+
+/**
+ * Admin account reactivated event
+ * Fired when an admin account is reactivated
+ */
+export interface AdminReactivatedEvent extends BaseDomainEvent {
+  eventType: 'ADMIN_REACTIVATED';
+  aggregateType: 'Admin';
+  actor: EventActor;
+  payload: {
+    /** Admin ID */
+    adminId: string;
+    /** Admin email */
+    email: string;
+  };
+}
+
+/**
+ * Admin invited event
+ * Fired when an admin is invited to the system
+ */
+export interface AdminInvitedEvent extends BaseDomainEvent {
+  eventType: 'ADMIN_INVITED';
+  aggregateType: 'Admin';
+  actor: EventActor;
+  payload: {
+    /** Invitation ID */
+    invitationId: string;
+    /** Invited admin email */
+    email: string;
+    /** Invited admin name */
+    name: string;
+    /** Assigned role ID */
+    roleId: string;
+    /** Invitation type */
+    type: 'EMAIL' | 'DIRECT';
+    /** Expiration timestamp */
+    expiresAt: Date;
+  };
+}
+
+/**
+ * Admin role changed event
+ * Fired when an admin's role is changed
+ */
+export interface AdminRoleChangedEvent extends BaseDomainEvent {
+  eventType: 'ADMIN_ROLE_CHANGED';
+  aggregateType: 'Admin';
+  actor: EventActor;
+  payload: {
+    /** Admin ID */
+    adminId: string;
+    /** Previous role ID */
+    previousRoleId: string;
+    /** New role ID */
+    newRoleId: string;
+  };
+}
+
+// ============================================================================
 // Role Events - Re-exported from identity events (SSOT)
 // ============================================================================
 // Note: RoleAssignedEvent and RoleRevokedEvent are defined in identity/events.ts
@@ -198,6 +318,12 @@ export const AUTH_EVENT_TYPES = {
   TOKEN_REVOKED: 'TOKEN_REVOKED',
   EMAIL_CHANGED: 'EMAIL_CHANGED',
   PHONE_CHANGED: 'PHONE_CHANGED',
+  ADMIN_CREATED: 'ADMIN_CREATED',
+  ADMIN_UPDATED: 'ADMIN_UPDATED',
+  ADMIN_DEACTIVATED: 'ADMIN_DEACTIVATED',
+  ADMIN_REACTIVATED: 'ADMIN_REACTIVATED',
+  ADMIN_INVITED: 'ADMIN_INVITED',
+  ADMIN_ROLE_CHANGED: 'ADMIN_ROLE_CHANGED',
 } as const;
 
 export type AuthEventType = (typeof AUTH_EVENT_TYPES)[keyof typeof AUTH_EVENT_TYPES];
@@ -217,4 +343,10 @@ export type AuthEvent =
   | LoginSucceededEvent
   | TokenRevokedEvent
   | EmailChangedEvent
-  | PhoneChangedEvent;
+  | PhoneChangedEvent
+  | AdminCreatedEvent
+  | AdminUpdatedEvent
+  | AdminDeactivatedEvent
+  | AdminReactivatedEvent
+  | AdminInvitedEvent
+  | AdminRoleChangedEvent;

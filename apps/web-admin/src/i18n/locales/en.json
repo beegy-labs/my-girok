@@ -48,7 +48,11 @@
     "allCountries": "All Countries",
     "required": "Required",
     "optional": "Optional",
-    "remove": "Remove"
+    "remove": "Remove",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "back": "Back",
+    "pageOf": "Page {{page}} of {{total}}"
   },
   "menu": {
     "dashboard": "Dashboard",
@@ -76,7 +80,8 @@
     "auditLogs": "Audit Logs",
     "loginHistory": "Login History",
     "sessionRecordings": "Session Recordings",
-    "settings": "Settings"
+    "settings": "Settings",
+    "adminAccounts": "Admin Accounts"
   },
   "auth": {
     "title": "Girok Admin",
@@ -760,5 +765,38 @@
         "SPECIFIC_PERMISSIONS": "Specific Permissions"
       }
     }
+  },
+  "admin": {
+    "adminAccounts": "Admin Accounts",
+    "adminAccountsDescription": "Manage system administrator accounts",
+    "addAdmin": "Add Admin",
+    "createAdmin": "Create Admin",
+    "editAdmin": "Edit Admin",
+    "searchPlaceholder": "Search by email or name...",
+    "email": "Email",
+    "name": "Name",
+    "role": "Role",
+    "scope": "Scope",
+    "status": "Status",
+    "lastLogin": "Last Login",
+    "createdAt": "Created At",
+    "tenant": "Tenant",
+    "tempPassword": "Temporary Password",
+    "selectRole": "Select a role",
+    "basicInfo": "Basic Information",
+    "permissions": "Permissions",
+    "permissionsReadOnly": "Permissions are managed through roles. Edit the role to change permissions.",
+    "noPermissions": "No permissions assigned",
+    "createSuccess": "Admin created successfully",
+    "createError": "Failed to create admin",
+    "updateSuccess": "Admin updated successfully",
+    "updateError": "Failed to update admin",
+    "allScopes": "All Scopes",
+    "adminCount": "{{count}} admins",
+    "emailRequired": "Email is required",
+    "invalidEmail": "Invalid email address",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "nameMinLength": "Name must be at least 2 characters",
+    "roleRequired": "Please select a role"
   }
 }
