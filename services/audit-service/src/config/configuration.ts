@@ -15,10 +15,6 @@ export default () => ({
 
   JWT_SECRET: process.env.JWT_SECRET,
 
-  jwt: {
-    secret: process.env.JWT_SECRET,
-  },
-
   valkey: {
     host: process.env.VALKEY_HOST || 'localhost',
     port: parseInt(process.env.VALKEY_PORT || '6379', 10),

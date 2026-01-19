@@ -1,8 +1,8 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
-import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-grpc';
-import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-grpc';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import axios, { AxiosInstance } from 'axios';
 import {
   TelemetryContext,
   OtlpTraceFormat,
@@ -10,7 +10,6 @@ import {
   OtlpLogFormat,
   SignalType,
   PiiPattern,
-  TelemetryCost,
 } from '../types/telemetry.types';
 
 /**
@@ -25,11 +24,9 @@ import {
  * - Audit log categorization
  */
 @Injectable()
-export class OtlpReceiverService implements OnModuleInit, OnModuleDestroy {
+export class OtlpReceiverService implements OnModuleInit {
   private readonly logger = new Logger(OtlpReceiverService.name);
-  private traceExporter!: OTLPTraceExporter;
-  private metricExporter!: OTLPMetricExporter;
-  private logExporter!: OTLPLogExporter;
+  private httpClient!: AxiosInstance;
   private collectorEndpoint!: string;
   private enabled!: boolean;
   private timeout!: number;
@@ -63,16 +60,18 @@ export class OtlpReceiverService implements OnModuleInit, OnModuleDestroy {
     },
   ];
 
-  // In-memory cost tracking (in production, this should be persisted)
-  private costTracking = new Map<string, TelemetryCost[]>();
-
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+  ) {}
 
   onModuleInit() {
-    this.collectorEndpoint = this.configService.get<string>(
+    // Get gRPC endpoint (port 4317) and convert to HTTP endpoint (port 4318)
+    const grpcEndpoint = this.configService.get<string>(
       'otel.collectorEndpoint',
       'http://localhost:4317',
     );
+    this.collectorEndpoint = grpcEndpoint.replace(':4317', ':4318');
     this.enabled = this.configService.get<boolean>('otel.enabled', true);
     this.timeout = this.configService.get<number>('otel.timeout', 30000);
 
@@ -81,42 +80,18 @@ export class OtlpReceiverService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    this.logger.log(`Initializing OTLP exporters to ${this.collectorEndpoint}`);
+    this.logger.log(`Initializing HTTP client for OTLP forwarding to ${this.collectorEndpoint}`);
 
-    // Initialize gRPC exporters
-    this.traceExporter = new OTLPTraceExporter({
-      url: this.collectorEndpoint,
-      timeoutMillis: this.timeout,
+    // Initialize HTTP client for OTLP/HTTP protocol
+    this.httpClient = axios.create({
+      baseURL: this.collectorEndpoint,
+      timeout: this.timeout,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
-    this.metricExporter = new OTLPMetricExporter({
-      url: this.collectorEndpoint,
-      timeoutMillis: this.timeout,
-    });
-
-    this.logExporter = new OTLPLogExporter({
-      url: this.collectorEndpoint,
-      timeoutMillis: this.timeout,
-    });
-
-    this.logger.log('OTLP exporters initialized successfully');
-  }
-
-  async onModuleDestroy() {
-    if (!this.enabled) {
-      return;
-    }
-
-    this.logger.log('Shutting down OTLP exporters');
-
-    try {
-      await this.traceExporter.shutdown();
-      await this.metricExporter.shutdown();
-      await this.logExporter.shutdown();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Error shutting down exporters: ${message}`);
-    }
+    this.logger.log('HTTP client for OTLP forwarding initialized successfully');
   }
 
   /**
@@ -327,30 +302,36 @@ export class OtlpReceiverService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Track telemetry costs for a tenant
+   * Track telemetry costs for a tenant using Redis
    */
-  private trackCost(context: TelemetryContext, signalType: SignalType, dataSize: number): void {
-    const key = `${context.tenantId}-${signalType}`;
-    const costs = this.costTracking.get(key) || [];
+  private async trackCost(
+    context: TelemetryContext,
+    signalType: SignalType,
+    dataSize: number,
+  ): Promise<void> {
+    const key = `telemetry:cost:${context.tenantId}:${signalType}`;
+    const ttl = 86400000; // 24 hours
 
-    costs.push({
-      tenantId: context.tenantId,
-      signalType,
-      count: 1,
-      bytes: dataSize,
-      timestamp: new Date(),
-    });
+    try {
+      // Get current cost data
+      const currentCost = await this.cacheManager.get<{ count: number; bytes: number }>(key);
 
-    // Keep only last 1000 entries per tenant-signal combination
-    if (costs.length > 1000) {
-      costs.shift();
+      // Update cost data
+      const updatedCost = {
+        count: (currentCost?.count || 0) + 1,
+        bytes: (currentCost?.bytes || 0) + dataSize,
+      };
+
+      // Store updated cost data
+      await this.cacheManager.set(key, updatedCost, ttl);
+
+      this.logger.debug(
+        `Tracked cost for tenant ${context.tenantId}: ${signalType} (${dataSize} bytes)`,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Failed to track cost: ${message}`);
     }
-
-    this.costTracking.set(key, costs);
-
-    this.logger.debug(
-      `Tracked cost for tenant ${context.tenantId}: ${signalType} (${dataSize} bytes)`,
-    );
   }
 
   /**
@@ -366,12 +347,14 @@ export class OtlpReceiverService implements OnModuleInit, OnModuleDestroy {
       const enriched = this.enrichTraces(data, context);
       const dataSize = JSON.stringify(enriched).length;
 
-      // Track cost
-      this.trackCost(context, SignalType.TRACES, dataSize);
+      // Track cost (non-blocking)
+      this.trackCost(context, SignalType.TRACES, dataSize).catch((err) =>
+        this.logger.warn(`Cost tracking failed: ${err.message}`),
+      );
 
-      // Forward to OTEL Collector
-      // Note: The exporter expects ResourceSpans objects, not JSON
-      // For now, we'll log success (actual implementation would convert to protobuf)
+      // Forward to OTEL Collector via HTTP/JSON
+      await this.httpClient.post('/v1/traces', enriched);
+
       this.logger.debug(
         `Forwarded ${enriched.resourceSpans?.length || 0} trace spans for tenant ${context.tenantId}`,
       );
@@ -395,10 +378,14 @@ export class OtlpReceiverService implements OnModuleInit, OnModuleDestroy {
       const enriched = this.enrichMetrics(data, context);
       const dataSize = JSON.stringify(enriched).length;
 
-      // Track cost
-      this.trackCost(context, SignalType.METRICS, dataSize);
+      // Track cost (non-blocking)
+      this.trackCost(context, SignalType.METRICS, dataSize).catch((err) =>
+        this.logger.warn(`Cost tracking failed: ${err.message}`),
+      );
 
-      // Forward to OTEL Collector
+      // Forward to OTEL Collector via HTTP/JSON
+      await this.httpClient.post('/v1/metrics', enriched);
+
       this.logger.debug(
         `Forwarded ${enriched.resourceMetrics?.length || 0} metrics for tenant ${context.tenantId}`,
       );
@@ -422,10 +409,14 @@ export class OtlpReceiverService implements OnModuleInit, OnModuleDestroy {
       const enriched = this.enrichLogs(data, context);
       const dataSize = JSON.stringify(enriched).length;
 
-      // Track cost
-      this.trackCost(context, SignalType.LOGS, dataSize);
+      // Track cost (non-blocking)
+      this.trackCost(context, SignalType.LOGS, dataSize).catch((err) =>
+        this.logger.warn(`Cost tracking failed: ${err.message}`),
+      );
 
-      // Forward to OTEL Collector
+      // Forward to OTEL Collector via HTTP/JSON
+      await this.httpClient.post('/v1/logs', enriched);
+
       this.logger.debug(
         `Forwarded ${enriched.resourceLogs?.length || 0} log records for tenant ${context.tenantId}`,
       );
@@ -437,22 +428,28 @@ export class OtlpReceiverService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Get cost tracking summary for a tenant
+   * Get cost tracking summary for a tenant from Redis
    */
-  getCostSummary(tenantId: string): Record<string, { count: number; bytes: number }> {
+  async getCostSummary(
+    tenantId: string,
+  ): Promise<Record<string, { count: number; bytes: number }>> {
     const summary: Record<string, { count: number; bytes: number }> = {};
 
-    for (const [key, costs] of this.costTracking.entries()) {
-      if (key.startsWith(`${tenantId}-`)) {
-        const signalType = key.substring(tenantId.length + 1); // Extract signal type after "tenantId-"
-        summary[signalType] = costs.reduce(
-          (acc, cost) => ({
-            count: acc.count + cost.count,
-            bytes: acc.bytes + cost.bytes,
-          }),
-          { count: 0, bytes: 0 },
-        );
+    try {
+      // Query Redis for all signal types
+      const signalTypes = [SignalType.TRACES, SignalType.METRICS, SignalType.LOGS];
+
+      for (const signalType of signalTypes) {
+        const key = `telemetry:cost:${tenantId}:${signalType}`;
+        const costData = await this.cacheManager.get<{ count: number; bytes: number }>(key);
+
+        if (costData) {
+          summary[signalType] = costData;
+        }
       }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to get cost summary: ${message}`);
     }
 
     return summary;

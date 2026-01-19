@@ -2,9 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { OtlpReceiverController } from './controllers/otlp-receiver.controller';
 import { OtlpReceiverService } from './services/otlp-receiver.service';
 import { TenantAuthGuard } from './guards/tenant-auth.guard';
+import { RedisThrottlerStorage } from './storage/redis-throttler-storage';
 
 /**
  * Telemetry Module
@@ -32,7 +35,7 @@ import { TenantAuthGuard } from './guards/tenant-auth.guard';
     }),
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: async (configService: ConfigService, cacheManager: Cache) => ({
         throttlers: [
           {
             ttl: 60000, // 1 minute
@@ -40,9 +43,9 @@ import { TenantAuthGuard } from './guards/tenant-auth.guard';
           },
         ],
         // Use Valkey (Redis) for distributed rate limiting
-        storage: undefined, // Will use default in-memory storage, can be enhanced with Redis storage
+        storage: new RedisThrottlerStorage(cacheManager),
       }),
-      inject: [ConfigService],
+      inject: [ConfigService, CACHE_MANAGER],
     }),
   ],
   controllers: [OtlpReceiverController],

@@ -6,15 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@dnd-kit/core':
-      specifier: ^6.3.1
-      version: 6.3.1
-    '@dnd-kit/sortable':
-      specifier: ^10.0.0
-      version: 10.0.0
-    '@dnd-kit/utilities':
-      specifier: ^3.2.2
-      version: 3.2.2
     '@nestjs/cli':
       specifier: ^11.0.14
       version: 11.0.14
@@ -30,51 +21,24 @@ catalogs:
     '@nestjs/jwt':
       specifier: ^11.0.2
       version: 11.0.2
-    '@nestjs/microservices':
-      specifier: ^11.1.9
-      version: 11.1.11
     '@nestjs/passport':
       specifier: ^11.0.5
       version: 11.0.5
     '@nestjs/platform-express':
       specifier: ^11.1.9
       version: 11.1.9
-    '@nestjs/schedule':
-      specifier: ^6.0.0
-      version: 6.1.0
     '@nestjs/swagger':
       specifier: ^11.2.3
       version: 11.2.3
     '@nestjs/testing':
       specifier: ^11.1.9
       version: 11.1.9
-    '@playwright/test':
-      specifier: ^1.57.0
-      version: 1.57.0
-    '@prisma/client':
-      specifier: ^6.19.0
-      version: 6.19.0
-    '@tailwindcss/vite':
-      specifier: ^4.1.18
-      version: 4.1.18
-    '@testing-library/jest-dom':
-      specifier: ^6.9.1
-      version: 6.9.1
-    '@testing-library/react':
-      specifier: ^16.3.0
-      version: 16.3.0
     '@types/express':
       specifier: ^5.0.6
       version: 5.0.6
     '@types/node':
       specifier: ^25.0.1
       version: 25.0.1
-    '@types/react':
-      specifier: ^19.2.7
-      version: 19.2.7
-    '@types/react-dom':
-      specifier: ^19.2.3
-      version: 19.2.3
     '@typescript-eslint/eslint-plugin':
       specifier: ^8.49.0
       version: 8.49.0
@@ -90,36 +54,15 @@ catalogs:
     helmet:
       specifier: ^8.1.0
       version: 8.1.0
-    kafkajs:
-      specifier: ^2.2.4
-      version: 2.2.4
     passport:
       specifier: ^0.7.0
       version: 0.7.0
     passport-jwt:
       specifier: ^4.0.1
       version: 4.0.1
-    prisma:
-      specifier: ^6.19.0
-      version: 6.19.1
-    react:
-      specifier: ^19.2.3
-      version: 19.2.3
-    react-dom:
-      specifier: ^19.2.3
-      version: 19.2.3
-    tailwindcss:
-      specifier: ^4.1.18
-      version: 4.1.18
-    tsup:
-      specifier: ^8.5.1
-      version: 8.5.1
     typescript:
       specifier: ^5.9.3
       version: 5.9.3
-    vite:
-      specifier: ^7.2.7
-      version: 7.2.7
     vitest:
       specifier: ^4.0.15
       version: 4.0.15
@@ -883,18 +826,9 @@ importers:
       '@nestjs/throttler':
         specifier: ^6.4.0
         version: 6.5.0(@nestjs/common@11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)(reflect-metadata@0.2.2)
-      '@opentelemetry/exporter-logs-otlp-grpc':
-        specifier: ^0.57.0
-        version: 0.57.2(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-metrics-otlp-grpc':
-        specifier: ^0.57.0
-        version: 0.57.2(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-trace-otlp-grpc':
-        specifier: ^0.57.0
-        version: 0.57.2(@opentelemetry/api@1.9.0)
-      '@opentelemetry/otlp-transformer':
-        specifier: ^0.57.0
-        version: 0.57.2(@opentelemetry/api@1.9.0)
+      axios:
+        specifier: ^1.13.2
+        version: 1.13.2
       cache-manager:
         specifier: ^7.2.7
         version: 7.2.7
@@ -15222,7 +15156,7 @@ snapshots:
       sirv: 3.0.2
       tinyrainbow: 3.0.3
       vitest: 4.0.15(@opentelemetry/api@1.9.0)(@types/node@25.0.1)(jiti@2.6.1)(jsdom@27.3.0(postcss@8.5.6))(lightningcss@1.30.2)(terser@5.44.1)(yaml@2.8.2)
-      ws: 8.18.3
+      ws: 8.19.0
     transitivePeerDependencies:
       - bufferutil
       - msw

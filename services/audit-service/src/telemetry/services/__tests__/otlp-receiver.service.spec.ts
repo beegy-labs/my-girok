@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import axios from 'axios';
 import { OtlpReceiverService } from '../otlp-receiver.service';
 import {
   TelemetryContext,
@@ -10,9 +12,12 @@ import {
   SignalType,
 } from '../../types/telemetry.types';
 
+vi.mock('axios');
+
 describe('OtlpReceiverService', () => {
   let service: OtlpReceiverService;
   let configService: ConfigService;
+  let cacheManager: any;
 
   const mockContext: TelemetryContext = {
     tenantId: 'tenant-123',
@@ -33,8 +38,34 @@ describe('OtlpReceiverService', () => {
       }),
     };
 
+    // Mock cache manager with in-memory storage for tests
+    const cache = new Map<string, any>();
+    const mockCacheManager = {
+      get: vi.fn((key: string) => cache.get(key)),
+      set: vi.fn((key: string, value: any) => {
+        cache.set(key, value);
+        return Promise.resolve();
+      }),
+      del: vi.fn((key: string) => cache.delete(key)),
+      reset: vi.fn(() => cache.clear()),
+    };
+    cacheManager = mockCacheManager;
+
+    // Mock axios.create to return a mock HTTP client
+    const mockHttpClient = {
+      post: vi.fn().mockResolvedValue({ status: 200, data: {} }),
+      get: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+    };
+    vi.mocked(axios.create).mockReturnValue(mockHttpClient as any);
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [OtlpReceiverService, { provide: ConfigService, useValue: mockConfigService }],
+      providers: [
+        OtlpReceiverService,
+        { provide: ConfigService, useValue: mockConfigService },
+        { provide: CACHE_MANAGER, useValue: mockCacheManager },
+      ],
     }).compile();
 
     service = module.get<OtlpReceiverService>(OtlpReceiverService);
@@ -410,7 +441,7 @@ describe('OtlpReceiverService', () => {
 
       await service.forwardTraces(traceData, mockContext);
 
-      const summary = service.getCostSummary('tenant-123');
+      const summary = await service.getCostSummary('tenant-123');
 
       expect(summary[SignalType.TRACES]).toBeDefined();
       expect(summary[SignalType.TRACES].count).toBeGreaterThan(0);
@@ -426,15 +457,15 @@ describe('OtlpReceiverService', () => {
       await service.forwardMetrics(metricData, mockContext);
       await service.forwardLogs(logData, mockContext);
 
-      const summary = service.getCostSummary('tenant-123');
+      const summary = await service.getCostSummary('tenant-123');
 
       expect(summary[SignalType.TRACES]).toBeDefined();
       expect(summary[SignalType.METRICS]).toBeDefined();
       expect(summary[SignalType.LOGS]).toBeDefined();
     });
 
-    it('should return empty summary for unknown tenant', () => {
-      const summary = service.getCostSummary('unknown-tenant');
+    it('should return empty summary for unknown tenant', async () => {
+      const summary = await service.getCostSummary('unknown-tenant');
 
       expect(Object.keys(summary)).toHaveLength(0);
     });
@@ -507,16 +538,31 @@ describe('OtlpReceiverService', () => {
     });
 
     it('should skip forwarding when gateway is disabled', async () => {
-      vi.mocked(configService.get).mockImplementation((key: string, defaultValue?: any) => {
-        if (key === 'otel.enabled') {
-          return false;
-        }
-        return defaultValue;
-      });
+      const disabledConfigService = {
+        get: vi.fn((key: string, defaultValue?: any) => {
+          if (key === 'otel.enabled') {
+            return false;
+          }
+          const config: Record<string, any> = {
+            'otel.collectorEndpoint': 'http://localhost:4317',
+            'otel.timeout': 30000,
+          };
+          return config[key] ?? defaultValue;
+        }),
+      };
+
+      const mockCacheManager = {
+        get: vi.fn(),
+        set: vi.fn(),
+      };
 
       // Re-initialize with disabled config
       const module: TestingModule = await Test.createTestingModule({
-        providers: [OtlpReceiverService, { provide: ConfigService, useValue: configService }],
+        providers: [
+          OtlpReceiverService,
+          { provide: ConfigService, useValue: disabledConfigService },
+          { provide: CACHE_MANAGER, useValue: mockCacheManager },
+        ],
       }).compile();
 
       const disabledService = module.get<OtlpReceiverService>(OtlpReceiverService);
@@ -530,23 +576,9 @@ describe('OtlpReceiverService', () => {
   });
 
   describe('Module Lifecycle', () => {
-    it('should initialize exporters on module init', () => {
+    it('should initialize HTTP client on module init', () => {
       // Already tested in beforeEach, verify it doesn't throw
       expect(() => service.onModuleInit()).not.toThrow();
-    });
-
-    it('should shutdown exporters on module destroy', async () => {
-      await expect(service.onModuleDestroy()).resolves.toBeUndefined();
-    });
-
-    it('should handle shutdown errors gracefully', async () => {
-      // Mock shutdown to throw an error
-      service['traceExporter'] = {
-        shutdown: vi.fn().mockRejectedValue(new Error('Shutdown failed')),
-      } as any;
-
-      // Should not throw, error should be logged
-      await expect(service.onModuleDestroy()).resolves.toBeUndefined();
     });
   });
 });
