@@ -10,6 +10,7 @@
 | Compliance reports | User data storage  |
 | Session recordings | Identity data      |
 | Session analytics  |                    |
+| Kafka consumers    | Event production   |
 
 ## gRPC (Summary)
 
@@ -21,6 +22,17 @@ Get*Events, GenerateComplianceReport
 Session Recording:
 RecordEvent, ListSessions, GetSession, GetSessionEvents
 GetSessionStats, GetDeviceBreakdown, GetTopPages
+```
+
+## Kafka Consumers
+
+```
+Admin Events (from auth-service):
+admin.created, admin.updated, admin.deactivated
+admin.reactivated, admin.invited, admin.roleChanged
+
+Consumer Group: audit-service-admin-events
+Target: admin_audit_logs (ClickHouse)
 ```
 
 **SSOT**: `docs/llm/services/audit-service.md`

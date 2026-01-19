@@ -27,6 +27,7 @@
     "@nestjs/config": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/jwt": "catalog:",
+    "@nestjs/microservices": "catalog:",
     "@nestjs/passport": "catalog:",
     "@nestjs/platform-express": "catalog:",
     "@nestjs/schedule": "^5.0.1",

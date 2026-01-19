@@ -64,6 +64,41 @@ Proto: `packages/proto/audit/v1/audit.proto`
 
 Proto: `packages/proto/session-recording/v1/session-recording.proto`
 
+## Kafka Consumers
+
+### Admin Events Consumer
+
+Consumes admin account management events from auth-service and persists them to ClickHouse for compliance logging.
+
+| Event Topic       | Handler                 | Target Table     |
+| ----------------- | ----------------------- | ---------------- |
+| admin.created     | AdminCreatedHandler     | admin_audit_logs |
+| admin.updated     | AdminUpdatedHandler     | admin_audit_logs |
+| admin.deactivated | AdminDeactivatedHandler | admin_audit_logs |
+| admin.reactivated | AdminReactivatedHandler | admin_audit_logs |
+| admin.invited     | AdminInvitedHandler     | admin_audit_logs |
+| admin.roleChanged | AdminRoleChangedHandler | admin_audit_logs |
+
+**Consumer Group**: `audit-service-admin-events`
+**Source Service**: auth-service
+**Event Types**: `@my-girok/types/events/auth`
+
+### Architecture
+
+```
+auth-service → Redpanda (Kafka) → audit-service → ClickHouse
+               (admin.* topics)    (consumers)     (admin_audit_logs)
+```
+
+**Implementation**:
+
+- `src/kafka/kafka.module.ts` - Kafka configuration
+- `src/admin-audit/consumers/admin-events.consumer.ts` - Event patterns
+- `src/admin-audit/handlers/*.handler.ts` - Event handlers (6 types)
+- `src/admin-audit/mappers/admin-event.mapper.ts` - Event-to-audit-log mapping
+
+**Error Handling**: Failed events are retried by Kafka (8 retries, exponential backoff)
+
 ## Tables
 
 | Table            | TTL | Purpose      |
@@ -99,6 +134,12 @@ CLICKHOUSE_DATABASE=audit_db
 CLICKHOUSE_WAIT_FOR_ASYNC_INSERT=true
 VALKEY_HOST=localhost
 VALKEY_DB=3
+
+# Kafka/Redpanda
+REDPANDA_ENABLED=true
+REDPANDA_BROKERS=kafka.girok.dev:9093
+REDPANDA_SASL_USERNAME=<vault>
+REDPANDA_SASL_PASSWORD=<vault>
 ```
 
 ---
