@@ -20,7 +20,6 @@ describe('AdminAccountService', () => {
 
   const mockAdminId = '01935c6d-c2d0-7abc-8def-1234567890aa';
   const mockRoleId = '01935c6d-c2d0-7abc-8def-1234567890bb';
-  const mockTenantId = '01935c6d-c2d0-7abc-8def-1234567890cc';
 
   beforeEach(async () => {
     const mockPrismaService = {
