@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { AdminAccountService } from './admin-account.service';
 import { PrismaService } from '../../database/prisma.service';
+import { AuditEventEmitterService } from '../../common/services/audit-event-emitter.service';
 import { AdminScope } from '../dto/admin-account.dto';
 import * as bcrypt from 'bcrypt';
 
@@ -30,6 +31,11 @@ describe('AdminAccountService', () => {
         update: vi.fn(),
         count: vi.fn(),
       },
+      admin_invitations: {
+        findFirst: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+      },
       roles: {
         findFirst: vi.fn(),
         findMany: vi.fn(),
@@ -44,12 +50,25 @@ describe('AdminAccountService', () => {
       $queryRaw: vi.fn(),
     };
 
+    const mockAuditEventEmitter = {
+      emitAdminCreated: vi.fn(),
+      emitAdminUpdated: vi.fn(),
+      emitAdminDeactivated: vi.fn(),
+      emitAdminReactivated: vi.fn(),
+      emitAdminInvited: vi.fn(),
+      emitAdminRoleChanged: vi.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminAccountService,
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: AuditEventEmitterService,
+          useValue: mockAuditEventEmitter,
         },
       ],
     }).compile();
