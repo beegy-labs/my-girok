@@ -89,8 +89,10 @@ All HR implementation code has been removed from auth-service:
 
 - Attendance module (deleted)
 - Leave module (deleted)
-- Delegation module (kept - now under Phase 4)
+- Delegation module (deleted)
 - Employee module (deleted)
+
+**Note**: Phase 4 Delegation Management remains in compliance module, not the deleted HR delegation.
 
 **HR Data**: HR tables remain in auth_db for historical reference.
 **Future HR**: When needed, HR will be implemented in a separate hr-service.
