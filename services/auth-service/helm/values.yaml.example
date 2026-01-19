@@ -146,6 +146,27 @@ app:
       port: 50051
 
 # ============================================================================
+# Redpanda/Kafka Configuration (optional)
+# ============================================================================
+# Enable for event-driven architecture (audit logging, domain events)
+redpanda:
+  enabled: false
+  # brokers: "redpanda.default.svc.cluster.local:9092"
+  # secretName: "auth-service-redpanda"  # SASL authentication (optional)
+
+# ============================================================================
+# OpenTelemetry Configuration (optional)
+# ============================================================================
+otel:
+  enabled: false
+  # endpoint: "http://otel-collector:4318"
+  # protocol: "http/protobuf"
+  # serviceName: "auth-service"
+  # tracesEnabled: true
+  # metricsEnabled: true
+  # logsEnabled: false
+
+# ============================================================================
 # Sealed Secrets Configuration
 # ============================================================================
 # Use kubeseal to encrypt secrets before committing

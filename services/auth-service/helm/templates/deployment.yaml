@@ -74,6 +74,32 @@ spec:
           value: {{ .Values.app.grpc.identity.host | quote }}
         - name: IDENTITY_GRPC_PORT
           value: {{ .Values.app.grpc.identity.port | quote }}
+        # ============================================================================
+        # Redpanda/Kafka Configuration (optional)
+        # ============================================================================
+        {{- if .Values.redpanda.enabled }}
+        - name: REDPANDA_ENABLED
+          value: "true"
+        - name: REDPANDA_BROKERS
+          value: {{ .Values.redpanda.brokers | quote }}
+        {{- if .Values.redpanda.secretName }}
+        - name: REDPANDA_SASL_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.redpanda.secretName }}
+              key: username
+              optional: true
+        - name: REDPANDA_SASL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.redpanda.secretName }}
+              key: password
+              optional: true
+        {{- end }}
+        {{- else }}
+        - name: REDPANDA_ENABLED
+          value: "false"
+        {{- end }}
         - name: GOOGLE_CLIENT_ID
           valueFrom:
             secretKeyRef:

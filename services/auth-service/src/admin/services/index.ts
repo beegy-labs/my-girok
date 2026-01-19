@@ -20,3 +20,6 @@ export * from './operator-assignment.service';
 // Phase 2: Admin Enterprise Services
 export * from './admin-profile.service';
 export * from './admin-enterprise.service';
+
+// Phase 3: Admin Account Management
+export * from './admin-account.service';
