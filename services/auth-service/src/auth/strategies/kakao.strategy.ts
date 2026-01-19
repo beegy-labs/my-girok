@@ -21,11 +21,7 @@ export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
     });
   }
 
-  async validate(
-    accessToken: string,
-    _refreshToken: string,
-    _profile: any,
-  ): Promise<any> {
+  async validate(accessToken: string, _refreshToken: string, _profile: any): Promise<any> {
     // Fetch user profile from Kakao API
     const response = await fetch('https://kapi.kakao.com/v2/user/me', {
       headers: {
@@ -33,7 +29,10 @@ export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
       },
     });
 
-    const data = await response.json() as { id: string; kakao_account: { email: string; profile?: { nickname: string; profile_image_url: string } } };
+    const data = (await response.json()) as {
+      id: string;
+      kakao_account: { email: string; profile?: { nickname: string; profile_image_url: string } };
+    };
     const { id, kakao_account } = data;
 
     const user = await this.authService.findOrCreateOAuthUser(
