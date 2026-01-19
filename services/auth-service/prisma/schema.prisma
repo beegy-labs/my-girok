@@ -655,8 +655,8 @@ model OperatorInvitation {
   countryCode  String           @map("country_code") @db.VarChar(2)
   email        String           @db.VarChar(255)
   name         String           @db.VarChar(100)
-  type         InvitationType
-  status       InvitationStatus @default(PENDING)
+  type         invitation_type
+  status       invitation_status @default(PENDING)
   token        String?          @unique
   tempPassword String?          @map("temp_password")
   permissions  Json
@@ -1859,7 +1859,7 @@ enum invitation_status {
   PENDING
   ACCEPTED
   EXPIRED
-  REVOKED
+  CANCELLED
 }
 
 enum OperatorAssignmentStatus {
@@ -1924,22 +1924,6 @@ enum AccessAction {
   DELETE
 
   @@map("access_action")
-}
-
-enum InvitationType {
-  EMAIL
-  DIRECT
-
-  @@map("invitation_type")
-}
-
-enum InvitationStatus {
-  PENDING
-  ACCEPTED
-  EXPIRED
-  CANCELLED
-
-  @@map("invitation_status")
 }
 
 enum AccountLinkStatus {

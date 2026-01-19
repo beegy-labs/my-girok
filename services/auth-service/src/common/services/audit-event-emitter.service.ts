@@ -9,7 +9,7 @@ import type {
   AdminInvitedEvent,
   AdminRoleChangedEvent,
   EventActor,
-} from '@my-girok/types/events/auth/events.js';
+} from '@my-girok/types';
 import { KafkaProducerService } from '../../kafka/kafka-producer.service';
 
 /**

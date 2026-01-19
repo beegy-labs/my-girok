@@ -15,15 +15,6 @@ import { KafkaProducerService } from './kafka-producer.service';
         name: 'KAFKA_CLIENT',
         imports: [ConfigModule],
         useFactory: (configService: ConfigService) => {
-          const redpandaEnabled = configService.get<string>('REDPANDA_ENABLED') === 'true';
-
-          if (!redpandaEnabled) {
-            return {
-              transport: Transport.TCP,
-              options: {},
-            };
-          }
-
           const brokers = configService.get<string>('REDPANDA_BROKERS', 'localhost:9092');
           const saslUsername = configService.get<string>('REDPANDA_SASL_USERNAME');
           const saslPassword = configService.get<string>('REDPANDA_SASL_PASSWORD');
@@ -37,7 +28,7 @@ import { KafkaProducerService } from './kafka-producer.service';
                 ...(saslUsername &&
                   saslPassword && {
                     sasl: {
-                      mechanism: 'plain',
+                      mechanism: 'plain' as const,
                       username: saslUsername,
                       password: saslPassword,
                     },

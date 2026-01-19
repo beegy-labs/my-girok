@@ -1,7 +1,7 @@
 import { Injectable, Inject, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientKafka } from '@nestjs/microservices';
-import type { BaseDomainEvent } from '@my-girok/types/events/base.js';
+import type { BaseDomainEvent } from '@my-girok/types';
 
 /**
  * Kafka Producer Service

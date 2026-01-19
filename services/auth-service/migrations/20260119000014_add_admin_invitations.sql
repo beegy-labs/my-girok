@@ -1,11 +1,6 @@
 -- +goose Up
--- Create invitation_type enum
-CREATE TYPE invitation_type AS ENUM ('EMAIL', 'DIRECT');
-
--- Create invitation_status enum
-CREATE TYPE invitation_status AS ENUM ('PENDING', 'ACCEPTED', 'EXPIRED', 'REVOKED');
-
 -- Create admin_invitations table
+-- Note: invitation_type and invitation_status enums already exist from operator migration
 CREATE TABLE admin_invitations (
     id UUID PRIMARY KEY,
     email TEXT NOT NULL,
@@ -28,5 +23,4 @@ CREATE INDEX idx_admin_invitations_expires_at ON admin_invitations(expires_at);
 
 -- +goose Down
 DROP TABLE IF EXISTS admin_invitations;
-DROP TYPE IF EXISTS invitation_status;
-DROP TYPE IF EXISTS invitation_type;
+-- Note: Keep invitation_type and invitation_status enums (used by operator_invitations)

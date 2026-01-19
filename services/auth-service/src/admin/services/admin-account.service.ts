@@ -9,7 +9,7 @@ import * as crypto from 'crypto';
 import { ID, Transactional } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditEventEmitterService } from '../../common/services/audit-event-emitter.service';
-import type { EventActor } from '@my-girok/types/events/auth/events.js';
+import type { EventActor } from '@my-girok/types';
 import {
   CreateAdminDto,
   InviteAdminDto,
@@ -557,7 +557,7 @@ export class AdminAccountService {
 
     await this.auditEventEmitter.emitAdminRoleChanged({
       adminId: id,
-      previousRoleId: admin.roleId,
+      previousRoleId: admin.role.id,
       newRoleId: roleId,
       actor,
     });
