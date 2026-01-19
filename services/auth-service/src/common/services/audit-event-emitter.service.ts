@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ID } from '@my-girok/nest-common';
 import type {
@@ -10,15 +10,26 @@ import type {
   AdminRoleChangedEvent,
   EventActor,
 } from '@my-girok/types/events/auth/events.js';
+import { KafkaProducerService } from '../../kafka/kafka-producer.service';
 
 /**
  * Audit Event Emitter Service
  * Centralizes event emission for audit logging
+ *
+ * Dual-mode event emission:
+ * 1. EventEmitter2: In-process event handling (always enabled)
+ * 2. Kafka: Inter-service communication (optional, configurable)
+ *
  * Events are consumed by audit-service for compliance logging
  */
 @Injectable()
 export class AuditEventEmitterService {
-  constructor(private readonly eventEmitter: EventEmitter2) {}
+  private readonly logger = new Logger(AuditEventEmitterService.name);
+
+  constructor(
+    private readonly eventEmitter: EventEmitter2,
+    private readonly kafkaProducer: KafkaProducerService,
+  ) {}
 
   /**
    * Emit admin created event
@@ -52,7 +63,7 @@ export class AuditEventEmitterService {
       },
     };
 
-    this.eventEmitter.emit('admin.created', event);
+    await this.emitEvent('admin.created', event);
   }
 
   /**
@@ -79,7 +90,7 @@ export class AuditEventEmitterService {
       },
     };
 
-    this.eventEmitter.emit('admin.updated', event);
+    await this.emitEvent('admin.updated', event);
   }
 
   /**
@@ -108,7 +119,7 @@ export class AuditEventEmitterService {
       },
     };
 
-    this.eventEmitter.emit('admin.deactivated', event);
+    await this.emitEvent('admin.deactivated', event);
   }
 
   /**
@@ -135,7 +146,7 @@ export class AuditEventEmitterService {
       },
     };
 
-    this.eventEmitter.emit('admin.reactivated', event);
+    await this.emitEvent('admin.reactivated', event);
   }
 
   /**
@@ -170,7 +181,7 @@ export class AuditEventEmitterService {
       },
     };
 
-    this.eventEmitter.emit('admin.invited', event);
+    await this.emitEvent('admin.invited', event);
   }
 
   /**
@@ -199,6 +210,24 @@ export class AuditEventEmitterService {
       },
     };
 
-    this.eventEmitter.emit('admin.roleChanged', event);
+    await this.emitEvent('admin.roleChanged', event);
+  }
+
+  /**
+   * Dual-mode event emission
+   * 1. EventEmitter2: Always emit for in-process handlers
+   * 2. Kafka: Publish to topic if enabled
+   */
+  private async emitEvent(topic: string, event: any): Promise<void> {
+    // 1. Always emit to EventEmitter2 for in-process handling
+    this.eventEmitter.emit(topic, event);
+
+    // 2. Publish to Kafka if enabled
+    try {
+      await this.kafkaProducer.publishEvent(topic, event);
+    } catch (error) {
+      this.logger.error(`Failed to publish event to Kafka: ${topic}`, error);
+      // Don't throw - EventEmitter2 already handled the event
+    }
   }
 }

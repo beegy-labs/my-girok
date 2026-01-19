@@ -4,6 +4,7 @@ import { ConflictException, NotFoundException, BadRequestException } from '@nest
 import { AdminAccountService } from './admin-account.service';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditEventEmitterService } from '../../common/services/audit-event-emitter.service';
+import { KafkaProducerService } from '../../kafka/kafka-producer.service';
 import { AdminScope } from '../dto/admin-account.dto';
 import * as bcrypt from 'bcrypt';
 
@@ -59,6 +60,11 @@ describe('AdminAccountService', () => {
       emitAdminRoleChanged: vi.fn(),
     };
 
+    const mockKafkaProducer = {
+      publishEvent: vi.fn(),
+      isKafkaEnabled: vi.fn(() => false),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminAccountService,
@@ -69,6 +75,10 @@ describe('AdminAccountService', () => {
         {
           provide: AuditEventEmitterService,
           useValue: mockAuditEventEmitter,
+        },
+        {
+          provide: KafkaProducerService,
+          useValue: mockKafkaProducer,
         },
       ],
     }).compile();

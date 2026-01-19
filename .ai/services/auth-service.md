@@ -70,9 +70,9 @@
 - `POST /admin/enterprise/:id/verify` - Verify identity
 - `GET /admin/enterprise/list` - List admins with filters
 
-## Phase 3: Admin Account Management
+## Phase 3: Core HR & Admin
 
-### System Admin Management
+### Admin Account Management
 
 - CRUD operations for admin accounts with role-based access
 - Admin invitation system (email/direct)
@@ -80,17 +80,11 @@
 - Scope-based access (SYSTEM/TENANT)
 - Audit logging for all admin operations
 
-### Key Endpoints
-
-**Admin Accounts:** `POST /admin/admins`, `GET /admin/admins`, `GET /admin/admins/:id`, `PATCH /admin/admins/:id`, `DELETE /admin/admins/:id`, `POST /admin/admins/:id/reactivate`
-
-**Roles:** `GET /admin/admins/roles`, `PATCH /admin/admins/:id/role`
-
-**Invitations:** `POST /admin/admins/invite`
+**Key Endpoints:** `POST /admin/admins`, `GET /admin/admins`, `GET /admin/admins/:id`, `PATCH /admin/admins/:id`, `DELETE /admin/admins/:id`, `POST /admin/admins/:id/reactivate`, `GET /admin/admins/roles`, `PATCH /admin/admins/:id/role`, `POST /admin/admins/invite`
 
 **Permissions:** `system_admin:create`, `system_admin:read`, `system_admin:update`, `system_admin:delete`
 
-## HR Backend (Attendance & Leave)
+### HR Backend (Attendance & Leave)
 
 **Note**: HR code will be removed in Phase 10 and migrated to a separate hr-service.
 
