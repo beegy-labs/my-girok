@@ -1,0 +1,35 @@
+{
+  "name": "@my-girok/otel-web-sdk",
+  "version": "1.0.0",
+  "description": "OpenTelemetry Web SDK for audit and observability",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/sdk-trace-web": "^1.28.0",
+    "@opentelemetry/instrumentation": "^0.54.0",
+    "@opentelemetry/instrumentation-document-load": "^0.42.0",
+    "@opentelemetry/instrumentation-fetch": "^0.54.0",
+    "@opentelemetry/instrumentation-user-interaction": "^0.42.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.54.0",
+    "@opentelemetry/resources": "^1.28.0",
+    "@opentelemetry/semantic-conventions": "^1.28.0",
+    "@opentelemetry/sdk-trace-base": "^1.28.0"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}

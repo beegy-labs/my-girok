@@ -10,6 +10,7 @@ import { AuditModule } from './audit/audit.module';
 import { AdminAuditModule } from './admin-audit/admin-audit.module';
 import { RetentionModule } from './retention/retention.module';
 import { SessionRecordingsModule } from './session-recordings/session-recordings.module';
+import { TelemetryModule } from './telemetry/telemetry.module';
 import { AuditGrpcController, AuthEventService } from './grpc';
 import configuration from './config/configuration';
 
@@ -49,6 +50,7 @@ import configuration from './config/configuration';
     AdminAuditModule,
     RetentionModule,
     SessionRecordingsModule,
+    TelemetryModule,
   ],
   controllers: [AuditGrpcController],
   providers: [AuthEventService],
