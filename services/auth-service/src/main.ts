@@ -1,6 +1,17 @@
 // CRITICAL: OTEL must be initialized FIRST before any other imports
 import { initOtel } from '@my-girok/nest-common';
-initOtel({ serviceName: 'auth-service' });
+initOtel({
+  serviceName: 'auth-service',
+  serviceVersion: process.env.SERVICE_VERSION || '1.0.0',
+  environment: process.env.NODE_ENV || 'development',
+  otlpEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+  exportHeaders: {
+    'x-api-key': process.env.AUDIT_API_KEY || '',
+    'x-tenant-id': 'system',
+    'x-environment': process.env.NODE_ENV || 'development',
+  },
+  debug: process.env.OTEL_DEBUG === 'true',
+});
 
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';

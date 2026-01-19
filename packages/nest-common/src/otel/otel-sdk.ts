@@ -91,6 +91,19 @@ export interface OtelConfig {
   samplingRatio?: number;
 
   /**
+   * Additional headers to send with OTLP exports (traces and metrics).
+   * Useful for authentication (e.g., API keys, bearer tokens) or tenant context.
+   * @example
+   * ```typescript
+   * {
+   *   'x-api-key': process.env.AUDIT_API_KEY,
+   *   'x-tenant-id': 'system',
+   * }
+   * ```
+   */
+  exportHeaders?: Record<string, string>;
+
+  /**
    * Metric export interval in milliseconds.
    * @default 60000 (1 minute)
    */
@@ -481,6 +494,7 @@ export function initOtel(config: OtelConfig): NodeSDK | null {
       url: `${otlpEndpoint}/v1/traces`,
       timeoutMillis: effectiveTraceTimeout,
       compression: CompressionAlgorithm.GZIP,
+      headers: config.exportHeaders || {},
     });
 
     // Get endpoints to ignore for tracing as Set for O(1) lookups
@@ -551,6 +565,7 @@ export function initOtel(config: OtelConfig): NodeSDK | null {
       timeoutMillis: effectiveMetricTimeout,
       compression: CompressionAlgorithm.GZIP,
       temporalityPreference: AggregationTemporalityPreference.DELTA,
+      headers: config.exportHeaders || {},
     });
 
     const metricReader = new PeriodicExportingMetricReader({
