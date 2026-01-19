@@ -1,6 +1,6 @@
 # GEMINI.md
 
-> **AI Assistant Entry Point for my-girok project** | **Last Updated**: 2026-01-07
+> **AI Assistant Entry Point for my-girok project** | **Last Updated**: 2026-01-19
 
 **Manifest**: [.ai/manifest.yaml](.ai/manifest.yaml) | **Changelog**: [.ai/CHANGELOG.md](.ai/CHANGELOG.md)
 
@@ -15,167 +15,116 @@
 1. **[.ai/rules.md](.ai/rules.md)** - Core DO/DON'T rules (CRITICAL)
 2. **[.ai/best-practices.md](.ai/best-practices.md)** - 2026 Best Practices (monthly review)
 3. **[.ai/architecture.md](.ai/architecture.md)** - Architecture patterns and routing
-4. **[docs/llm/policies/testing.md](docs/llm/policies/testing.md)** - Test coverage status
+4. **[docs/test-coverage.md](docs/test-coverage.md)** - Test coverage status & pending tests
 
-## Documentation Policy (2026) - CRITICAL
+### Testing Requirements
 
-This project uses a layered documentation structure. As an AI assistant, you must adhere to these rules.
+**All code changes MUST include tests.** Check `docs/test-coverage.md` for:
 
-### Documentation Layers
-
-| Path | Role | Editable by AI? | Description |
-
-| :---------- | :--------------------------------- | :-------------- | :---------------------------------------------------------------------------- |
-
-| `.ai/` | **Indicator** | **Yes** | Quick-reference files (~20 lines) for core concepts. Points to the SSOT. |
-
-| `docs/llm/` | **LLM-Optimized SSOT** | **Yes** | The detailed Single Source of Truth, optimized for LLM consumption. |
-
-| `docs/en/` | **Human-Readable Docs** | **No** | Generated from `docs/llm/`. **DO NOT EDIT THIS DIRECTORY.** |
-
-| `docs/kr/` | **Translated Docs** | **No** | Generated from `docs/en/`. **DO NOT EDIT THIS DIRECTORY.** |
-
-### AI Editing Workflow
-
-1.  **Your scope is limited**: You can **ONLY** edit files within the `.ai/` and `docs/llm/` directories.
-
-2.  **Check for staleness**: Before editing, ensure the `.ai/` indicator and `docs/llm/` SSOT are in sync.
-
-3.  **Perform the edit**: Apply changes to the relevant files in `.ai/` and/or `docs/llm/`.
-
-### User-Managed Generation Flow
-
-The `docs/en/` and `docs/kr/` directories are synchronized by the **user** running specific scripts. You are not responsible for this part of the workflow.
-
-```bash
-
-# User action to generate English docs from SSOT
-
-pnpm docs:generate
-
-
-
-# User action to translate English docs to Korean
-
-pnpm docs:translate --locale kr
-
-```
-
-**Full policy**: `docs/llm/policies/documentation-architecture.md`
+- Current coverage status per service
+- Pending tests that need to be written
+- Files excluded from coverage (and why)
 
 ## Task-Based Navigation
 
-### Backend Development
+| Task Area                 | Read First                                     | SSOT/Policy                                  |
+| ------------------------- | ---------------------------------------------- | -------------------------------------------- |
+| **Auth/Login**            | `.ai/services/auth-bff.md` + `auth-service.md` | -                                            |
+| **Identity Platform**     | `.ai/services/identity-service.md`             | `docs/llm/policies/identity-platform.md`     |
+| **Resume/Profile**        | `.ai/services/personal-service.md`             | -                                            |
+| **Audit/Compliance**      | `.ai/services/audit-service.md`                | `docs/en/services/audit-service.md`          |
+| **Analytics/BI**          | `.ai/services/analytics-service.md`            | `docs/en/services/analytics-service.md`      |
+| **Authorization (ReBAC)** | `.ai/services/authorization-service.md`        | `docs/llm/services/authorization-service.md` |
+| **Web App**               | `.ai/apps/web-girok.md`                        | -                                            |
+| **Design Tokens**         | `.ai/packages/design-tokens.md`                | -                                            |
+| **Storybook**             | `.ai/apps/storybook.md`                        | -                                            |
+| **i18n/Localization**     | `.ai/i18n-locale.md`                           | -                                            |
+| **DB Migrations**         | `.ai/database.md`                              | `docs/llm/policies/database.md`              |
+| **Helm/K8s Deploy**       | `.ai/helm-deployment.md` + `.ai/ci-cd.md`      | -                                            |
+| **Caching (Redis)**       | `.ai/caching.md`                               | `docs/llm/policies/caching.md`               |
+| **Pull Requests**         | `.ai/pull-requests.md` + `.ai/git-flow.md`     | -                                            |
+| **Legal/Consent**         | `.ai/services/auth-service.md` (Legal API)     | `docs/llm/policies/legal-consent.md`         |
+| **External Resources**    | `.ai/packages/design-tokens.md`                | `docs/llm/policies/external-resources.md`    |
 
-**Working on authentication?**
-Read: `.ai/rules.md` + `.ai/services/auth-service.md`
+**Always read `.ai/rules.md` first for any task.**
 
-**Working on Identity Platform?**
-Read: `.ai/services/identity-service.md` + `.ai/architecture.md`
+## Documentation Policy (2026)
 
-**Working on resume/profile?**
-Read: `.ai/rules.md` + `.ai/services/personal-service.md`
+| Tier | Path        | Role                  | Editable | Generated By     |
+| ---- | ----------- | --------------------- | -------- | ---------------- |
+| 1    | `.ai/`      | Indicator (~20 lines) | ✅ Edit  | Manual           |
+| 2    | `docs/llm/` | SSOT (Full spec)      | ✅ Edit  | Manual           |
+| 3    | `docs/en/`  | Human-readable        | ⛔ Auto  | `docs:generate`  |
+| 4    | `docs/kr/`  | Korean                | ⛔ Auto  | `docs:translate` |
 
-### Frontend Development
+**Edit Rules**: Edit `.ai/` + `docs/llm/` only. Never edit `docs/en/` or `docs/kr/` directly.
 
-**Working on web app?**
-Read: `.ai/rules.md` + `.ai/apps/web-girok.md`
-
-**Working on design tokens/styling?**
-Read: `.ai/ssot.md` + `.ai/packages/design-tokens.md`
-
-### Database & Deployment
-
-**Working on database migrations?**
-Read: `.ai/database.md` + `.ai/rules.md`
-
-**Working on Helm/Kubernetes?**
-Read: `.ai/helm-deployment.md` + `.ai/ci-cd.md`
+**Full policy**: `docs/llm/policies/documentation-architecture.md`
 
 ## Directory Structure
 
 ```
 my-girok/
-├── GEMINI.md                 # <- You are here (Entry point)
-├── CLAUDE.md                 # Claude entry point
-├── README.md                 # Project introduction
+├── GEMINI.md                 # Entry point (this file)
 │
-├── .ai/                      # LLM-optimized docs (EDITABLE)
-│   ├── README.md             # Navigation guide
-│   ├── rules.md              # Core rules (READ FIRST)
-│   ├── manifest.yaml         # Machine-readable contract
-│   ├── CHANGELOG.md          # Documentation changelog
-│   ├── services/             # Backend service APIs
-│   ├── packages/             # Shared packages
-│   └── apps/                 # Frontend app guides
+├── .ai/                      # LLM INDICATORS (~20 lines each)
+│   ├── README.md             # Navigation
+│   ├── rules.md              # Core rules
+│   ├── services/             # Service indicators → docs/llm/services/
+│   ├── packages/             # Package indicators → docs/llm/packages/
+│   └── apps/                 # App indicators
 │
-├── docs/llm/                 # SSOT - LLM optimized (EDITABLE)
+├── docs/llm/                 # LLM SSOT (Full documentation)
 │   ├── policies/             # Policy definitions
-│   ├── services/             # Service documentation
-│   └── guides/               # Technical guides
+│   ├── services/             # Service full specs
+│   ├── guides/               # Technical guides
+│   └── packages/             # Package documentation
 │
-├── docs/en/                  # Human-readable (GENERATED - DO NOT EDIT)
-└── docs/kr/                  # Korean translation (GENERATED - DO NOT EDIT)
+├── docs/en/                  # GENERATED (batch) - DO NOT EDIT
+└── docs/kr/                  # TRANSLATED (batch) - DO NOT EDIT
 ```
 
 ## Key Principles
 
-### Language Policy
+### Language & Git
 
-**ALL code, documentation, and commits MUST be in English**
+- **Language**: English only (code, docs, commits)
+- **GitFlow**: `feat/* → develop → release → main` ([.ai/git-flow.md](.ai/git-flow.md))
+- **Commits**: Never mention AI assistance
 
-### Git Branch & Merge Policy (GitFlow Standard)
+### Architecture & Stack
 
-```
-feat/* ──squash──> develop ──merge──> release ──merge──> main
-                    (Dev)    (Staging)   (Prod)
-```
-
-Full details: [.ai/git-flow.md](.ai/git-flow.md)
-
-### Git Commit Policy
-
-**NEVER mention AI assistance in commit messages**
-
-- Do NOT include "Generated with Gemini" or similar
-- Do NOT add AI attribution
-- Write as human developer
-
-### Architecture
-
-- Full BFF Pattern (IETF recommended, session-based auth)
-- GraphQL Federation for API aggregation
-- gRPC for internal service communication
-- Redpanda for event-driven messaging (Kafka-compatible, no JVM)
-- Cilium Gateway API for edge routing
+| Layer         | Tech                                                   |
+| ------------- | ------------------------------------------------------ |
+| **Frontend**  | React 19.2, TypeScript 5.9, Tailwind CSS 4.1, Vite 7.2 |
+| **Mobile**    | iOS (Swift), Android (Kotlin), Flutter                 |
+| **Backend**   | Node.js 24, NestJS 11, GraphQL Federation, gRPC        |
+| **Database**  | PostgreSQL 16, Prisma 6, Redis                         |
+| **Messaging** | Redpanda (Kafka-compatible)                            |
+| **AI**        | Python 3.13, FastAPI                                   |
+| **Deploy**    | Kubernetes, Kustomize, Cilium Gateway API              |
 
 ### Development Rules
 
 - Types first (`packages/types`)
 - `@Transactional()` for multi-step DB ops
 - 80% test coverage minimum
-- Sealed Secrets for K8s
+- Full BFF Pattern (session-based auth)
 
-### Stack (2026)
+## Policies & Guides
 
-| Category | Technology                                         |
-| -------- | -------------------------------------------------- |
-| Web      | React 19.2, TypeScript 5.9, Tailwind 4.1, Vite 7.2 |
-| Backend  | Node.js 24, NestJS 11                              |
-| Database | PostgreSQL 16, Prisma 6, Valkey                    |
-| AI       | Python 3.13, FastAPI                               |
-| Deploy   | Kubernetes, Kustomize                              |
+| Topic                 | Path                                       |
+| --------------------- | ------------------------------------------ |
+| Best Practices (2026) | `docs/llm/policies/best-practices-2026.md` |
+| Database/Migrations   | `docs/llm/policies/database.md`            |
+| Security              | `docs/llm/policies/security.md`            |
+| Testing Standards     | `docs/llm/policies/testing.md`             |
+| Performance           | `docs/llm/policies/performance.md`         |
+| Deployment            | `docs/llm/policies/deployment.md`          |
+| External Resources    | `docs/llm/policies/external-resources.md`  |
 
-## Detailed Policies
-
-| Policy              | Location                                          |
-| ------------------- | ------------------------------------------------- |
-| Best Practices 2026 | `docs/llm/policies/best-practices-2026.md`        |
-| Security            | `docs/llm/policies/security.md`                   |
-| Testing             | `docs/llm/policies/testing.md`                    |
-| Database            | `docs/llm/policies/database.md`                   |
-| Documentation       | `docs/llm/policies/documentation-architecture.md` |
+**Token Optimization**: Read `.ai/` for coding (patterns, APIs), refer to `docs/llm/` for policies.
 
 ---
 
-**Ready to code? Start with [.ai/README.md](.ai/README.md)**
+**Start**: [.ai/README.md](.ai/README.md)

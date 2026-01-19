@@ -1,510 +1,221 @@
-# Web-Admin OAuth Settings Management
+# Web-Admin OAuth Settings
 
-> **SSOT for OAuth Settings UI in web-admin**
-> **Version**: 1.0.0
-> **Last Updated**: 2026-01-17
+```yaml
+version: 1.0.0
+updated: 2026-01-17
+location: apps/web-admin/src/pages/system/OAuthSettingsPage.tsx
+access: MASTER role only
+```
 
 ## Overview
 
-OAuth Settings management page allows MASTER administrators to configure OAuth provider credentials and control which authentication providers are available to end users.
+Configure OAuth provider credentials and control authentication providers for end users.
 
 ## Architecture
 
-### Component Hierarchy
+```yaml
+component_hierarchy:
+  OAuthSettingsPage:
+    - PageHeader: title, subtitle, refresh button
+    - SecurityNotice: encryption information
+    - LoadingState: spinner
+    - ErrorState: error message + retry
+    - ProviderGrid:
+        - OAuthProviderCard[]:
+          display_mode:
+            - ClientIdDisplay
+            - ClientSecretMasked
+            - CallbackUrlDisplay
+            - Actions: Edit, Enable/Disable
+          edit_mode:
+            - ClientIdInput
+            - ClientSecretInput (show/hide toggle)
+            - CallbackUrlInput
+            - Actions: Save, Cancel
 
-```
-OAuthSettingsPage
-├── PageHeader (title, subtitle, refresh button)
-├── SecurityNotice (encryption information)
-├── LoadingState (Spinner)
-├── ErrorState (error message + retry button)
-└── ProviderGrid
-    └── OAuthProviderCard[] (one for each provider)
-        ├── ProviderHeader (icon, name, status badge)
-        ├── DisplayMode (read-only view)
-        │   ├── ClientIdDisplay
-        │   ├── ClientSecretMasked
-        │   ├── CallbackUrlDisplay
-        │   └── Actions (Edit, Enable/Disable)
-        └── EditMode (credential update form)
-            ├── ClientIdInput
-            ├── ClientSecretInput (with show/hide toggle)
-            ├── CallbackUrlInput
-            └── Actions (Save, Cancel)
-```
-
-### Data Flow
-
-```
-User Action → Component → API Call → Backend → Database
-                ↓
-           State Update → UI Re-render → Toast Notification
+data_flow: User → Component → API → Backend → Database → State Update → UI → Toast
 ```
 
 ## API Integration
 
-### API Client
-
 **File**: `apps/web-admin/src/api/oauth.ts`
+
+### Types
 
 ```typescript
 interface OAuthProviderConfig {
   provider: AuthProvider;
   enabled: boolean;
   clientId?: string;
-  clientSecretMasked?: string; // Last 4 characters only
+  clientSecretMasked?: string; // Last 4 chars only
   callbackUrl?: string;
   displayName: string;
   description?: string;
   updatedAt: Date;
   updatedBy?: string;
 }
-
-interface UpdateCredentialsRequest {
-  clientId?: string;
-  clientSecret?: string;
-  callbackUrl?: string;
-}
-
-interface ToggleProviderRequest {
-  enabled: boolean;
-}
 ```
 
-#### Methods
+### Endpoints
 
-1. **getAllProviders()**
-   - Endpoint: `GET /v1/oauth-config`
-   - Auth: MASTER role required
-   - Returns: `OAuthProviderConfig[]`
-   - Purpose: Fetch all OAuth provider configurations with masked secrets
-
-2. **getProvider(provider)**
-   - Endpoint: `GET /v1/oauth-config/:provider`
-   - Auth: MASTER role required
-   - Returns: `OAuthProviderConfig`
-   - Purpose: Fetch specific provider configuration
-
-3. **toggleProvider(provider, enabled)**
-   - Endpoint: `PATCH /v1/oauth-config/:provider/toggle`
-   - Auth: MASTER role required
-   - Body: `{ enabled: boolean }`
-   - Returns: `OAuthProviderConfig`
-   - Purpose: Enable or disable OAuth provider
-
-4. **updateCredentials(provider, credentials)**
-   - Endpoint: `PATCH /v1/oauth-config/:provider`
-   - Auth: MASTER role required
-   - Body: `UpdateCredentialsRequest`
-   - Returns: `OAuthProviderConfig`
-   - Purpose: Update OAuth credentials (clientId, clientSecret, callbackUrl)
-
-5. **getProviderStatus(provider)**
-   - Endpoint: `GET /v1/oauth-config/:provider/status`
-   - Auth: Public (no auth required)
-   - Returns: `{ provider: string, enabled: boolean }`
-   - Purpose: Check if provider is enabled
+| Method | Endpoint                            | Auth   | Purpose                 |
+| ------ | ----------------------------------- | ------ | ----------------------- |
+| GET    | `/v1/oauth-config`                  | MASTER | Fetch all providers     |
+| GET    | `/v1/oauth-config/:provider`        | MASTER | Fetch specific provider |
+| PATCH  | `/v1/oauth-config/:provider/toggle` | MASTER | Enable/disable provider |
+| PATCH  | `/v1/oauth-config/:provider`        | MASTER | Update credentials      |
+| GET    | `/v1/oauth-config/:provider/status` | Public | Check if enabled        |
 
 ## Components
 
-### OAuthSettingsPage
-
-**File**: `apps/web-admin/src/pages/system/OAuthSettingsPage.tsx`
-
-**Responsibilities**:
-
-- Load all OAuth provider configurations on mount
-- Manage global loading/error states
-- Coordinate provider toggle and credential update operations
-- Display toast notifications for success/error feedback
-
-**State Management**:
-
-```typescript
-const [providers, setProviders] = useState<OAuthProviderConfig[]>([]);
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState<string | null>(null);
-```
-
-**Key Handlers**:
-
-- `loadProviders()` - Fetch all providers from API
-- `handleToggle(provider, enabled)` - Enable/disable provider
-- `handleUpdate(provider, credentials)` - Update provider credentials
-
-**UI Sections**:
-
-1. **Page Header**: Title, subtitle, refresh button
-2. **Security Notice**: Warning about AES-256-GCM encryption
-3. **Loading State**: Spinner while fetching data
-4. **Error State**: Error message with retry button
-5. **Provider Grid**: 2-column grid of OAuthProviderCard components
-6. **Help Section**: Setup guides for each OAuth provider
-
 ### OAuthProviderCard
 
-**File**: `apps/web-admin/src/pages/system/components/OAuthProviderCard.tsx`
+```yaml
+state:
+  - isEditing: boolean
+  - showSecret: boolean
+  - loading: boolean
+  - clientId, clientSecret, callbackUrl: string
 
-**Props**:
+modes:
+  display: Read-only view with masked secrets
+  edit: Form inputs with show/hide toggle
 
-```typescript
-interface OAuthProviderCardProps {
-  provider: OAuthProviderConfig;
-  onToggle: (provider: AuthProvider, enabled: boolean) => Promise<void>;
-  onUpdate: (provider: AuthProvider, credentials: UpdateCredentialsRequest) => Promise<void>;
-}
+metadata:
+  GOOGLE: { name: 'Google', color: 'bg-blue-100...', icon: '🔵' }
+  KAKAO: { name: 'Kakao', color: 'bg-yellow-100...', icon: '💬' }
+  NAVER: { name: 'Naver', color: 'bg-green-100...', icon: '🟢' }
+  APPLE: { name: 'Apple', color: 'bg-gray-100...', icon: '' }
 ```
 
-**Responsibilities**:
+## Navigation
 
-- Display provider information and current configuration
-- Toggle between display mode and edit mode
-- Validate and submit credential updates
-- Show/hide client secret in edit mode
-
-**State Management**:
-
-```typescript
-const [isEditing, setIsEditing] = useState(false);
-const [showSecret, setShowSecret] = useState(false);
-const [loading, setLoading] = useState(false);
-const [toggleLoading, setToggleLoading] = useState(false);
-const [clientId, setClientId] = useState('');
-const [clientSecret, setClientSecret] = useState('');
-const [callbackUrl, setCallbackUrl] = useState('');
-```
-
-**Modes**:
-
-1. **Display Mode** (default):
-   - Shows current configuration (read-only)
-   - Displays masked client secret
-   - Actions: "Edit Credentials", "Enable/Disable"
-
-2. **Edit Mode**:
-   - Form inputs for clientId, clientSecret, callbackUrl
-   - Show/hide toggle for client secret
-   - Actions: "Save Changes", "Cancel"
-
-**Provider Metadata**:
-
-```typescript
-const PROVIDER_METADATA: Record<string, {
-  name: string;
-  color: string;
-  icon: string;
-  description: string;
-}> = {
-  GOOGLE: { name: 'Google', color: 'bg-blue-100...', icon: '🔵', ... },
-  KAKAO: { name: 'Kakao', color: 'bg-yellow-100...', icon: '💬', ... },
-  NAVER: { name: 'Naver', color: 'bg-green-100...', icon: '🟢', ... },
-  APPLE: { name: 'Apple', color: 'bg-gray-100...', icon: '', ... },
-};
-```
-
-## Navigation Integration
-
-### Route Configuration
-
-**File**: `apps/web-admin/src/router.tsx`
-
-```typescript
-{
-  path: 'system/oauth',
-  element: (
-    <PrivateRoute permission="settings:read">
-      <OAuthSettingsPage />
-    </PrivateRoute>
-  ),
-}
-```
-
-**Access Control**:
-
-- Permission: `settings:read`
-- Role: MASTER (enforced by backend RBAC)
-
-### Menu Configuration
-
-**File**: `apps/web-admin/src/config/menu.config.ts`
-
-```typescript
-{
-  id: 'system-oauth',
-  path: '/system/oauth',
-  icon: Key,
-  labelKey: 'menu.oauthSettings',
-  permission: 'settings:read',
-  order: 2,
-}
-```
+**Route**: `/system/oauth`
 
 **Menu Hierarchy**:
 
 ```
 System
-├── Supported Countries
-├── Supported Locales
-├── OAuth Settings ← NEW
+├── OAuth Settings ← settings:read permission
 ├── Audit Logs
-├── Login History
-├── Session Recordings
 └── Settings
 ```
 
-## Internationalization
+**i18n Key**: `menu.oauthSettings`
 
-**File**: `apps/web-admin/src/i18n/locales/en.json`
+## Provider Setup
 
-**Added Keys**:
+### Callback URL Format
 
-```json
-{
-  "menu": {
-    "oauthSettings": "OAuth Settings",
-    "users": "Users",
-    "usersOverview": "Users Overview",
-    "authorization": "Authorization"
-  }
-}
+```yaml
+google: https://auth-bff.girok.dev/v1/oauth/google/callback
+kakao: https://auth-bff.girok.dev/v1/oauth/kakao/callback
+naver: https://auth-bff.girok.dev/v1/oauth/naver/callback
+apple: https://auth-bff.girok.dev/v1/oauth/apple/callback
 ```
 
-## Toast Notifications
+### Setup Guides
 
-**Hook**: `apps/web-admin/src/hooks/useToast.ts`
+| Provider | Console URL                        | Notes                       |
+| -------- | ---------------------------------- | --------------------------- |
+| Google   | Google Cloud Console → Credentials | OAuth 2.0 Client ID         |
+| Kakao    | Kakao Developers → My Application  | REST API Key + Secret       |
+| Naver    | Naver Developers → Application     | Client ID + Secret          |
+| Apple    | Apple Developer → Identifiers      | JWT-based secret generation |
 
-**Usage**:
-
-```typescript
-const { showToast } = useToast();
-
-showToast({
-  type: 'success' | 'error' | 'info' | 'warning',
-  title: string,
-  message: string,
-  duration?: number, // default: 4000ms
-});
-```
-
-**Integration**: Uses Sonner library via ToastProvider
-
-**Toast Messages**:
-
-- **Success**: "Provider updated", "Credentials updated successfully"
-- **Error**: "Failed to load OAuth providers", "Failed to toggle provider", "Failed to update credentials"
-
-## Security Considerations
+## Security
 
 ### Secret Handling
 
-1. **Encryption**:
-   - All client secrets are encrypted using AES-256-GCM on the backend
-   - Encryption key stored in environment variable
+```yaml
+encryption:
+  algorithm: AES-256-GCM
+  key_storage: Environment variable
 
-2. **Masking**:
-   - Secrets are masked in the UI (only last 4 characters shown)
-   - Example: `********fg78`
+masking:
+  format: '********{last4chars}'
+  example: '********fg78'
 
-3. **Secret Visibility**:
-   - Edit mode provides show/hide toggle for new secrets
-   - Existing secrets cannot be retrieved (only updated)
+visibility:
+  - Edit mode: show/hide toggle for new secrets
+  - Existing secrets: Cannot retrieve, only update
 
-4. **Validation**:
-   - Callback URL validation (must be HTTPS for production)
-   - Domain whitelist check on backend
+validation:
+  - Callback URL: HTTPS for production
+  - Domain whitelist: Backend check
+```
 
 ### Access Control
 
-1. **Role-Based**:
-   - Only MASTER admins can access OAuth settings
-   - Enforced by `PrivateRoute` with `settings:read` permission
+```yaml
+rbac:
+  role: MASTER
+  permission: settings:read
+  enforcement: PrivateRoute + backend RBAC
 
-2. **Audit Logging**:
-   - All configuration changes are logged
-   - Includes: admin ID, timestamp, changes made
-
-## OAuth Provider Setup Guides
-
-### Google OAuth 2.0
-
-1. Visit Google Cloud Console → APIs & Services → Credentials
-2. Create OAuth 2.0 Client ID (Web application)
-3. Add authorized redirect URIs
-4. Copy Client ID and Client Secret
-
-**Callback URL Format**: `https://auth-bff.girok.dev/v1/oauth/google/callback`
-
-### Kakao Login
-
-1. Visit Kakao Developers → My Application
-2. Navigate to Kakao Login settings
-3. Set Redirect URI
-4. Copy REST API Key (Client ID) and Client Secret
-
-**Callback URL Format**: `https://auth-bff.girok.dev/v1/oauth/kakao/callback`
-
-### Naver Login
-
-1. Visit Naver Developers → Application → Register
-2. Set Callback URL
-3. Copy Client ID and Client Secret
-
-**Callback URL Format**: `https://auth-bff.girok.dev/v1/oauth/naver/callback`
-
-### Sign in with Apple
-
-1. Visit Apple Developer → Certificates, Identifiers & Profiles
-2. Create Services ID and configure Sign In with Apple
-3. Set Return URLs
-4. Generate Client Secret using private key (JWT-based)
-
-**Callback URL Format**: `https://auth-bff.girok.dev/v1/oauth/apple/callback`
-
-**Special Note**: Apple uses JWT-based client secret generation with private key
+audit:
+  tracked: All configuration changes
+  fields: admin ID, timestamp, changes
+```
 
 ## Error Handling
 
-### API Errors
+| Code | Scenario                     | Display                    |
+| ---- | ---------------------------- | -------------------------- |
+| 401  | Unauthorized                 | Redirect to login          |
+| 403  | Forbidden                    | Permission error           |
+| 404  | Provider not found           | Toast notification         |
+| 400  | Invalid credentials/callback | Inline error message       |
+| 500  | Server error                 | Full-page error with retry |
 
-**Common Error Scenarios**:
+## Testing
 
-1. **Unauthorized** (401): Redirect to login
-2. **Forbidden** (403): Show permission error
-3. **Not Found** (404): Provider configuration not found
-4. **Bad Request** (400): Invalid callback URL or credentials
-5. **Server Error** (500): Backend service unavailable
+### Test Coverage
 
-**Error Display**:
+```yaml
+unit_tests:
+  - apps/web-admin/src/api/oauth.ts
+  - apps/web-admin/src/hooks/useToast.ts
 
-- Global errors: Full-page error state with retry button
-- Provider-specific errors: Toast notification
-- Form validation errors: Inline error messages
+component_tests:
+  - OAuthSettingsPage.tsx: Load, error, toggle, refresh
+  - OAuthProviderCard.tsx: Display, edit, secret toggle, submit
 
-### Graceful Degradation
+e2e_tests:
+  - Navigate to /system/oauth
+  - Verify 4 providers displayed
+  - Toggle provider status
+  - Update credentials
+  - Error handling + retry
 
-1. **API Failure**: Show error state with retry button
-2. **Partial Load**: Display loaded providers, show error toast
-3. **Update Failure**: Revert UI state, show error toast
+target_coverage: 80%+
+```
 
-## Testing Strategy
+## Performance
 
-### Unit Tests
+```yaml
+optimization:
+  data_fetching: Load once on mount, refresh on user action only
+  components: memo for OAuthProviderCard, useCallback for handlers
+  bundle: Lazy load page, tree-shake icons
 
-**Files to Test**:
-
-1. `apps/web-admin/src/api/oauth.ts`
-   - Mock API calls
-   - Test response parsing
-   - Test error handling
-
-2. `apps/web-admin/src/hooks/useToast.ts`
-   - Test toast function calls
-   - Test toast options
-
-### Component Tests
-
-**Files to Test**:
-
-1. `apps/web-admin/src/pages/system/OAuthSettingsPage.tsx`
-   - Render with providers
-   - Loading state
-   - Error state
-   - Provider toggle
-   - Refresh button
-
-2. `apps/web-admin/src/pages/system/components/OAuthProviderCard.tsx`
-   - Display mode rendering
-   - Edit mode rendering
-   - Show/hide secret toggle
-   - Form submission
-   - Cancel action
-
-**Test Coverage Target**: 80%+
-
-### E2E Tests
-
-**Test Scenarios**:
-
-1. **Load OAuth Settings Page**
-   - Navigate to /system/oauth
-   - Verify all 4 providers are displayed
-   - Verify status badges are correct
-
-2. **Toggle Provider**
-   - Click enable/disable toggle
-   - Verify API call is made
-   - Verify status badge updates
-   - Verify toast notification appears
-
-3. **Update Credentials**
-   - Click "Edit Credentials"
-   - Enter new credentials
-   - Click "Save Changes"
-   - Verify API call is made
-   - Verify masked secret updates
-   - Verify toast notification appears
-
-4. **Error Handling**
-   - Simulate API failure
-   - Verify error state is shown
-   - Click retry button
-   - Verify data reloads
-
-## Performance Considerations
-
-### Optimization Strategies
-
-1. **Data Fetching**:
-   - Load providers once on mount
-   - Refresh only on user action (refresh button)
-   - No polling or real-time updates
-
-2. **Component Optimization**:
-   - Use `memo` for OAuthProviderCard
-   - Use `useCallback` for event handlers
-   - Minimize re-renders
-
-3. **Bundle Size**:
-   - Lazy load OAuthSettingsPage
-   - Tree-shake unused Lucide icons
-   - Optimize toast library imports
+metrics:
+  - No polling/real-time updates
+  - Minimal re-renders
+```
 
 ## Future Enhancements
 
-1. **Batch Operations**:
-   - Enable/disable multiple providers at once
-   - Bulk credential updates
-
-2. **Credential Validation**:
-   - Test OAuth flow before saving
-   - Verify callback URL accessibility
-
-3. **Audit Log Integration**:
-   - Display recent changes inline
-   - Link to full audit log
-
-4. **Provider Statistics**:
-   - Show OAuth login count per provider
-   - Display last successful login
-
-5. **Advanced Configuration**:
-   - Custom scope configuration
-   - Token expiry settings
-   - Rate limiting per provider
+- Batch enable/disable multiple providers
+- Test OAuth flow before saving
+- Verify callback URL accessibility
+- Display OAuth login statistics per provider
+- Custom scope configuration
+- Token expiry settings
 
 ## References
 
-- Backend Implementation: `services/auth-service/src/oauth-config/`
-- BFF Integration: `services/auth-bff/src/oauth/`
-- Types: `packages/types/src/auth/enums.ts` (AuthProvider, OAuthProvider)
-- Related Documentation: `.ai/services/auth-service.md`
-
-## Changelog
-
-### v1.0.0 (2026-01-17)
-
-- Initial OAuth Settings management UI
-- Support for Google, Kakao, Naver, Apple
-- Enable/disable toggle
-- Credential update with secret masking
-- Security notice and setup guides
+- Backend: `services/auth-service/src/oauth-config/`
+- BFF: `services/auth-bff/src/oauth/`
+- Types: `packages/types/src/auth/enums.ts`
+- Related: `.ai/services/auth-service.md`
