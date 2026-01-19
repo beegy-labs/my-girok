@@ -212,6 +212,7 @@ model admins {
   admin_delegations_admin_delegations_delegate_idToadmins                           AdminDelegation[]              @relation("admin_delegations_delegate_idToadmins")
   admin_delegations_admin_delegations_delegator_idToadmins                          AdminDelegation[]              @relation("admin_delegations_delegator_idToadmins")
   admin_delegations_admin_delegations_revoked_byToadmins                            AdminDelegation[]              @relation("admin_delegations_revoked_byToadmins")
+  admin_invitations                                                                 admin_invitations[]            @relation("admin_invitations_invited_byToadmins")
   loginAttempts                                                                     AdminLoginAttempt[]
   mfaConfig                                                                         AdminMfaConfig?
   admin_organization_history_admin_organization_history_admin_idToadmins            AdminOrganizationHistory[]     @relation("admin_organization_history_admin_idToadmins")
@@ -254,6 +255,27 @@ model admins {
   @@index([employment_status], map: "idx_admins_employment_status")
   @@index([identity_type], map: "idx_admins_identity_type")
   @@index([lifecycle_status], map: "idx_admins_lifecycle_status")
+}
+
+model admin_invitations {
+  id         String            @id @db.Uuid
+  email      String
+  name       String
+  role_id    String            @db.Uuid
+  type       invitation_type   @default(EMAIL)
+  token      String            @unique
+  status     invitation_status @default(PENDING)
+  invited_by String            @db.Uuid
+  expires_at DateTime          @db.Timestamptz(6)
+  created_at DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at DateTime          @default(now()) @db.Timestamptz(6)
+  roles      roles             @relation(fields: [role_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  admins     admins            @relation("admin_invitations_invited_byToadmins", fields: [invited_by], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@index([email], map: "idx_admin_invitations_email")
+  @@index([status], map: "idx_admin_invitations_status")
+  @@index([token], map: "idx_admin_invitations_token")
+  @@index([expires_at], map: "idx_admin_invitations_expires_at")
 }
 
 model AdminMfaConfig {
@@ -397,6 +419,7 @@ model roles {
   service_id       String?            @map("service_id") @db.Uuid
   country_code     String?            @map("country_code") @db.VarChar(2)
   adminServices    AdminService[]
+  admin_invitations admin_invitations[]
   admins           admins[]
   role_permissions role_permissions[]
   roles            roles?             @relation("rolesToroles", fields: [parent_id], references: [id], onUpdate: NoAction)
@@ -1825,6 +1848,18 @@ enum AdminLoginFailureReason {
   UNKNOWN
 
   @@map("admin_login_failure_reason")
+}
+
+enum invitation_type {
+  EMAIL
+  DIRECT
+}
+
+enum invitation_status {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
 }
 
 enum OperatorAssignmentStatus {

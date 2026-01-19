@@ -8,6 +8,8 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { ID, Transactional } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
+import { AuditEventEmitterService } from '../../common/services/audit-event-emitter.service';
+import type { EventActor } from '@my-girok/types/events/auth/events.js';
 import {
   CreateAdminDto,
   InviteAdminDto,
@@ -25,7 +27,10 @@ import {
 
 @Injectable()
 export class AdminAccountService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditEventEmitter: AuditEventEmitterService,
+  ) {}
 
   /**
    * Private helper: Create admin account without transaction wrapper
@@ -87,7 +92,7 @@ export class AdminAccountService {
     const adminId = ID.generate();
 
     // 6. Insert admin using Prisma Client
-    await this.prisma.admins.create({
+    const admin = await this.prisma.admins.create({
       data: {
         id: adminId,
         email: dto.email,
@@ -101,20 +106,21 @@ export class AdminAccountService {
       },
     });
 
-    // 7. Log audit (Raw SQL: audit_logs table not in Prisma schema)
-    const auditId = ID.generate();
-    await this.prisma.$executeRaw`
-      INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, details, created_at)
-      VALUES (
-        ${auditId}::uuid,
-        ${currentAdminId}::uuid,
-        'admin.create',
-        'admin',
-        ${adminId}::uuid,
-        ${JSON.stringify({ email: dto.email, roleId: dto.roleId })}::jsonb,
-        NOW()
-      )
-    `;
+    // 7. Emit admin created event for audit logging
+    const actor: EventActor = {
+      id: currentAdminId,
+      type: 'ADMIN',
+    };
+
+    await this.auditEventEmitter.emitAdminCreated({
+      adminId,
+      email: admin.email,
+      name: admin.name,
+      roleId: admin.role_id,
+      scope: admin.scope as 'SYSTEM' | 'TENANT',
+      tenantId: admin.tenant_id ?? undefined,
+      actor,
+    });
 
     return adminId;
   }
@@ -130,7 +136,6 @@ export class AdminAccountService {
 
   /**
    * Invite an admin via email or direct creation
-   * NOTE: admin_invitations table uses Raw SQL as it's not in Prisma schema
    */
   @Transactional({ isolationLevel: 'ReadCommitted', timeout: 30000, maxRetries: 3 })
   async invite(currentAdminId: string, dto: InviteAdminDto): Promise<InvitationResponse> {
@@ -146,13 +151,16 @@ export class AdminAccountService {
       throw new ConflictException('Email already registered');
     }
 
-    // Check for existing pending invitation (Raw SQL: admin_invitations table not in Prisma schema)
-    const existingInvite = await this.prisma.$queryRaw<{ id: string }[]>`
-      SELECT id FROM admin_invitations
-      WHERE email = ${dto.email} AND status = 'PENDING' AND expires_at > NOW()
-      LIMIT 1
-    `;
-    if (existingInvite.length > 0) {
+    // Check for existing pending invitation
+    const existingInvite = await this.prisma.admin_invitations.findFirst({
+      where: {
+        email: dto.email,
+        status: 'PENDING',
+        expires_at: { gt: new Date() },
+      },
+      select: { id: true },
+    });
+    if (existingInvite) {
       throw new ConflictException('Pending invitation already exists');
     }
 
@@ -170,22 +178,19 @@ export class AdminAccountService {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     // Create invitation
-    await this.prisma.$executeRaw`
-      INSERT INTO admin_invitations (
-        id, email, name, role_id, type, token, status, invited_by, expires_at, created_at
-      ) VALUES (
-        ${invitationId}::uuid,
-        ${dto.email},
-        ${dto.name},
-        ${dto.roleId}::uuid,
-        ${dto.type}::invitation_type,
-        ${token},
-        'PENDING',
-        ${currentAdminId}::uuid,
-        ${expiresAt},
-        NOW()
-      )
-    `;
+    await this.prisma.admin_invitations.create({
+      data: {
+        id: invitationId,
+        email: dto.email,
+        name: dto.name,
+        role_id: dto.roleId,
+        type: dto.type,
+        token,
+        status: 'PENDING',
+        invited_by: currentAdminId,
+        expires_at: expiresAt,
+      },
+    });
 
     // If DIRECT type, create admin with temp password immediately
     if (dto.type === InvitationType.DIRECT && dto.tempPassword) {
@@ -199,26 +204,30 @@ export class AdminAccountService {
       });
 
       // Mark invitation as accepted
-      await this.prisma.$executeRaw`
-        UPDATE admin_invitations SET status = 'ACCEPTED', updated_at = NOW()
-        WHERE id = ${invitationId}::uuid
-      `;
+      await this.prisma.admin_invitations.update({
+        where: { id: invitationId },
+        data: {
+          status: 'ACCEPTED',
+          updated_at: new Date(),
+        },
+      });
     }
 
-    // Log audit
-    const auditId = ID.generate();
-    await this.prisma.$executeRaw`
-      INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, details, created_at)
-      VALUES (
-        ${auditId}::uuid,
-        ${currentAdminId}::uuid,
-        'admin.invite',
-        'admin_invitation',
-        ${invitationId}::uuid,
-        ${JSON.stringify({ email: dto.email, type: dto.type })}::jsonb,
-        NOW()
-      )
-    `;
+    // Emit admin invited event for audit logging
+    const actor: EventActor = {
+      id: currentAdminId,
+      type: 'ADMIN',
+    };
+
+    await this.auditEventEmitter.emitAdminInvited({
+      invitationId,
+      email: dto.email,
+      name: dto.name,
+      roleId: dto.roleId,
+      type: dto.type as 'EMAIL' | 'DIRECT',
+      expiresAt,
+      actor,
+    });
 
     return {
       id: invitationId,
@@ -421,20 +430,17 @@ export class AdminAccountService {
         data: updateData,
       });
 
-      // Log audit (Raw SQL: audit_logs table not in Prisma schema)
-      const auditId = ID.generate();
-      await this.prisma.$executeRaw`
-        INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, details, created_at)
-        VALUES (
-          ${auditId}::uuid,
-          ${currentAdminId}::uuid,
-          'admin.update',
-          'admin',
-          ${id}::uuid,
-          ${JSON.stringify(dto)}::jsonb,
-          NOW()
-        )
-      `;
+      // Emit admin updated event for audit logging
+      const actor: EventActor = {
+        id: currentAdminId,
+        type: 'ADMIN',
+      };
+
+      await this.auditEventEmitter.emitAdminUpdated({
+        adminId: id,
+        changedFields: Object.keys(updateData),
+        actor,
+      });
     }
 
     return this.findById(id);
@@ -473,19 +479,17 @@ export class AdminAccountService {
       },
     });
 
-    // Log audit (Raw SQL: audit_logs table not in Prisma schema)
-    const auditId = ID.generate();
-    await this.prisma.$executeRaw`
-      INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, created_at)
-      VALUES (
-        ${auditId}::uuid,
-        ${currentAdminId}::uuid,
-        'admin.deactivate',
-        'admin',
-        ${id}::uuid,
-        NOW()
-      )
-    `;
+    // Emit admin deactivated event for audit logging
+    const actor: EventActor = {
+      id: currentAdminId,
+      type: 'ADMIN',
+    };
+
+    await this.auditEventEmitter.emitAdminDeactivated({
+      adminId: id,
+      email: admin.email,
+      actor,
+    });
   }
 
   /**
@@ -505,19 +509,17 @@ export class AdminAccountService {
       data: { is_active: true },
     });
 
-    // Log audit (Raw SQL: audit_logs table not in Prisma schema)
-    const auditId = ID.generate();
-    await this.prisma.$executeRaw`
-      INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, created_at)
-      VALUES (
-        ${auditId}::uuid,
-        ${currentAdminId}::uuid,
-        'admin.reactivate',
-        'admin',
-        ${id}::uuid,
-        NOW()
-      )
-    `;
+    // Emit admin reactivated event for audit logging
+    const actor: EventActor = {
+      id: currentAdminId,
+      type: 'ADMIN',
+    };
+
+    await this.auditEventEmitter.emitAdminReactivated({
+      adminId: id,
+      email: admin.email,
+      actor,
+    });
 
     return this.findById(id);
   }
@@ -547,20 +549,18 @@ export class AdminAccountService {
       data: { role_id: roleId },
     });
 
-    // Log audit (Raw SQL: audit_logs table not in Prisma schema)
-    const auditId = ID.generate();
-    await this.prisma.$executeRaw`
-      INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, details, created_at)
-      VALUES (
-        ${auditId}::uuid,
-        ${currentAdminId}::uuid,
-        'admin.role.assign',
-        'admin',
-        ${id}::uuid,
-        ${JSON.stringify({ roleId })}::jsonb,
-        NOW()
-      )
-    `;
+    // Emit admin role changed event for audit logging
+    const actor: EventActor = {
+      id: currentAdminId,
+      type: 'ADMIN',
+    };
+
+    await this.auditEventEmitter.emitAdminRoleChanged({
+      adminId: id,
+      previousRoleId: admin.roleId,
+      newRoleId: roleId,
+      actor,
+    });
 
     return this.findById(id);
   }
