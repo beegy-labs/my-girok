@@ -14,15 +14,7 @@ import apiClient from './client';
 
 export const adminAccountsApi = {
   list: async (query?: AdminListQuery): Promise<AdminListResponse> => {
-    const params = new URLSearchParams();
-    if (query?.page) params.append('page', query.page.toString());
-    if (query?.limit) params.append('limit', query.limit.toString());
-    if (query?.scope) params.append('scope', query.scope);
-    if (query?.roleId) params.append('roleId', query.roleId);
-    if (query?.isActive !== undefined) params.append('isActive', query.isActive.toString());
-    if (query?.search) params.append('search', query.search);
-
-    const response = await apiClient.get<AdminListResponse>(`/admins?${params}`);
+    const response = await apiClient.get<AdminListResponse>('/admins', { params: query });
     return response.data;
   },
 
@@ -61,10 +53,7 @@ export const adminAccountsApi = {
   },
 
   getRoles: async (query?: AdminRoleListQuery): Promise<AdminRoleListResponse> => {
-    const params = new URLSearchParams();
-    if (query?.scope) params.append('scope', query.scope);
-
-    const response = await apiClient.get<AdminRoleListResponse>(`/admins/roles?${params}`);
+    const response = await apiClient.get<AdminRoleListResponse>('/admins/roles', { params: query });
     return response.data;
   },
 };

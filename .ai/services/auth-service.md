@@ -90,7 +90,9 @@
 
 **Permissions:** `system_admin:create`, `system_admin:read`, `system_admin:update`, `system_admin:delete`
 
-## Phase 3: HR Backend (Attendance & Leave)
+## HR Backend (Attendance & Leave)
+
+**Note**: HR code will be removed in Phase 10 and migrated to a separate hr-service.
 
 ### Attendance Management
 
