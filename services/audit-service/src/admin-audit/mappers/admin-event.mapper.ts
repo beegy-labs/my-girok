@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ID } from '@my-girok/nest-common';
+import {
+  ID,
+  formatAuditTimestamp,
+  calculateAuditRetentionDate,
+  generateAuditChecksum,
+} from '@my-girok/nest-common';
 import type {
   AdminCreatedEvent,
   AdminUpdatedEvent,
@@ -8,7 +13,6 @@ import type {
   AdminInvitedEvent,
   AdminRoleChangedEvent,
 } from '@my-girok/types';
-import * as crypto from 'crypto';
 
 interface ClickHouseAuditLog {
   id: string;
@@ -57,10 +61,24 @@ interface ClickHouseAuditLog {
 
 @Injectable()
 export class AdminEventMapper {
+  /**
+   * Extract source service information from event metadata
+   * Falls back to default auth-service values if not provided
+   */
+  private getSourceServiceInfo(metadata?: any) {
+    return {
+      serviceSlug: metadata?.sourceService?.slug || 'auth-service',
+      serviceName: metadata?.sourceService?.name || 'Auth Service',
+      sourceVersion: metadata?.sourceService?.version || '1.0.0',
+    };
+  }
+
   mapAdminCreatedToAuditLog(event: AdminCreatedEvent): ClickHouseAuditLog {
+    const { serviceSlug, serviceName, sourceVersion } = this.getSourceServiceInfo(event.metadata);
+
     return {
       id: ID.generate(),
-      timestamp: this.formatTimestamp(event.timestamp),
+      timestamp: formatAuditTimestamp(event.timestamp),
       actor_id: event.actor.id,
       actor_type: event.actor.type,
       actor_email: (event.metadata?.actorEmail || '') as string,
@@ -69,8 +87,8 @@ export class AdminEventMapper {
       actor_role: (event.metadata?.actorRole || '') as string,
       actor_ip: (event.metadata?.ipAddress || '') as string,
       service_id: (event.metadata?.serviceId || '') as string,
-      service_slug: 'auth-service',
-      service_name: 'Auth Service',
+      service_slug: serviceSlug,
+      service_name: serviceName,
       resource: 'admin_account',
       resource_version: 1,
       action: 'create',
@@ -97,23 +115,25 @@ export class AdminEventMapper {
       data_classification: 'INTERNAL',
       pii_accessed: true,
       pii_fields: ['email', 'name'],
-      source: 'auth-service',
-      source_version: '1.0.0',
+      source: serviceSlug,
+      source_version: sourceVersion,
       trace_id: (event.metadata?.traceId || '') as string,
       span_id: (event.metadata?.spanId || '') as string,
       ui_event_id: null,
       api_log_id: null,
-      checksum: this.generateChecksum(event),
+      checksum: generateAuditChecksum(event),
       previous_log_id: null,
-      retention_until: this.calculateRetentionDate(event.timestamp, 7),
+      retention_until: calculateAuditRetentionDate(event.timestamp, 7),
       legal_hold: false,
     };
   }
 
   mapAdminUpdatedToAuditLog(event: AdminUpdatedEvent): ClickHouseAuditLog {
+    const { serviceSlug, serviceName, sourceVersion } = this.getSourceServiceInfo(event.metadata);
+
     return {
       id: ID.generate(),
-      timestamp: this.formatTimestamp(event.timestamp),
+      timestamp: formatAuditTimestamp(event.timestamp),
       actor_id: event.actor.id,
       actor_type: event.actor.type,
       actor_email: (event.metadata?.actorEmail || '') as string,
@@ -122,8 +142,8 @@ export class AdminEventMapper {
       actor_role: (event.metadata?.actorRole || '') as string,
       actor_ip: (event.metadata?.ipAddress || '') as string,
       service_id: (event.metadata?.serviceId || '') as string,
-      service_slug: 'auth-service',
-      service_name: 'Auth Service',
+      service_slug: serviceSlug,
+      service_name: serviceName,
       resource: 'admin_account',
       resource_version: 1,
       action: 'update',
@@ -145,23 +165,25 @@ export class AdminEventMapper {
       data_classification: 'INTERNAL',
       pii_accessed: event.payload.changedFields.some((key) => ['email', 'name'].includes(key)),
       pii_fields: event.payload.changedFields.filter((key) => ['email', 'name'].includes(key)),
-      source: 'auth-service',
-      source_version: '1.0.0',
+      source: serviceSlug,
+      source_version: sourceVersion,
       trace_id: (event.metadata?.traceId || '') as string,
       span_id: (event.metadata?.spanId || '') as string,
       ui_event_id: null,
       api_log_id: null,
-      checksum: this.generateChecksum(event),
+      checksum: generateAuditChecksum(event),
       previous_log_id: null,
-      retention_until: this.calculateRetentionDate(event.timestamp, 7),
+      retention_until: calculateAuditRetentionDate(event.timestamp, 7),
       legal_hold: false,
     };
   }
 
   mapAdminDeactivatedToAuditLog(event: AdminDeactivatedEvent): ClickHouseAuditLog {
+    const { serviceSlug, serviceName, sourceVersion } = this.getSourceServiceInfo(event.metadata);
+
     return {
       id: ID.generate(),
-      timestamp: this.formatTimestamp(event.timestamp),
+      timestamp: formatAuditTimestamp(event.timestamp),
       actor_id: event.actor.id,
       actor_type: event.actor.type,
       actor_email: (event.metadata?.actorEmail || '') as string,
@@ -170,8 +192,8 @@ export class AdminEventMapper {
       actor_role: (event.metadata?.actorRole || '') as string,
       actor_ip: (event.metadata?.ipAddress || '') as string,
       service_id: (event.metadata?.serviceId || '') as string,
-      service_slug: 'auth-service',
-      service_name: 'Auth Service',
+      service_slug: serviceSlug,
+      service_name: serviceName,
       resource: 'admin_account',
       resource_version: 1,
       action: 'deactivate',
@@ -194,23 +216,25 @@ export class AdminEventMapper {
       data_classification: 'INTERNAL',
       pii_accessed: false,
       pii_fields: [],
-      source: 'auth-service',
-      source_version: '1.0.0',
+      source: serviceSlug,
+      source_version: sourceVersion,
       trace_id: (event.metadata?.traceId || '') as string,
       span_id: (event.metadata?.spanId || '') as string,
       ui_event_id: null,
       api_log_id: null,
-      checksum: this.generateChecksum(event),
+      checksum: generateAuditChecksum(event),
       previous_log_id: null,
-      retention_until: this.calculateRetentionDate(event.timestamp, 7),
+      retention_until: calculateAuditRetentionDate(event.timestamp, 7),
       legal_hold: false,
     };
   }
 
   mapAdminReactivatedToAuditLog(event: AdminReactivatedEvent): ClickHouseAuditLog {
+    const { serviceSlug, serviceName, sourceVersion } = this.getSourceServiceInfo(event.metadata);
+
     return {
       id: ID.generate(),
-      timestamp: this.formatTimestamp(event.timestamp),
+      timestamp: formatAuditTimestamp(event.timestamp),
       actor_id: event.actor.id,
       actor_type: event.actor.type,
       actor_email: (event.metadata?.actorEmail || '') as string,
@@ -219,8 +243,8 @@ export class AdminEventMapper {
       actor_role: (event.metadata?.actorRole || '') as string,
       actor_ip: (event.metadata?.ipAddress || '') as string,
       service_id: (event.metadata?.serviceId || '') as string,
-      service_slug: 'auth-service',
-      service_name: 'Auth Service',
+      service_slug: serviceSlug,
+      service_name: serviceName,
       resource: 'admin_account',
       resource_version: 1,
       action: 'reactivate',
@@ -243,23 +267,25 @@ export class AdminEventMapper {
       data_classification: 'INTERNAL',
       pii_accessed: false,
       pii_fields: [],
-      source: 'auth-service',
-      source_version: '1.0.0',
+      source: serviceSlug,
+      source_version: sourceVersion,
       trace_id: (event.metadata?.traceId || '') as string,
       span_id: (event.metadata?.spanId || '') as string,
       ui_event_id: null,
       api_log_id: null,
-      checksum: this.generateChecksum(event),
+      checksum: generateAuditChecksum(event),
       previous_log_id: null,
-      retention_until: this.calculateRetentionDate(event.timestamp, 7),
+      retention_until: calculateAuditRetentionDate(event.timestamp, 7),
       legal_hold: false,
     };
   }
 
   mapAdminInvitedToAuditLog(event: AdminInvitedEvent): ClickHouseAuditLog {
+    const { serviceSlug, serviceName, sourceVersion } = this.getSourceServiceInfo(event.metadata);
+
     return {
       id: ID.generate(),
-      timestamp: this.formatTimestamp(event.timestamp),
+      timestamp: formatAuditTimestamp(event.timestamp),
       actor_id: event.actor.id,
       actor_type: event.actor.type,
       actor_email: (event.metadata?.actorEmail || '') as string,
@@ -268,8 +294,8 @@ export class AdminEventMapper {
       actor_role: (event.metadata?.actorRole || '') as string,
       actor_ip: (event.metadata?.ipAddress || '') as string,
       service_id: (event.metadata?.serviceId || '') as string,
-      service_slug: 'auth-service',
-      service_name: 'Auth Service',
+      service_slug: serviceSlug,
+      service_name: serviceName,
       resource: 'admin_invitation',
       resource_version: 1,
       action: 'invite',
@@ -295,23 +321,25 @@ export class AdminEventMapper {
       data_classification: 'INTERNAL',
       pii_accessed: true,
       pii_fields: ['email', 'name'],
-      source: 'auth-service',
-      source_version: '1.0.0',
+      source: serviceSlug,
+      source_version: sourceVersion,
       trace_id: (event.metadata?.traceId || '') as string,
       span_id: (event.metadata?.spanId || '') as string,
       ui_event_id: null,
       api_log_id: null,
-      checksum: this.generateChecksum(event),
+      checksum: generateAuditChecksum(event),
       previous_log_id: null,
-      retention_until: this.calculateRetentionDate(event.timestamp, 7),
+      retention_until: calculateAuditRetentionDate(event.timestamp, 7),
       legal_hold: false,
     };
   }
 
   mapAdminRoleChangedToAuditLog(event: AdminRoleChangedEvent): ClickHouseAuditLog {
+    const { serviceSlug, serviceName, sourceVersion } = this.getSourceServiceInfo(event.metadata);
+
     return {
       id: ID.generate(),
-      timestamp: this.formatTimestamp(event.timestamp),
+      timestamp: formatAuditTimestamp(event.timestamp),
       actor_id: event.actor.id,
       actor_type: event.actor.type,
       actor_email: (event.metadata?.actorEmail || '') as string,
@@ -320,8 +348,8 @@ export class AdminEventMapper {
       actor_role: (event.metadata?.actorRole || '') as string,
       actor_ip: (event.metadata?.ipAddress || '') as string,
       service_id: (event.metadata?.serviceId || '') as string,
-      service_slug: 'auth-service',
-      service_name: 'Auth Service',
+      service_slug: serviceSlug,
+      service_name: serviceName,
       resource: 'admin_account',
       resource_version: 1,
       action: 'role_change',
@@ -344,30 +372,16 @@ export class AdminEventMapper {
       data_classification: 'INTERNAL',
       pii_accessed: false,
       pii_fields: [],
-      source: 'auth-service',
-      source_version: '1.0.0',
+      source: serviceSlug,
+      source_version: sourceVersion,
       trace_id: (event.metadata?.traceId || '') as string,
       span_id: (event.metadata?.spanId || '') as string,
       ui_event_id: null,
       api_log_id: null,
-      checksum: this.generateChecksum(event),
+      checksum: generateAuditChecksum(event),
       previous_log_id: null,
-      retention_until: this.calculateRetentionDate(event.timestamp, 7),
+      retention_until: calculateAuditRetentionDate(event.timestamp, 7),
       legal_hold: false,
     };
-  }
-
-  private formatTimestamp(date: Date): string {
-    return date.toISOString().replace('T', ' ').replace('Z', '');
-  }
-
-  private calculateRetentionDate(timestamp: Date, years: number): string {
-    const retentionDate = new Date(timestamp);
-    retentionDate.setFullYear(retentionDate.getFullYear() + years);
-    return retentionDate.toISOString().split('T')[0];
-  }
-
-  private generateChecksum(event: any): string {
-    return crypto.createHash('sha256').update(JSON.stringify(event)).digest('hex');
   }
 }

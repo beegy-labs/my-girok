@@ -10,37 +10,36 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         name: 'KAFKA_CLIENT',
         imports: [ConfigModule],
         useFactory: (configService: ConfigService) => {
-          const brokers = configService.get<string>('REDPANDA_BROKERS', 'localhost:9092');
-          const saslUsername = configService.get<string>('REDPANDA_SASL_USERNAME');
-          const saslPassword = configService.get<string>('REDPANDA_SASL_PASSWORD');
+          const kafkaConfig = configService.get('kafka');
+          const { brokers, clientId, consumerGroup, sasl, consumer } = kafkaConfig;
 
           return {
             transport: Transport.KAFKA,
             options: {
               client: {
-                clientId: 'audit-service',
-                brokers: brokers.split(','),
-                ...(saslUsername &&
-                  saslPassword && {
+                clientId,
+                brokers,
+                ...(sasl.username &&
+                  sasl.password && {
                     sasl: {
                       mechanism: 'plain' as const,
-                      username: saslUsername,
-                      password: saslPassword,
+                      username: sasl.username,
+                      password: sasl.password,
                     },
                     ssl: true,
                   }),
               },
               consumer: {
-                groupId: 'audit-service-admin-events',
+                groupId: consumerGroup,
                 allowAutoTopicCreation: false,
-                sessionTimeout: 30000,
-                heartbeatInterval: 3000,
-                rebalanceTimeout: 60000,
+                sessionTimeout: consumer.sessionTimeout,
+                heartbeatInterval: consumer.heartbeatInterval,
+                rebalanceTimeout: consumer.rebalanceTimeout,
                 retry: {
-                  initialRetryTime: 100,
-                  retries: 8,
-                  maxRetryTime: 30000,
-                  multiplier: 2,
+                  initialRetryTime: consumer.retry.initialRetryTime,
+                  retries: consumer.retry.retries,
+                  maxRetryTime: consumer.retry.maxRetryTime,
+                  multiplier: consumer.retry.multiplier,
                 },
               },
             },
