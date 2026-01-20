@@ -107,8 +107,7 @@ export function createKeyedResourceCache<TKey extends string, TValue>(
 /**
  * Serialize query parameters to a cache key
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function queryCacheKey(params: any): string {
+export function queryCacheKey(params: unknown): string {
   return JSON.stringify(
     Object.entries(params as Record<string, unknown>)
       .filter(([, value]) => value !== undefined && value !== null && value !== '')

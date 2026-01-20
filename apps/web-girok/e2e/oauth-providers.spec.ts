@@ -1,4 +1,4 @@
-import { test, expect, OAUTH_PROVIDERS } from './fixtures/auth.fixture';
+import { test, expect } from './fixtures/auth.fixture';
 
 /**
  * E2E Tests: OAuth Provider Enable/Disable
