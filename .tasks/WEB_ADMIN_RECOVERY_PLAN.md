@@ -119,28 +119,23 @@
 
 ---
 
-## 🚀 추천 작업 순서
+## 🚀 작업 순서 (확정)
 
-### Option 1: 완전 복구 (7-9일)
-```
-1. Phase 4 (Permission Management) - 4-5일
-2. Phase 8 (Notification 기본) - 3-4일
-```
-**결과**: web-admin 핵심 기능 완성
+### 완전 복구: Phase 4 + Phase 8 (9-12일)
 
-### Option 2: 최소 복구 (4-5일)
-```
-1. Phase 4 (Permission Management) - 4-5일
-```
-**결과**: 권한 관리 가능, 알림은 나중에
+**Week 1 (5-6일)**:
+- Phase 4 Backend (OpenFGA + API) - 2-3일
+- Phase 8 Infrastructure (Email + Kafka) - 3일
 
-### Option 3: 단계적 복구 (10-15일)
-```
-1. Phase 4 (Permission Management) - 4-5일
-2. Phase 8 (Notification 기본) - 3-4일
-3. Phase 9 (Settings 완성) - 2-3일
-```
-**결과**: web-admin 완전 복구
+**Week 2 (4-5일)**:
+- Phase 4 Frontend (UI + Guards) - 3일
+- Phase 8 완성 (테스트 + 배포) - 2일
+
+**Week 3 (2일)**:
+- Phase 4 테스트 + 문서화 - 1일
+- 통합 검증 + 배포 - 1일
+
+**체크리스트**: `.tasks/PHASE4_PHASE8_CHECKLIST.md`
 
 ---
 

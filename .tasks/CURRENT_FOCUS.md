@@ -26,49 +26,48 @@
 
 ---
 
-## 🎯 Next Priority Task
+## 🎯 Next Priority Tasks
 
 ### 1. Phase 4: Permission Management System (P1 - High) ⚡
 
-**Why Important**: web-admin 복구 핵심 - 관리자 권한 차등화 필요
+**Current Problem**:
+- 모든 관리자가 동일 권한
+- 메뉴별 접근 제어 불가능
+
+**Scope**: 35개 작업, 4-5일
+- OpenFGA 모델 확장
+- PermissionsPage UI
+- 메뉴별 접근 제어
+
+**Documentation**:
+- `.tasks/phases/PHASE_4_PERMISSION_MANAGEMENT_SYSTEM.md`
+- `.tasks/PHASE4_PHASE8_CHECKLIST.md`
+
+### 2. Phase 8: Notification Service (P1 - High) ⚡
 
 **Current Problem**:
-- 모든 관리자가 동일 권한 (슈퍼관리자)
-- 메뉴별 접근 제어 불가능
-- 역할 기반 권한 관리 필요
+- 관리자 초대 이메일 없음
+- 비밀번호 재설정 알림 없음
 
-**Scope**:
-- OpenFGA 모델 확장 (department, menu_item, role)
-- PermissionsPage UI (Admin/Team/Menu 탭)
-- 권한 템플릿 관리
-- 메뉴별 접근 제어 Guard
+**Scope**: 28개 작업, 3-4일 (기본 버전)
+- SendGrid/AWS SES 연동
+- 이메일 템플릿 (초대, 재설정, 알림)
+- Kafka 이벤트 기반 발송
 
-**Estimated Effort**: 4-5일
+**Documentation**:
+- `.tasks/phases/PHASE_8_NOTIFICATION_SERVICE.md`
+- `.tasks/PHASE4_PHASE8_CHECKLIST.md`
 
-**Documentation**: `.tasks/phases/PHASE_4_PERMISSION_MANAGEMENT_SYSTEM.md`
+**총 작업 기간**: 9-12일
 
-**Dependencies**: Phase 3 ✅ (Complete)
+**Implementation Steps**: `.tasks/PHASE4_PHASE8_CHECKLIST.md` 참조
 
-**PR Branch**: `feat/phase4-permission-management`
-
-**Implementation Steps**:
-1. Review OpenFGA current model
-2. Design extended model (department, menu_item, role)
-3. Create PermissionsPage component structure
-4. Implement Admin permissions tab
-5. Implement Team permissions tab
-6. Implement Menu permissions tab
-7. Add permission templates
-8. Create access control guards
-9. Test permission enforcement
-10. Update menu rendering logic
-
-**Technical Details**:
-- Authorization: OpenFGA
-- Backend: auth-service/authorization-service
-- Frontend: web-admin/src/pages/permissions
-- Database: authorization_db (OpenFGA DSL update)
-- Dependencies: Phase 3 Admin Account Management ✅
+**작업 순서**:
+```
+Week 1: Phase 4 Backend + Phase 8 Infrastructure
+Week 2: Phase 4 Frontend + Phase 8 완성
+Week 3: 테스트 및 검증
+```
 
 ---
 
