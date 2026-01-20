@@ -1,7 +1,7 @@
 # Web-Admin Refactoring - Progress Tracker
 
 > **Last Updated**: 2026-01-20
-> **Current Focus**: Observability Visualization - Grafana Dashboards (P1 - High)
+> **Current Focus**: Web-Admin 복구 - Phase 4 Permission Management (P1 - High)
 
 ---
 
@@ -249,145 +249,87 @@
 
 ## Next Priority Task
 
-### 📋 Observability Visualization - Grafana Dashboards (P1)
+### 📋 Phase 4: Permission Management System (P1 - High)
 **Status**: Ready for Implementation
-**Dependencies**: Post-Phase 3-P3 ✅, Post-Phase 3-P6 ✅
-**Estimated Effort**: 2-3 days
+**Dependencies**: Phase 3 ✅
+**Estimated Effort**: 4-5 days
+**Purpose**: web-admin 복구 핵심 작업
+
+**Current Problem**:
+- 모든 관리자가 동일 권한 (슈퍼관리자)
+- 메뉴별 접근 제어 불가능
+- 역할 기반 권한 관리 필요
 
 **Scope**:
-- Create Grafana dashboards for audit logs
-- Configure alerting for consumer lag > 100 messages
-- Add trace visualization (Jaeger or Grafana Tempo integration)
-- Create service-level metrics dashboards
-- Document query patterns for audit compliance
+1. OpenFGA 모델 확장 (department, menu_item, role)
+2. PermissionsPage UI (Admin/Team/Menu 탭)
+3. 권한 템플릿 관리
+4. 메뉴별 접근 제어 Guard
+5. 권한 기반 메뉴 표시/숨김
 
 **Key Deliverables**:
-1. Audit Logs Dashboard (ClickHouse data source)
-2. Service Performance Dashboard (traces, metrics)
-3. Consumer Lag Alerts (Prometheus alerts)
-4. Compliance Report Templates (SQL queries)
-5. Query documentation for common use cases
+1. OpenFGA DSL update (authorization model)
+2. PermissionsPage component
+3. Permission API client
+4. Access control guards
+5. Menu permission enforcement
+
+**Documentation**: `.tasks/phases/PHASE_4_PERMISSION_MANAGEMENT_SYSTEM.md`
 
 ---
 
-## Planned Phases (P2-P3)
+## Planned Phases - Web-Admin 복구
 
-### 📋 Phase 4: Permission Management System (P2)
-**Status**: Planned
-**Dependencies**: Phase 3 (Complete ✅)
-**Estimated Effort**: 4-5 days
+### 📋 Phase 8: Notification Service (P2 - 선택적)
+**Status**: Optional
+**Dependencies**: Kafka/Redpanda ✅
+**Estimated Effort**: 3-4일 (기본 버전)
 
-**Scope**:
-- OpenFGA model extensions
-- Permission management UI
-- Role-based access control refinement
+**Scope** (간소화):
+- SendGrid/AWS SES 연동
+- 관리자 초대 이메일
+- 비밀번호 재설정 알림
+- Kafka 이벤트 기반 발송
 
-**Database Migration**: OpenFGA DSL Update (not goose)
+**Excluded** (나중에):
+- Push/SMS/In-App notification
+- Mail receiving (inbox)
+- MJML 고급 템플릿
 
----
-
-### 📋 Phase 5: Service Management Framework (P2)
-**Status**: Planned
-**Dependencies**: Phase 4
-**Estimated Effort**: 5-7 days
-
-**Scope**:
-- Service Registry
-- [appId] dynamic routing
-- Feature Flags management
-- Maintenance Mode control
-
-**Database Migration**: Required (goose)
-New tables: app_registry, app_versions, feature_flags, remote_configs, maintenance_schedules
+**필요성**: 중간 (필요하면 기본 기능만 구현)
 
 ---
 
-### 📋 Phase 5.5: App Management (P2)
-**Status**: Planned
-**Dependencies**: Phase 5
-**Estimated Effort**: 4-5 days
-
-**Scope**:
-- Mobile app version control
-- Force update policy
-- Ad management
-- Push notification campaigns
-
-**Database Migration**: Required (goose, extends Phase 5 tables)
-
----
-
-### 📋 Phase 5.6: auth-bff gRPC (P2)
-**Status**: Planned
-**Dependencies**: Phase 5.5
-**Estimated Effort**: 4-5 days
-
-**Scope**:
-- Proto definitions for mobile apps
-- gRPC Services (AppCheck, AppSession, AppConfig)
-- Guards & Interceptors
-
-**Database Migration**: Not Required (gRPC only)
-
----
-
-### 📋 Phase 6: Analytics Dashboard (P3)
-**Status**: Planned
-**Dependencies**: Phase 5
-**Estimated Effort**: 5-7 days
-
-**Scope**:
-- Dashboard components package
-- ClickHouse query builder
-- Custom query management
-
-**Database Migration**: Required (goose)
-New tables: saved_queries, dashboard_configs
-
----
-
-### 📋 Phase 7: Audit System (P3)
-**Status**: Planned
-**Dependencies**: Phase 6
-**Estimated Effort**: 5-7 days
-
-**Scope**:
-- Session replay enhancements
-- Heatmaps (click, scroll)
-- Path analysis
-- Web Vitals tracking
-
-**Database Migration**: Required (goose, ClickHouse)
-New tables: heatmap_events, path_events, web_vitals, goal_conversions
-
----
-
-### 📋 Phase 8: Notification Service (P3)
-**Status**: Planned
-**Dependencies**: Kafka/Redpanda infrastructure
-**Estimated Effort**: 7-10 days
-
-**Scope**:
-- Email/Push/SMS/In-App notification infrastructure
-- Mail service DB (receiving)
-- MJML templates
-
-**Database Migration**: Required (goose)
-New DB: mail_db with mailboxes, messages, folders, attachments, contacts
-
----
-
-### 📋 Phase 9: Settings & System Config (P3)
-**Status**: 75% Complete (Backend done, Frontend partial)
+### 📋 Phase 9: Settings UI 완성 (P3 - 선택적)
+**Status**: 75% Complete (Backend done, Frontend missing)
 **Dependencies**: None
-**Estimated Effort**: 5-7 days (remaining)
+**Estimated Effort**: 2-3일
 
 **Scope**:
 - Service Configuration Page (frontend)
 - Service Features Page (frontend)
 - Country Configuration Page (frontend)
 
-**Database Migration**: Not Required (Frontend only)
+**필요성**: 낮음 (백엔드 완료, 프론트엔드 선택적)
+
+---
+
+## 제외 Phases (현재 불필요)
+
+### ❌ Phase 5: Service Management Framework
+**이유**: 서비스 수 적음, 동적 라우팅 불필요
+
+### ❌ Phase 5.5: App Management
+**이유**: 모바일 앱 없음
+
+### ❌ Phase 5.6: auth-bff gRPC
+**이유**: 모바일 앱 없음
+
+### ❌ Phase 6: Analytics Dashboard
+**이유**: ClickHouse 데이터는 Audit용, Grafana로 대체 가능
+
+### ❌ Phase 7: Audit System 고도화
+**이유**: Session recordings 있음, 서드파티로 대체 가능
 
 ---
 
@@ -419,38 +361,30 @@ New DB: mail_db with mailboxes, messages, folders, attachments, contacts
 ## Summary
 
 ### Completed (14 phases)
-1. ✅ Phase 0: HR Service Structure Backup
-2. ✅ Phase 1: Code Refactoring (HR menu removal)
-3. ✅ Phase 1.5: Global User Schema Design
-4. ✅ Phase 2: Data Cleanup Design
-5. ✅ Phase 3: Admin Account Management
-6. ✅ Phase 3.5: Documentation Optimization
-7. ✅ Phase 10: HR Code Removal & Codebase Cleanup
-8. ✅ Post-Phase 3-P1: Audit Service Telemetry Gateway (PR #590)
-9. ✅ Post-Phase 3-P2: OTEL Collector Configuration (PR #525)
-10. ✅ Post-Phase 3-P3: ClickHouse Kafka Engine Integration (Migrations 007-010)
-11. ✅ Post-Phase 3-P4: Frontend SDK Integration (packages/otel-web-sdk)
-12. ✅ Post-Phase 3-P5: Backend Instrumentation (nest-common + services)
-13. ✅ Post-Phase 3-P6: OTLP JSON Parsing (arrayFirst + NULL-safe)
-14. ✅ Redpanda Standard Architecture (9093 internal + 9094 external)
+1. ✅ Phase 0-3: HR 제거 및 Admin Account Management
+2. ✅ Phase 10: HR Code Removal & Codebase Cleanup
+3. ✅ Post-Phase 3 (P1-P6): OTEL Pipeline for Audit Service
+   - 목적: Audit 서비스 데이터 수집
+   - 결과: ClickHouse에 3,779 로그 정상 저장 중
+   - 상태: 정상 작동 (0 consumer lag)
 
 ### Next Immediate Action (P1 - High)
 
-**Observability Visualization - Grafana Dashboards**
-- **Priority**: P1 - High (Enable production monitoring)
-- **Estimated**: 2-3 days
-- **Scope**: Grafana dashboards, alerting, trace visualization
-- **Environment**: dev → release → main
+**Phase 4: Permission Management System**
+- **Priority**: P1 - High (web-admin 복구 핵심)
+- **Estimated**: 4-5일
+- **Scope**: OpenFGA 모델 확장, PermissionsPage UI, 메뉴별 접근 제어
+- **Documentation**: `.tasks/WEB_ADMIN_RECOVERY_PLAN.md`
 
-### Pending Phases (7)
-- Phase 4: Permission Management (P2)
-- Phase 5: Service Management Framework (P2)
-- Phase 5.5: App Management (P2)
-- Phase 5.6: auth-bff gRPC (P2)
-- Phase 6: Analytics Dashboard (P3)
-- Phase 7: Audit System (P3)
-- Phase 8: Notification Service (P3)
-- Phase 9: Settings & System Config (75% done, P3)
+### 선택적 작업 (P2-P3)
+- Phase 8: Notification Service (기본 버전, 3-4일)
+- Phase 9: Settings UI 완성 (2-3일)
+
+### 제외 작업 (현재 불필요)
+- ❌ Phase 5: Service Management (서비스 수 적음)
+- ❌ Phase 5.5, 5.6: App/gRPC (모바일 앱 없음)
+- ❌ Phase 6: Analytics Dashboard (Grafana로 대체)
+- ❌ Phase 7: Audit System 고도화 (서드파티로 대체)
 
 ---
 

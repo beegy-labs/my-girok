@@ -1,101 +1,96 @@
 # Current Focus
 
 > **Last Updated**: 2026-01-20
-> **Status**: OTEL Pipeline Complete - Ready for Grafana Dashboards
+> **Status**: Web-Admin Recovery - Phase 4 Permission Management
 
 ---
 
 ## ✅ Recently Completed
 
-### Post-Phase 3-P3 + P6: ClickHouse OTLP Pipeline (2026-01-20)
-- **Commits**: my-girok #94c0b4d, platform-gitops #e91c0d5c
-- **Migrations**: 007 (OTLP JSON), 008 (arrayFirst), 009 (NULL severity), 010 (Complete NULL handling)
-- **Impact**: Complete OTLP → Kafka → ClickHouse pipeline operational
-- **Result**: 3,779 logs successfully stored, 0 consumer lag, 2 services tracked across 10 namespaces
-- **Architecture**: Redpanda standard (9093 internal + 9094 external), OTEL Collector internal routing, ClickHouse external connection
+### OTEL Pipeline for Audit Service (2026-01-19 ~ 2026-01-20)
+- **목적**: Audit 서비스를 위한 데이터 수집 파이프라인 구축
+- **결과**: ClickHouse에 3,779 로그 정상 저장, 0 consumer lag
+- **상태**: ✅ 완료 - 정상 작동 중
+- **Phases**: Post-Phase 3 P1-P6 전체 완료
+  - P1: Audit Service Telemetry Gateway
+  - P2: OTEL Collector Configuration
+  - P3: ClickHouse Kafka Engine Integration
+  - P4: Frontend SDK Integration
+  - P5: Backend Instrumentation
+  - P6: OTLP JSON Parsing (arrayFirst + NULL-safe)
 
-### Post-Phase 3-P4 + P5: SDK Integration (2026-01-19)
-- **Frontend SDK**: packages/otel-web-sdk with browser OTEL SDK
-- **Backend SDK**: packages/nest-common with auto-instrumentation
-- **Impact**: Services instrumented with HTTP, gRPC, Prisma auto-instrumentation
-- **Result**: Full telemetry collection from frontend and backend
-
-### Post-Phase 3-P2: OTEL Collector Configuration (2026-01-19)
-- **PR**: platform-gitops #525 (merged to develop)
-- **Impact**: Kafka exporter to Redpanda, dual export path
-- **Result**: OTEL Collector forwarding to ClickHouse + Kafka
-
-### Post-Phase 3-P1: Audit Service Telemetry Gateway (2026-01-19)
-- **PR**: #590 (merged to develop)
-- **Impact**: Secure gateway for all telemetry data (traces, metrics, logs)
-- **Result**: 2823 lines added, 83 tests passing, all CI green
+### Web-Admin 기본 기능 (Phase 0-3, 10)
+- ✅ Phase 3: Admin Account Management (관리자 CRUD)
+- ✅ Phase 10: HR Code Removal
+- ✅ Settings: Countries, Locales, OAuth, Tenant, Audit, Sessions
 
 ---
 
 ## 🎯 Next Priority Task
 
-### 1. Observability Visualization (P1 - High) ⚡
+### 1. Phase 4: Permission Management System (P1 - High) ⚡
 
-**Why Important?**: Enable monitoring and debugging of production systems with visual dashboards.
+**Why Important**: web-admin 복구 핵심 - 관리자 권한 차등화 필요
 
-**Architecture**: Grafana dashboards for ClickHouse OTLP data
+**Current Problem**:
+- 모든 관리자가 동일 권한 (슈퍼관리자)
+- 메뉴별 접근 제어 불가능
+- 역할 기반 권한 관리 필요
 
 **Scope**:
-- Create Grafana dashboards for audit logs
-- Configure alerting for consumer lag
-- Add trace visualization (Jaeger or Grafana Tempo)
-- Create service-level metrics dashboards
-- Document query patterns for audit compliance
+- OpenFGA 모델 확장 (department, menu_item, role)
+- PermissionsPage UI (Admin/Team/Menu 탭)
+- 권한 템플릿 관리
+- 메뉴별 접근 제어 Guard
 
-**Estimated Effort**: 2-3 days
+**Estimated Effort**: 4-5일
 
-**Documentation**: Create new task document
+**Documentation**: `.tasks/phases/PHASE_4_PERMISSION_MANAGEMENT_SYSTEM.md`
+
+**Dependencies**: Phase 3 ✅ (Complete)
+
+**PR Branch**: `feat/phase4-permission-management`
 
 **Implementation Steps**:
-1. Review ClickHouse Kafka Engine documentation
-2. Create migration file: `20260120000000_otel_audit_tables.sql`
-3. Define Kafka Engine tables (audit_logs_queue, audit_traces_queue, audit_metrics_queue)
-4. Define MergeTree tables (otel_audit_logs, otel_audit_traces, otel_audit_metrics)
-5. Create Materialized Views for data transformation
-6. Configure SASL authentication for Kafka connection
-7. Test with sample telemetry data
-8. Verify data ingestion and querying
+1. Review OpenFGA current model
+2. Design extended model (department, menu_item, role)
+3. Create PermissionsPage component structure
+4. Implement Admin permissions tab
+5. Implement Team permissions tab
+6. Implement Menu permissions tab
+7. Add permission templates
+8. Create access control guards
+9. Test permission enforcement
+10. Update menu rendering logic
 
 **Technical Details**:
-- Kafka Broker: `kafka.girok.dev:9093` (SASL SCRAM-SHA-256)
-- Topics: `otel-telemetry` (single topic from OTEL Collector)
-- Format: OTLP Protobuf
-- Retention: Logs (7y), Traces (90d), Metrics (1y)
-- Partitioning: Monthly (toYYYYMM)
-- Environment: **dev only** (release/prod later)
+- Authorization: OpenFGA
+- Backend: auth-service/authorization-service
+- Frontend: web-admin/src/pages/permissions
+- Database: authorization_db (OpenFGA DSL update)
+- Dependencies: Phase 3 Admin Account Management ✅
 
 ---
 
 ## 📊 Progress Overview
 
-### Completed Phases (9)
-1. ✅ Phase 0: HR Service Structure Backup
-2. ✅ Phase 1: Code Refactoring
-3. ✅ Phase 1.5: Global User Schema Design
-4. ✅ Phase 2: Data Cleanup Design
-5. ✅ Phase 3: Admin Account Management
-6. ✅ Phase 3.5: Documentation Optimization
-7. ✅ Phase 10: HR Code Removal & Codebase Cleanup
-8. ✅ Post-Phase 3-P1: Audit Gateway (PR #590)
-9. ✅ Post-Phase 3-P2: OTEL Collector (PR #525)
+### Completed Phases (14)
+1. ✅ Phase 0-3, 10: HR 제거 및 Admin Management
+2. ✅ Post-Phase 3 (P1-P6): OTEL Pipeline for Audit Service
+   - 목적: Audit 서비스 데이터 수집
+   - 상태: 3,779 로그 정상 저장 중
 
-### Planned Phases (12)
-- 📋 Post-Phase 3-P3: ClickHouse Kafka (P1) ⚡ **← YOU ARE HERE**
-- 📋 Post-Phase 3-P4: Frontend SDK (P2)
-- 📋 Post-Phase 3-P5: Backend Instrumentation (P2)
-- 📋 Phase 4: Permission Management (P2)
-- 📋 Phase 5: Service Management Framework (P2)
-- 📋 Phase 5.5: App Management (P2)
-- 📋 Phase 5.6: auth-bff gRPC (P2)
-- 📋 Phase 6: Analytics Dashboard (P3)
-- 📋 Phase 7: Audit System (P3)
-- 📋 Phase 8: Notification Service (P3)
-- 🚧 Phase 9: Settings & System Config (75% done, P3)
+### Next Phases - Web-Admin 복구
+- 📋 Phase 4: Permission Management (P1) ⚡ **← YOU ARE HERE**
+- 📋 Phase 8: Notification Service (P2, 선택적)
+- 📋 Phase 9 완성: Settings UI (P3, 선택적)
+
+### 제외 Phases (현재 불필요)
+- ❌ Phase 5: Service Management (서비스 수 적음)
+- ❌ Phase 5.5: App Management (모바일 앱 없음)
+- ❌ Phase 5.6: auth-bff gRPC (모바일 앱 없음)
+- ❌ Phase 6: Analytics Dashboard (Grafana로 대체)
+- ❌ Phase 7: Audit System 고도화 (서드파티로 대체)
 
 ---
 
@@ -103,70 +98,44 @@
 
 **Recommended Command**:
 ```bash
-# Read implementation plan first
-cat .tasks/POST_PHASE3_P1_AUDIT_GATEWAY.md
+# Read implementation plan
+cat .tasks/phases/PHASE_4_PERMISSION_MANAGEMENT_SYSTEM.md
 
 # Create feature branch
 git checkout develop
 git pull
-git checkout -b feat/otel-audit-gateway
+git checkout -b feat/phase4-permission-management
 
-# Start implementation
-cd services/audit-service
+# Review OpenFGA model
+cd services/authorization-service
 ```
 
 **Why Start Now?**:
-- ⚡ P1 High priority
-- 🏗️ Foundation for unified observability
-- ⏱️ Reasonable effort (2-3 days)
-- 🔒 Security-first architecture
-- 📊 Enables full telemetry pipeline
+- ⚡ P1 High priority - web-admin 복구 핵심
+- 🔒 권한 차등화 필수 기능
+- 📊 메뉴별 접근 제어 필요
+- ⏱️ 4-5일 작업량
 
 ---
 
-## 📋 Future Tasks (After OTEL Pipeline)
+## 📋 선택적 작업 (After Phase 4)
 
-### Post-Phase 3-P2: OTEL Collector Configuration (P1)
-- **Estimated**: 1-2 days
-- **Dependency**: Post-Phase 3-P1 ✅
-- **Scope**: Deploy OTEL Collector, Kafka exporter, NetworkPolicy
+### Phase 8: Notification Service (기본 버전)
+- **Estimated**: 3-4일
+- **Scope**: SendGrid/AWS SES 연동, 관리자 초대 이메일, 비밀번호 재설정
+- **필요성**: 중간 (필요하면 기본 기능만)
 
-### Post-Phase 3-P3: ClickHouse Kafka Engine (P1)
-- **Estimated**: 1-2 days
-- **Dependency**: Post-Phase 3-P2 ✅
-- **Scope**: Kafka Engine tables, Materialized Views, TTL policies
-
-### Post-Phase 3-P4: Frontend SDK (P2)
-- **Estimated**: 1-2 days
-- **Dependency**: Post-Phase 3-P1 ✅
-- **Scope**: Browser SDK package, React integration
-
-### Post-Phase 3-P5: Backend Instrumentation (P2)
-- **Estimated**: 1-2 days
-- **Dependency**: Post-Phase 3-P1 ✅
-- **Scope**: NestJS OTEL module, service instrumentation
-
-### Phase 4: Permission Management System (P2)
-- **Estimated**: 4-5 days
-- **Dependency**: Phase 3 ✅ (Complete)
-- **Scope**: OpenFGA extensions, Permission UI, RBAC refinement
-
-### Phase 5-9: Additional Features (P2-P3)
-- Service Management Framework
-- App Management
-- gRPC for mobile
-- Analytics Dashboard
-- Audit System enhancements
-- Notification Service
-- Settings & Config (75% done)
+### Phase 9 완성: Settings UI
+- **Estimated**: 2-3일
+- **Scope**: Service Config, Service Features, Country Config 프론트엔드
+- **필요성**: 낮음 (백엔드 완료, 프론트엔드 선택적)
 
 ---
 
 ## 📚 References
 
-- **Implementation Plan**: `.tasks/POST_PHASE3_P1_AUDIT_GATEWAY.md`
-- **Full OTEL Architecture**: `docs/llm/policies/best-practices-2026.md` (OpenTelemetry section)
+- **Web-Admin 복구 계획**: `.tasks/WEB_ADMIN_RECOVERY_PLAN.md`
+- **Phase 4 상세**: `.tasks/phases/PHASE_4_PERMISSION_MANAGEMENT_SYSTEM.md`
 - **Progress Tracker**: `.tasks/PROGRESS.md`
 - **Master Plan**: `.tasks/MASTER_PROJECT_PLAN.md`
 - **Git Flow**: `.ai/git-flow.md`
-- **Testing Policy**: `docs/llm/policies/testing.md`
