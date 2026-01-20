@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Building2, ArrowLeft, Users, UserCog, Shield } from 'lucide-react';
 
 export default function DepartmentDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id: _id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
 

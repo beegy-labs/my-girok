@@ -100,7 +100,10 @@ test.describe('OAuth Flow', () => {
       await expect(page).toHaveURL(/\/oauth\/callback/);
     });
 
-    test('should redirect to home after successful OAuth', async ({ oauthCallbackPage, page }) => {
+    test('should redirect to home after successful OAuth', async ({
+      oauthCallbackPage: _oauthCallbackPage,
+      page,
+    }) => {
       // Mock successful OAuth callback that redirects to home
       await page.route('**/auth/v1/oauth/google/callback*', async (route) => {
         await route.fulfill({
@@ -124,7 +127,7 @@ test.describe('OAuth Flow', () => {
     });
 
     test('should redirect to stored return URL after OAuth', async ({
-      oauthCallbackPage,
+      oauthCallbackPage: _oauthCallbackPage,
       page,
     }) => {
       const returnUrl = '/settings/sessions';
@@ -196,7 +199,7 @@ test.describe('OAuth Flow', () => {
 
   test.describe('OAuth Callback - MFA Required', () => {
     test('should redirect to MFA page when required', async ({
-      oauthCallbackPage,
+      oauthCallbackPage: _oauthCallbackPage,
       mfaPage,
       page,
     }) => {
@@ -226,7 +229,7 @@ test.describe('OAuth Flow', () => {
     });
 
     test('should support multiple MFA methods from OAuth', async ({
-      oauthCallbackPage,
+      oauthCallbackPage: _oauthCallbackPage,
       mfaPage,
       page,
     }) => {
