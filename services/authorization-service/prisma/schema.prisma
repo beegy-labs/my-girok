@@ -99,6 +99,22 @@ model Team {
   @@map("teams")
 }
 
+/// Department metadata for hierarchical permission grouping
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model Department {
+  id          String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name        String    @db.VarChar(128)
+  displayName String    @map("display_name") @db.VarChar(256)
+  serviceId   String?   @map("service_id") @db.VarChar(64)
+  description String?
+  createdBy   String    @map("created_by") @db.VarChar(256)
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([serviceId], map: "idx_departments_service")
+  @@map("departments")
+}
+
 model goose_db_version {
   id         Int      @id @default(autoincrement())
   version_id BigInt
