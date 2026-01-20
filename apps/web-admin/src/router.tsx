@@ -25,6 +25,9 @@ const ServiceConsentsPage = lazy(() => import('./pages/services/ServiceConsentsP
 const SupportedCountriesPage = lazy(() => import('./pages/system/SupportedCountriesPage'));
 const SupportedLocalesPage = lazy(() => import('./pages/system/SupportedLocalesPage'));
 const OAuthSettingsPage = lazy(() => import('./pages/system/OAuthSettingsPage'));
+const ServiceConfigPage = lazy(() => import('./pages/system/ServiceConfigPage'));
+const ServiceFeaturesPage = lazy(() => import('./pages/system/ServiceFeaturesPage'));
+const CountryConfigPage = lazy(() => import('./pages/system/CountryConfigPage'));
 const SessionRecordingsPage = lazy(
   () => import('./pages/system/session-recordings/SessionRecordingsPage'),
 );
@@ -295,6 +298,30 @@ export const router = createBrowserRouter([
             element: (
               <PrivateRoute permission="settings:read">
                 <OAuthSettingsPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'system/service-config',
+            element: (
+              <PrivateRoute permission="service:read">
+                <ServiceConfigPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'system/features',
+            element: (
+              <PrivateRoute permission="service:read">
+                <ServiceFeaturesPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'system/country-config',
+            element: (
+              <PrivateRoute permission="settings:read">
+                <CountryConfigPage />
               </PrivateRoute>
             ),
           },

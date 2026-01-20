@@ -1,7 +1,7 @@
 # Web-Admin Refactoring - Progress Tracker
 
 > **Last Updated**: 2026-01-20
-> **Current Focus**: Web-Admin 복구 - Phase 4 Permission Management (P1 - High)
+> **Current Focus**: Web-Admin 복구 완료 - Phase 4 Permission Management System merged
 
 ---
 
@@ -247,34 +247,74 @@
 
 ---
 
-## Next Priority Task
-
-### 📋 Phase 4: Permission Management System (P1 - High)
-**Status**: Ready for Implementation
-**Dependencies**: Phase 3 ✅
-**Estimated Effort**: 4-5 days
-**Purpose**: web-admin 복구 핵심 작업
-
-**Current Problem**:
-- 모든 관리자가 동일 권한 (슈퍼관리자)
-- 메뉴별 접근 제어 불가능
-- 역할 기반 권한 관리 필요
+### ✅ Phase 4: Permission Management System
+**Status**: Complete
+**PR**: #592 (merged)
+**Branch**: `feat/phase4-permission-system`
+**Started**: 2026-01-20
+**Completed**: 2026-01-20
 
 **Scope**:
-1. OpenFGA 모델 확장 (department, menu_item, role)
-2. PermissionsPage UI (Admin/Team/Menu 탭)
-3. 권한 템플릿 관리
-4. 메뉴별 접근 제어 Guard
-5. 권한 기반 메뉴 표시/숨김
+- Backend: Permission & Department management API
+- Frontend: PermissionsPage & DepartmentsPage UI
+- OpenFGA: Extended authorization model
+- Templates: 9 built-in permission templates
 
-**Key Deliverables**:
-1. OpenFGA DSL update (authorization model)
-2. PermissionsPage component
-3. Permission API client
-4. Access control guards
-5. Menu permission enforcement
+**Deliverables**:
+- **Backend (auth-bff)**:
+  - PermissionController (14 endpoints) + PermissionService
+  - DepartmentController (8 endpoints) + DepartmentService
+  - DTOs with Zod validation
+  - 9 permission templates (service-admin, operator, viewer, etc.)
 
-**Documentation**: `.tasks/phases/PHASE_4_PERMISSION_MANAGEMENT_SYSTEM.md`
+- **Backend (authorization-service)**:
+  - OpenFGA DSL: department, menu_item, role, resource_permission, country types
+  - Department migration (20260120000000_add_departments_table.sql)
+  - DepartmentRepository for CRUD operations
+
+- **Frontend (web-admin)**:
+  - PermissionsPage with 4 tabs (Admin/Team/Menu/Templates)
+  - DepartmentsPage + DepartmentDetailPage
+  - API clients: permissions.ts, departments.ts
+  - Updated menu and router configuration
+
+- **Code Quality**:
+  - JSDoc documentation for all public methods
+  - Type-safe code (no 'any' types)
+  - NotImplementedException for unimplemented gRPC endpoints
+  - +2,038 lines across 24 files
+
+**Features**:
+- Admin/Team/Department permission assignment
+- Permission templates for quick assignment
+- Hierarchical department structure (head/manager/member)
+- Menu access control infrastructure
+- Permission check API (single + batch)
+
+**Note**: Department gRPC endpoints in authorization-service marked as TODO for future implementation
+
+---
+
+## Next Priority Task
+
+### 📋 Phase 8: Notification Service (P2 - Optional)
+**Status**: Optional (선택적 구현)
+**Dependencies**: Kafka/Redpanda ✅
+**Estimated Effort**: 3-4 days
+**Purpose**: 관리자 초대 및 비밀번호 재설정 알림
+
+**Scope** (간소화 버전):
+- SendGrid/AWS SES 연동
+- 관리자 초대 이메일
+- 비밀번호 재설정 알림
+- Kafka 이벤트 기반 발송
+
+**Excluded** (나중에):
+- Push/SMS/In-App notification
+- Mail receiving (inbox)
+- MJML 고급 템플릿
+
+**Documentation**: `.tasks/phases/PHASE_8_NOTIFICATION_SERVICE.md`
 
 ---
 
@@ -360,25 +400,31 @@
 
 ## Summary
 
-### Completed (14 phases)
-1. ✅ Phase 0-3: HR 제거 및 Admin Account Management
+### Completed (15 phases)
+1. ✅ Phase 0-4: HR 제거, Admin Account Management, Permission Management System
 2. ✅ Phase 10: HR Code Removal & Codebase Cleanup
 3. ✅ Post-Phase 3 (P1-P6): OTEL Pipeline for Audit Service
    - 목적: Audit 서비스 데이터 수집
-   - 결과: ClickHouse에 3,779 로그 정상 저장 중
+   - 결과: ClickHouse에 3,779+ 로그 정상 저장 중
    - 상태: 정상 작동 (0 consumer lag)
 
-### Next Immediate Action (P1 - High)
+### Web-Admin 복구 완료 🎉
+**Phase 4 완료로 핵심 Web-Admin 기능 복구 완료**
+- ✅ Admin Account Management (Phase 3)
+- ✅ Permission Management System (Phase 4)
+- ✅ Department Hierarchy (Phase 4)
+- ✅ Menu Access Control Infrastructure (Phase 4)
 
-**Phase 4: Permission Management System**
-- **Priority**: P1 - High (web-admin 복구 핵심)
-- **Estimated**: 4-5일
-- **Scope**: OpenFGA 모델 확장, PermissionsPage UI, 메뉴별 접근 제어
-- **Documentation**: `.tasks/WEB_ADMIN_RECOVERY_PLAN.md`
+### Next Optional Tasks (P2-P3)
 
-### 선택적 작업 (P2-P3)
-- Phase 8: Notification Service (기본 버전, 3-4일)
-- Phase 9: Settings UI 완성 (2-3일)
+**Phase 8: Notification Service** (선택적, 3-4일)
+- 관리자 초대 이메일
+- 비밀번호 재설정 알림
+- Kafka 이벤트 기반 발송
+
+**Phase 9: Settings UI 완성** (선택적, 2-3일)
+- Service Configuration Page (frontend)
+- Frontend 일부만 남음 (backend 완료)
 
 ### 제외 작업 (현재 불필요)
 - ❌ Phase 5: Service Management (서비스 수 적음)
