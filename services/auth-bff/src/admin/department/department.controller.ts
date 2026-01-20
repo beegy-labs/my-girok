@@ -35,21 +35,30 @@ export class DepartmentController {
     private readonly authzClient: AuthorizationGrpcClient,
   ) {}
 
+  /**
+   * Create a new department
+   * @throws {Error} Until Department gRPC is added to authorization-service
+   */
   @Post()
-  async create(@Body() dto: CreateDepartmentDto): Promise<DepartmentResponse> {
-    // TODO: Implement after adding Department gRPC to authorization-service
-    throw new Error('Not implemented');
+  async create(@Body() _dto: CreateDepartmentDto): Promise<DepartmentResponse> {
+    throw new Error('Not implemented: Department creation requires gRPC implementation');
   }
 
+  /**
+   * List all departments
+   * @throws {Error} Until Department gRPC is added to authorization-service
+   */
   @Get()
-  async list(@Query() query: ListDepartmentsQueryDto): Promise<DepartmentListResponse> {
-    // TODO: Implement after adding Department gRPC to authorization-service
-    throw new Error('Not implemented');
+  async list(@Query() _query: ListDepartmentsQueryDto): Promise<DepartmentListResponse> {
+    throw new Error('Not implemented: Department list requires gRPC implementation');
   }
 
+  /**
+   * Get department details by ID
+   * TODO: Implement full details after adding Department gRPC to authorization-service
+   */
   @Get(':id')
   async getById(@Param('id', ParseUUIDPipe) id: string): Promise<DepartmentDetailResponse> {
-    // TODO: Implement after adding Department gRPC to authorization-service
     const members = await this.departmentService.getMembers(id);
     const head = await this.departmentService.getHead(id);
     const managers = await this.departmentService.getManagers(id);
@@ -59,45 +68,57 @@ export class DepartmentController {
       name: 'Loading...',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      members: members.map((m: any) => ({
-        ...m,
+      members: members.map((m) => ({
+        adminId: m.adminId,
         name: '',
         email: '',
+        role: m.role,
         joinedAt: new Date().toISOString(),
       })),
       head: head
         ? {
-            ...head,
+            adminId: head.adminId,
             name: '',
             email: '',
             role: 'head' as const,
             joinedAt: new Date().toISOString(),
           }
         : undefined,
-      managers: managers.map((m: any) => ({
-        ...m,
+      managers: managers.map((m) => ({
+        adminId: m.adminId,
         name: '',
         email: '',
+        role: m.role,
         joinedAt: new Date().toISOString(),
       })),
     };
   }
 
+  /**
+   * Update department
+   * @throws {Error} Until Department gRPC is added to authorization-service
+   */
   @Patch(':id')
   async update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateDepartmentDto,
+    @Param('id', ParseUUIDPipe) _id: string,
+    @Body() _dto: UpdateDepartmentDto,
   ): Promise<DepartmentResponse> {
-    // TODO: Implement after adding Department gRPC to authorization-service
-    throw new Error('Not implemented');
+    throw new Error('Not implemented: Department update requires gRPC implementation');
   }
 
+  /**
+   * Delete department
+   * @throws {Error} Until Department gRPC is added to authorization-service
+   */
   @Delete(':id')
-  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<{ success: boolean }> {
-    // TODO: Implement after adding Department gRPC to authorization-service
-    throw new Error('Not implemented');
+  async delete(@Param('id', ParseUUIDPipe) _id: string): Promise<{ success: boolean }> {
+    throw new Error('Not implemented: Department deletion requires gRPC implementation');
   }
 
+  /**
+   * Add member to department
+   * Grants permission tuple via OpenFGA
+   */
   @Post(':id/members')
   async addMember(
     @Param('id', ParseUUIDPipe) id: string,
@@ -108,6 +129,10 @@ export class DepartmentController {
     return { success: true };
   }
 
+  /**
+   * Remove member from department
+   * Revokes all department-related permission tuples
+   */
   @Delete(':id/members/:adminId')
   async removeMember(
     @Param('id', ParseUUIDPipe) id: string,
@@ -119,6 +144,10 @@ export class DepartmentController {
     return { success: true };
   }
 
+  /**
+   * Set department head
+   * Revokes previous head and grants to new admin
+   */
   @Patch(':id/head')
   async setHead(
     @Param('id', ParseUUIDPipe) id: string,

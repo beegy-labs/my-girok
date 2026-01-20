@@ -77,25 +77,26 @@ export class PermissionService {
 
   /**
    * Get all direct permissions for a user
+   * @param _user User identifier (unused until Read API is implemented)
+   * @returns Empty array until Read operation is added to AuthorizationGrpcClient
+   * @todo Add Read operation to AuthorizationGrpcClient
    */
-  async getPermissionsForUser(user: string): Promise<PermissionTuple[]> {
+  async getPermissionsForUser(_user: string): Promise<PermissionTuple[]> {
     // Since Read API is not exposed via gRPC client, we need to use listObjects
     // This is a simplified version - in production, you'd add Read to the gRPC client
     // For now, we'll return an empty array and rely on check operations
-    // TODO: Add Read operation to AuthorizationGrpcClient
     return [];
   }
 
   /**
    * Get inherited permissions for a user (via teams and departments)
+   * @param user User identifier in format "admin:uuid"
+   * @returns Array of permission tuples inherited from teams and departments
    */
   async getInheritedPermissions(user: string): Promise<PermissionTuple[]> {
     const inherited: PermissionTuple[] = [];
 
     try {
-      // Extract admin ID from user string (format: "admin:uuid")
-      const adminId = user.replace('admin:', '');
-
       // Find teams this admin belongs to
       const teamMemberships = await this.authzClient.listObjects(user, 'member', 'team');
 
@@ -134,16 +135,18 @@ export class PermissionService {
 
   /**
    * Get menu permissions (which users/teams can access which menus)
+   * @returns Empty array until Read operation with objectType filter is implemented
+   * @todo Implement after adding Read operation to gRPC client
    */
   async getMenuPermissions(): Promise<MenuPermissionItem[]> {
     // This requires Read API with objectType filter
     // For now, return empty array
-    // TODO: Implement after adding Read operation to gRPC client
     return [];
   }
 
   /**
    * List available permission templates
+   * @returns Array of built-in permission templates
    */
   async listTemplates(): Promise<PermissionTemplate[]> {
     return PERMISSION_TEMPLATES;
@@ -151,6 +154,11 @@ export class PermissionService {
 
   /**
    * Apply a permission template to a target user
+   * @param templateId Template identifier
+   * @param targetUser User identifier to apply template to
+   * @param scope Optional scope (services, countries) for scoped permissions
+   * @returns Array of applied permission tuples
+   * @throws {NotFoundException} If template is not found
    */
   async applyTemplate(
     templateId: string,

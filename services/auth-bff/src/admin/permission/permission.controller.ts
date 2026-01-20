@@ -33,6 +33,9 @@ export class PermissionController {
   // Admin Permission Assignment
   // ==========================================
 
+  /**
+   * Grant permission to an admin
+   */
   @Post('admin/:adminId/grant')
   async grantToAdmin(
     @Param('adminId', ParseUUIDPipe) adminId: string,
@@ -49,6 +52,9 @@ export class PermissionController {
     };
   }
 
+  /**
+   * Revoke permission from an admin
+   */
   @Delete('admin/:adminId/revoke')
   async revokeFromAdmin(
     @Param('adminId', ParseUUIDPipe) adminId: string,
@@ -59,6 +65,9 @@ export class PermissionController {
     return { success: true, consistencyToken: token };
   }
 
+  /**
+   * Get all permissions for an admin (direct + inherited)
+   */
   @Get('admin/:adminId')
   async getAdminPermissions(
     @Param('adminId', ParseUUIDPipe) adminId: string,
