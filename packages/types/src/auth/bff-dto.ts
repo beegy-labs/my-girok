@@ -124,6 +124,7 @@ export interface UserInfo {
   username: string;
   emailVerified: boolean;
   mfaEnabled: boolean;
+  tenantId?: string;
 }
 
 /** User MFA setup response */
