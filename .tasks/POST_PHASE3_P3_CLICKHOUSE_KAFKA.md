@@ -1,11 +1,16 @@
 # Post-Phase 3-P3: ClickHouse Kafka Engine Integration
 
-> **Status**: Completed ✅
-> **Completed Date**: 2026-01-19
+> **Status**: ✅ Completed
+> **Implementation Date**: 2026-01-19
+> **Completion Date**: 2026-01-20
 > **Priority**: P1 (High)
 > **Dependencies**: Post-Phase 3-P2 (OTEL Collector)
-> **Repository**: infrastructure/clickhouse
+> **Repository**: infrastructure/clickhouse, platform-gitops
 > **Verification Guide**: [POST_PHASE3_P3_VERIFICATION.md](POST_PHASE3_P3_VERIFICATION.md)
+> **Migrations**: 007 (OTLP JSON), 008 (arrayFirst), 009 (NULL severity), 010 (Complete NULL handling)
+> **Result**: 3,779 logs, 2 services, 10 namespaces, 0 consumer lag
+> **Troubleshooting**: [docs/troubleshooting/otlp-clickhouse-parsing-issue.md](../docs/troubleshooting/otlp-clickhouse-parsing-issue.md)
+> **Related**: [docs/llm/tasks/POST_PHASE3_P6_OTLP_JSON_PARSING.md](../docs/llm/tasks/POST_PHASE3_P6_OTLP_JSON_PARSING.md)
 
 ---
 
