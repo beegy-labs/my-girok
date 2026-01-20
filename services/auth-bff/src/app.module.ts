@@ -21,6 +21,8 @@ import { SessionRecordingsModule } from './session-recordings/session-recordings
 import { AnalyticsModule } from './admin/analytics/analytics.module';
 import { AuthorizationModule as AdminAuthorizationModule } from './admin/authorization/authorization.module';
 import { TeamsModule } from './admin/teams/teams.module';
+import { PermissionModule } from './admin/permission/permission.module';
+import { DepartmentModule } from './admin/department/department.module';
 import { SessionGuard } from './common/guards/session.guard';
 
 @Module({
@@ -71,6 +73,8 @@ import { SessionGuard } from './common/guards/session.guard';
     AnalyticsModule,
     AdminAuthorizationModule,
     TeamsModule,
+    PermissionModule,
+    DepartmentModule,
   ],
   providers: [
     {
