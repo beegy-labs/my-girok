@@ -42,6 +42,11 @@ const AdminAccountsPage = lazy(() => import('./pages/system/admins/AdminAccounts
 const AdminDetailPage = lazy(() => import('./pages/system/admins/AdminDetailPage'));
 const AdminEditPage = lazy(() => import('./pages/system/admins/AdminEditPage'));
 
+// Phase 4: Permission Management System
+const PermissionsPage = lazy(() => import('./pages/system/permissions/PermissionsPage'));
+const DepartmentsPage = lazy(() => import('./pages/system/departments/DepartmentsPage'));
+const DepartmentDetailPage = lazy(() => import('./pages/system/departments/DepartmentDetailPage'));
+
 // HR Pages removed: Phase 1 of user model refactor (PR #585)
 // HR employees migrated from admins table to accounts table (identity_db)
 // HR management will be handled by dedicated hr-service, not web-admin
@@ -236,6 +241,34 @@ export const router = createBrowserRouter([
             element: (
               <PrivateRoute permission="system_admin:update">
                 <AdminEditPage />
+              </PrivateRoute>
+            ),
+          },
+
+          // System - Permissions
+          {
+            path: 'system/permissions',
+            element: (
+              <PrivateRoute permission="permissions:read">
+                <PermissionsPage />
+              </PrivateRoute>
+            ),
+          },
+
+          // System - Departments
+          {
+            path: 'system/departments',
+            element: (
+              <PrivateRoute permission="department:read">
+                <DepartmentsPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'system/departments/:id',
+            element: (
+              <PrivateRoute permission="department:read">
+                <DepartmentDetailPage />
               </PrivateRoute>
             ),
           },
