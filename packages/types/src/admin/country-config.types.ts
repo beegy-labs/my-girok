@@ -27,7 +27,7 @@ export interface CountryConfig {
   dataPrivacyLaw?: string;
   employmentLawNotes?: string;
   isActive: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -55,7 +55,7 @@ export interface CreateCountryConfigDto {
   dataPrivacyLaw?: string;
   employmentLawNotes?: string;
   isActive?: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateCountryConfigDto {
@@ -80,7 +80,7 @@ export interface UpdateCountryConfigDto {
   dataPrivacyLaw?: string;
   employmentLawNotes?: string;
   isActive?: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface CountryConfigListResponse {

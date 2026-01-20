@@ -69,6 +69,8 @@
     "sessionRecordings": "세션 녹화",
     "settings": "설정",
     "adminAccounts": "관리자 계정",
+    "permissions": "권한",
+    "departments": "부서",
     "serviceConfig": "서비스 설정",
     "serviceFeatures": "서비스 기능",
     "countryConfig": "국가 설정"

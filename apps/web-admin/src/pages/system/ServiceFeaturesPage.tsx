@@ -263,6 +263,12 @@ export default function ServiceFeaturesPage() {
     }
   }, [selectedServiceId, loadFeatures]);
 
+  const closeFeatureModal = useCallback(() => {
+    setShowFeatureModal(false);
+    setEditingFeature(null);
+    setParentFeature(null);
+  }, []);
+
   const handleAddRootFeature = () => {
     setEditingFeature(null);
     setParentFeature(null);
@@ -436,11 +442,7 @@ export default function ServiceFeaturesPage() {
       {/* Feature Form Modal */}
       <Modal
         isOpen={showFeatureModal}
-        onClose={() => {
-          setShowFeatureModal(false);
-          setEditingFeature(null);
-          setParentFeature(null);
-        }}
+        onClose={closeFeatureModal}
         title={
           editingFeature
             ? t('serviceFeatures.editFeature')
@@ -542,14 +544,7 @@ export default function ServiceFeaturesPage() {
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setShowFeatureModal(false);
-                setEditingFeature(null);
-                setParentFeature(null);
-              }}
-            >
+            <Button variant="secondary" onClick={closeFeatureModal}>
               {t('common.cancel')}
             </Button>
             <Button

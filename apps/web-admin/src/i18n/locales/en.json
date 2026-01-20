@@ -82,6 +82,8 @@
     "sessionRecordings": "Session Recordings",
     "settings": "Settings",
     "adminAccounts": "Admin Accounts",
+    "permissions": "Permissions",
+    "departments": "Departments",
     "serviceConfig": "Service Configuration",
     "serviceFeatures": "Service Features",
     "countryConfig": "Country Configuration"
