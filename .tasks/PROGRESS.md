@@ -1,7 +1,7 @@
 # Web-Admin Refactoring - Progress Tracker
 
 > **Last Updated**: 2026-01-20
-> **Current Focus**: Web-Admin 복구 완료 - Phase 4 Permission Management System merged
+> **Current Focus**: Web-Admin 복구 완료 - Phase 4 & Phase 9 merged
 
 ---
 
@@ -295,6 +295,52 @@
 
 ---
 
+### ✅ Phase 9: Settings UI 완성
+**Status**: Complete
+**PR**: #593 (merged)
+**Branch**: `feat/phase9-settings-ui`
+**Started**: 2026-01-20
+**Completed**: 2026-01-20
+
+**Scope**:
+- Backend: Already complete (75% complete at start)
+- Frontend: 3 new settings pages + 4 shared components
+- i18n: Complete English and Korean translations
+
+**Deliverables**:
+- **Types (packages/types)**:
+  - CountryConfig types (country-config.types.ts)
+  - Updated UserInfo interface with tenantId property
+
+- **Frontend (web-admin)**:
+  - CountryConfigPage with 7 sections (Basic, Currency, Timezone, Employment, Leave, Tax, Compliance)
+  - ServiceConfigPage with settings management (JWT, domains, rate limiting, IP whitelist, maintenance mode)
+  - ServiceFeaturesPage with recursive tree structure (max depth 4)
+  - 4 shared components: ServiceSelector, CountrySelector, IpWhitelistInput, DomainListManager
+
+- **API Clients**:
+  - countryConfig.ts (CRUD operations)
+  - Updated services.ts for service configuration
+
+- **i18n**:
+  - Complete translations for all 3 pages (en.json, ko.json)
+  - Added missing menu translations (permissions, departments)
+
+- **Code Quality**:
+  - Type safety improvements (any → unknown)
+  - Modal logic refactoring
+  - Linting fixes for web-girok OAuth tests
+  - +1,847 lines across 15 files
+
+**Features**:
+- Country-specific configuration (employment rules, leave policies, tax settings)
+- Service configuration management (security, rate limiting, maintenance mode)
+- Hierarchical feature toggle system with permission targeting
+- Domain and IP whitelist management
+- Change reason tracking for critical config changes
+
+---
+
 ## Next Priority Task
 
 ### 📋 Phase 8: Notification Service (P2 - Optional)
@@ -340,20 +386,6 @@
 
 ---
 
-### 📋 Phase 9: Settings UI 완성 (P3 - 선택적)
-**Status**: 75% Complete (Backend done, Frontend missing)
-**Dependencies**: None
-**Estimated Effort**: 2-3일
-
-**Scope**:
-- Service Configuration Page (frontend)
-- Service Features Page (frontend)
-- Country Configuration Page (frontend)
-
-**필요성**: 낮음 (백엔드 완료, 프론트엔드 선택적)
-
----
-
 ## 제외 Phases (현재 불필요)
 
 ### ❌ Phase 5: Service Management Framework
@@ -387,44 +419,44 @@
 | Post-Phase 3-P4 | None | - | ✅ Complete (packages/otel-web-sdk) |
 | Post-Phase 3-P5 | None | - | ✅ Complete (nest-common instrumentation) |
 | Post-Phase 3-P6 | goose (ClickHouse) | audit_db_dev | ✅ Complete (arrayFirst + NULL-safe) |
-| Phase 4 | OpenFGA DSL | authorization_db | 📋 Planned |
+| Phase 4 | OpenFGA DSL | authorization_db | ✅ Complete (PR #592, Department migration) |
+| Phase 9 | None | - | ✅ Complete (PR #593, Frontend only) |
 | Phase 5 | goose | auth_db | 📋 Planned |
 | Phase 5.5 | goose | auth_db | 📋 Planned |
 | Phase 5.6 | None | - | 📋 Planned (gRPC only) |
 | Phase 6 | goose | analytics_db | 📋 Planned |
 | Phase 7 | goose (ClickHouse) | audit_db | 📋 Planned |
 | Phase 8 | goose | mail_db (new) | 📋 Planned |
-| Phase 9 | None | - | 🚧 75% Complete (Frontend only) |
 
 ---
 
 ## Summary
 
-### Completed (15 phases)
+### Completed (16 phases)
 1. ✅ Phase 0-4: HR 제거, Admin Account Management, Permission Management System
-2. ✅ Phase 10: HR Code Removal & Codebase Cleanup
-3. ✅ Post-Phase 3 (P1-P6): OTEL Pipeline for Audit Service
+2. ✅ Phase 9: Settings UI 완성 (Service Config, Features, Country Config)
+3. ✅ Phase 10: HR Code Removal & Codebase Cleanup
+4. ✅ Post-Phase 3 (P1-P6): OTEL Pipeline for Audit Service
    - 목적: Audit 서비스 데이터 수집
    - 결과: ClickHouse에 3,779+ 로그 정상 저장 중
    - 상태: 정상 작동 (0 consumer lag)
 
 ### Web-Admin 복구 완료 🎉
-**Phase 4 완료로 핵심 Web-Admin 기능 복구 완료**
+**Phase 4 + Phase 9 완료로 핵심 Web-Admin 기능 복구 완료**
 - ✅ Admin Account Management (Phase 3)
 - ✅ Permission Management System (Phase 4)
 - ✅ Department Hierarchy (Phase 4)
 - ✅ Menu Access Control Infrastructure (Phase 4)
+- ✅ Service Configuration UI (Phase 9)
+- ✅ Service Features Management UI (Phase 9)
+- ✅ Country Configuration UI (Phase 9)
 
-### Next Optional Tasks (P2-P3)
+### Next Optional Tasks (P2)
 
 **Phase 8: Notification Service** (선택적, 3-4일)
 - 관리자 초대 이메일
 - 비밀번호 재설정 알림
 - Kafka 이벤트 기반 발송
-
-**Phase 9: Settings UI 완성** (선택적, 2-3일)
-- Service Configuration Page (frontend)
-- Frontend 일부만 남음 (backend 완료)
 
 ### 제외 작업 (현재 불필요)
 - ❌ Phase 5: Service Management (서비스 수 적음)
