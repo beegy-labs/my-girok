@@ -21,12 +21,11 @@ import { PrismaService } from '../../src/database/prisma.service';
 describe('PrismaService', () => {
   let service: PrismaService;
   let loggerLogSpy: ReturnType<typeof vi.spyOn>;
-  let loggerDebugSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     service = new PrismaService();
     loggerLogSpy = vi.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
-    loggerDebugSpy = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => {});
+    vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
