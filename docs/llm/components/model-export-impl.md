@@ -1,6 +1,6 @@
 # ModelExport - Implementation Details
 
-> Modal usage, format selection UI, error handling, testing, and security
+> Modal usage, format selection UI, and file download
 
 ## In Modal
 
@@ -64,26 +64,18 @@ The component:
 - Triggers automatic download with a descriptive filename
 - Cleans up the object URL after download
 - Filename format: `authz-model-v{version}.{format}`
-  - Example: `authz-model-v5.json` or `authz-model-v5.dsl`
 
 ## Error Handling
 
 ```typescript
 try {
   const response = await apiClient.get(endpoint, { responseType: 'blob' });
-  // Download file...
   showSuccessToast(`Model v${version} exported successfully`);
 } catch (error) {
   const appError = handleApiError(error, 'ModelExport.handleExport');
   showErrorToast(appError);
 }
 ```
-
-The `handleApiError` function provides:
-
-- User-friendly error messages
-- Technical details for debugging (logged to console)
-- Context tracking (`ModelExport.handleExport`)
 
 ## State Management
 
@@ -96,38 +88,7 @@ The `handleApiError` function provides:
 
 The component is self-contained and doesn't require global state management or React Query.
 
-## Accessibility
+## Related Documentation
 
-- Clear button labels with format descriptions
-- Disabled state during export prevents double-clicks
-- Descriptive loading text
-- Keyboard navigation support
-- Close button for modal dismissal
-
-## Testing Considerations
-
-- Test both JSON and DSL export formats
-- Verify filename generation (correct version number)
-- Check loading state during download
-- Confirm success/error toast notifications
-- Test error handling for network failures
-- Validate Blob cleanup (no memory leaks)
-- Test `onClose` callback invocation
-
-## Performance
-
-- **Lightweight**: No heavy dependencies
-- **Memory efficient**: Blob URLs are immediately revoked
-- **Fast**: Direct download from API response
-- **No caching**: Fresh export every time
-
-## Security
-
-- Uses authenticated API client
-- Requires proper admin permissions
-- No sensitive data exposed in URLs
-- File download happens client-side (no intermediary storage)
-
----
-
-_Main: `model-export.md`_
+- **Testing & Security**: `model-export-impl-testing.md`
+- Main: `model-export.md`

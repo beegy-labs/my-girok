@@ -108,7 +108,8 @@ export default createNestJsConfig(__dirname, {
 | -------------- | ---------------------- |
 | Test Utilities | `testing-utilities.md` |
 | E2E Testing    | `testing-e2e.md`       |
-| gRPC Testing   | `testing-grpc.md`      |
+
+> **Note**: gRPC testing patterns are included in `testing-utilities.md`
 
 ---
 

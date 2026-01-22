@@ -194,6 +194,22 @@ purpose: Quick navigation, pointers to Tier 2
 | `features/`       | 100       | ~1,000 | Feature specifications        |
 | `infrastructure/` | 150       | ~1,500 | Infra documentation           |
 
+### Exceptions (Framework Documents)
+
+These documents define the methodology itself and are exempt from line limits:
+
+| File                                  | Reason                                   |
+| ------------------------------------- | ---------------------------------------- |
+| `policies/cdd.md`                     | CDD framework definition (this document) |
+| `policies/sdd.md`                     | SDD framework definition with templates  |
+| `policies/development-methodology.md` | Core methodology (loads cdd.md, sdd.md)  |
+
+**Criteria for exception:**
+
+- Document defines the framework/methodology itself
+- Requires full context to understand (splitting breaks comprehension)
+- Loaded infrequently (onboarding, planning sessions only)
+
 ### Context Budget (128k)
 
 ```

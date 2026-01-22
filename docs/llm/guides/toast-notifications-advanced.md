@@ -1,10 +1,8 @@
 # Toast Notifications - Advanced
 
-> Advanced usage, configuration, migration, and troubleshooting
+> Advanced usage, promise-based toasts, and action buttons
 
-## Advanced Usage
-
-### Promise-based Toasts
+## Promise-based Toasts
 
 Show loading state, then automatically update to success/error:
 
@@ -20,7 +18,7 @@ toastPromise(savePromise, {
 });
 ```
 
-### Action Buttons
+## Action Buttons
 
 Add retry or custom actions to toasts:
 
@@ -33,7 +31,7 @@ showErrorToast(error, {
 });
 ```
 
-### Manual Control
+## Manual Control
 
 ```typescript
 import { showLoadingToast, dismissToast } from '../lib/toast';
@@ -45,7 +43,7 @@ dismissToast(toastId);
 showSuccessToast('Processing complete!');
 ```
 
-### Dynamic Success Messages
+## Dynamic Success Messages
 
 ```typescript
 const mutation = useApiMutation({
@@ -54,7 +52,7 @@ const mutation = useApiMutation({
 });
 ```
 
-### Disable Automatic Error Toast
+## Disable Automatic Error Toast
 
 ```typescript
 const mutation = useApiMutation({
@@ -68,86 +66,6 @@ const mutation = useApiMutation({
     }
   },
 });
-```
-
-## Configuration
-
-### ToastProvider
-
-Located in `apps/web-admin/src/main.tsx`:
-
-```typescript
-<ThemeProvider>
-  <ToastProvider>
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
-  </ToastProvider>
-</ThemeProvider>
-```
-
-### Theme Integration
-
-Toasts automatically use theme CSS variables:
-
-- `--theme-bg-card`
-- `--theme-text-primary`
-- `--theme-status-error-bg`
-- `--theme-status-success-bg`
-
-### Position and Duration
-
-Edit `ToastProvider.tsx` to customize:
-
-```typescript
-<Toaster
-  position="bottom-right"  // top-left, top-right, bottom-left, bottom-right
-  expand={false}
-  richColors
-  closeButton
-  toastOptions={{
-    // Custom durations per type
-    duration: 4000, // Default
-    error: { duration: 6000 },
-    success: { duration: 3000 },
-  }}
-/>
-```
-
-## Migration Guide
-
-### Before (Old Pattern)
-
-```typescript
-const [error, setError] = useState<string | null>(null);
-
-try {
-  await api.save(data);
-} catch (err) {
-  setError(err instanceof Error ? err.message : 'Failed to save');
-}
-
-// Template
-{error && (
-  <div className="p-3 bg-theme-status-error-bg">
-    {error}
-  </div>
-)}
-```
-
-### After (New Pattern)
-
-```typescript
-const mutation = useApiMutation({
-  mutationFn: (data) => api.save(data),
-  successToast: 'Saved successfully!',
-});
-
-// No error state needed!
-// No inline error UI needed!
-<button onClick={() => mutation.mutate(data)}>
-  Save
-</button>
 ```
 
 ## Hook Options
@@ -165,49 +83,7 @@ const mutation = useApiMutation({
 | ----------- | --------- | ------- | ---------------------- |
 | `showToast` | `boolean` | `true`  | Auto-show error toasts |
 
-## Testing
+## Related Documentation
 
-Test toast integration:
-
-```typescript
-import { render, screen, waitFor } from '@testing-library/react';
-import { toast } from 'sonner';
-import { showSuccessToast } from '../lib/toast';
-
-// Mock sonner
-vi.mock('sonner', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
-test('shows success toast', () => {
-  showSuccessToast('Test message');
-  expect(toast.success).toHaveBeenCalledWith('Test message', expect.any(Object));
-});
-```
-
-## Troubleshooting
-
-### Toasts not appearing
-
-- Ensure `ToastProvider` is in `main.tsx`
-- Check z-index conflicts with modals/dialogs
-- Verify theme CSS variables are loaded
-
-### Multiple toasts stacking
-
-- Use `dismissAllToasts()` before critical operations
-- Set reasonable durations
-- Consider using `toastPromise` for sequential operations
-
-### Theme not applying
-
-- Verify `useTheme()` hook returns correct `resolvedTheme`
-- Check CSS variable definitions in theme files
-- Ensure ToastProvider is inside ThemeProvider
-
----
-
-_Main: `toast-notifications.md`_
+- **Configuration & Testing**: `toast-notifications-config.md`
+- Main: `toast-notifications.md`
