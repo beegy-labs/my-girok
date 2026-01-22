@@ -2,32 +2,54 @@
 
 > L1: Master direction | Load on planning only
 
+## Feature Spec
+
+- `menu-structure.md` (v1.0, 97/100)
+
 ## 2026
 
-| Q   | Priority | Feature             | Status    | Scope                 |
-| --- | -------- | ------------------- | --------- | --------------------- |
-| Q1  | P0       | Menu structure      | ⏳ Active | → `scopes/2026-Q1.md` |
-| Q2  | P0       | Dashboard analytics | Pending   | -                     |
-| Q2  | P1       | PAM integration     | Pending   | -                     |
-| Q3  | P0       | Audit center        | Pending   | -                     |
-| Q3  | P1       | Compliance reports  | Pending   | -                     |
+| Scope | Priority | Feature           | Status           | Scope File                |
+| ----- | -------- | ----------------- | ---------------- | ------------------------- |
+| 1     | P0       | Email Service     | ✅ Spec Complete | → `scopes/2026-scope1.md` |
+| 2     | P0       | Login             | 📋 Planning      | -                         |
+| 3     | P0       | Roles             | 📋 Planning      | -                         |
+| 4     | P0       | Admin Accounts    | 📋 Planning      | -                         |
+| 5     | P1       | Partners          | Pending          | -                         |
+| 6     | P2       | Identity Overview | Pending          | -                         |
+
+## Status Legend
+
+| Status           | Description                |
+| ---------------- | -------------------------- |
+| Pending          | Waiting                    |
+| 📋 Planning      | Spec in progress           |
+| ✅ Spec Complete | Spec done, awaiting impl   |
+| 🚧 In Progress   | Implementation in progress |
+| ✅ Done          | Implementation complete    |
 
 ## Dependencies
 
 ```
-Menu structure (Q1)
+Scope 1: Email Service
     ↓
-Dashboard + PAM (Q2)
+Scope 2: Login (Password Reset → Email)
     ↓
-Audit + Compliance (Q3)
+Scope 3: Roles
+    ↓
+Scope 4: Admin Accounts (Invite → Email, Role Assign → Roles)
+    ↓
+Scope 5: Partners (Invite → Email, Access → Roles)
+    ↓
+Scope 6: Identity Overview
 ```
+
+## Phase 2+ (Future)
+
+- Security (Sessions, MFA, Password Policy)
+- Organization & Governance
+- Audit & Compliance
+- Advanced Features (PAM, Lifecycle, Command Palette)
 
 ## Completed
 
 See `history/scopes/` for archived scopes.
-
-## References
-
-- Feature Spec: `menu-structure.md`
-- Active Scopes: `scopes/`
-- Decisions: `history/decisions/`

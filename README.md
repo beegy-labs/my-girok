@@ -1,148 +1,201 @@
 # My-Girok
 
-> Personal Information Management Platform
+> LLM-Driven Development Methodology Playground
 
-A comprehensive personal management platform for organizing professional profiles, resumes, and more. Built with TypeScript, NestJS, Prisma, and React.
+This repository is a **hobby project** used as a testbed for establishing and validating LLM-driven development methodologies. The actual application (personal information management) is secondary - the primary goal is to define and refine **CDD**, **SDD**, and **ADD** workflows.
 
 ![Node](https://img.shields.io/badge/node-24.x-green.svg)
 ![TypeScript](https://img.shields.io/badge/typescript-5.9-blue.svg)
 ![NestJS](https://img.shields.io/badge/nestjs-11-red.svg)
 ![React](https://img.shields.io/badge/react-19-blue.svg)
 
-## Features
+---
 
-- **Resume Management**: Multiple resumes, work experience, education, skills, certifications
-- **File Attachments**: Profile photos, portfolios, certificates (MinIO storage)
-- **Sharing**: Public URLs, time-limited share links with analytics
-- **Multi-Provider Auth**: Local, Google, Kakao, Naver OAuth
-- **RBAC**: Role-based access control with H-RBAC hierarchy
-- **Legal Compliance**: GDPR, PIPA, CCPA, APPI consent management
+## Purpose
 
-## Tech Stack
+**Establish and validate LLM-first development methodologies:**
 
-| Layer     | Technology                                         |
-| --------- | -------------------------------------------------- |
-| Frontend  | React 19.2, Vite 7.3, TypeScript 5.9, Tailwind 4.1 |
-| Backend   | Node.js 24, NestJS 11.1, Prisma 7                  |
-| Database  | PostgreSQL 16, ClickHouse (analytics/audit)        |
-| Cache     | Valkey (Redis-compatible)                          |
-| Messaging | Redpanda (Kafka-compatible)                        |
-| Storage   | MinIO (S3-compatible)                              |
-| Infra     | Kubernetes, Helm, ArgoCD, Cilium Gateway           |
+- Define clear boundaries between human direction and LLM execution
+- Create reusable patterns for LLM-assisted software development
+- Validate that complex systems can be built entirely through LLM interactions
 
-## Quick Start
+**Core Principle:**
 
-```bash
-# Install dependencies
-pnpm install
+> All code, documentation, and configurations are generated exclusively through LLM.
+> Humans provide direction only. LLM executes all changes.
 
-# Start with Docker Compose
-cp docker-compose.yml.example docker-compose.yml
-docker compose up -d
+---
 
-# Or start manually
-pnpm dev
+## Methodologies Under Validation
+
+### CDD (Context-Driven Development)
+
+**What**: Structured documentation optimized for LLM context loading
+
+**Purpose**: Enable LLM to understand codebase patterns, boundaries, and conventions quickly
+
+**Implementation**:
+
+```
+.ai/                    # Tier 1: Indicators (~20 lines each)
+├── services/*.md       # Service boundaries, APIs, patterns
+├── apps/*.md           # App structure, routing
+└── rules.md            # Core DO/DON'T rules
+
+docs/llm/               # Tier 2: SSOT (Full specifications)
+├── policies/*.md       # Development policies
+├── services/*.md       # Detailed service docs
+└── guides/*.md         # Implementation guides
 ```
 
-**Access:**
+**Key Concept**: Token-efficient documentation hierarchy - load minimal context for quick tasks, full context for complex tasks.
 
-- Web App: http://localhost:3000
-- Auth Service: http://localhost:3001/api/docs
-- Personal Service: http://localhost:3002/api/docs
+---
+
+### SDD (Spec-Driven Development)
+
+**What**: Task planning and tracking system for LLM execution
+
+**Purpose**: Break down human requirements into LLM-executable specifications
+
+**Implementation**:
+
+```
+.specs/
+└── apps/{app}/
+    ├── roadmap.md          # L1: Master direction (Human)
+    ├── scopes/{scope}.md   # L2: Implementation scope (Human + LLM)
+    └── tasks/{scope}.md    # L3: Detailed tasks (LLM autonomous)
+```
+
+**3-Layer Structure**:
+
+| Layer      | File          | Owner       | Human Role |
+| ---------- | ------------- | ----------- | ---------- |
+| L1 Roadmap | `roadmap.md`  | Human       | Direction  |
+| L2 Scope   | `scopes/*.md` | Human + LLM | Approval   |
+| L3 Tasks   | `tasks/*.md`  | LLM         | Autonomous |
+
+**Key Concept**: Humans define "what" at high level; LLM breaks down into executable tasks and implements autonomously.
+
+---
+
+### ADD (AI-Driven Development)
+
+**What**: End-to-end implementation workflow through LLM
+
+**Purpose**: Validate that LLM can handle complete development lifecycle
+
+**Workflow**:
+
+```
+Human Direction
+      ↓
+┌─────────────────────────────────────┐
+│  SDD: Planning                      │
+│  - Read roadmap                     │
+│  - Create scope specification       │
+│  - Break down into tasks            │
+└─────────────────────────────────────┘
+      ↓
+┌─────────────────────────────────────┐
+│  CDD: Context Loading               │
+│  - Load relevant .ai/ indicators    │
+│  - Load docs/llm/ policies          │
+│  - Understand existing patterns     │
+└─────────────────────────────────────┘
+      ↓
+┌─────────────────────────────────────┐
+│  ADD: Implementation                │
+│  - Write code following patterns    │
+│  - Write tests (80%+ coverage)      │
+│  - Update CDD documentation         │
+│  - Create commits and PRs           │
+└─────────────────────────────────────┘
+      ↓
+Human Review & Merge
+```
+
+**Key Concept**: LLM operates autonomously within defined boundaries. Humans only intervene at approval checkpoints.
+
+---
+
+## Validation Metrics
+
+| Metric             | Target    | Purpose                    |
+| ------------------ | --------- | -------------------------- |
+| Human Edits        | 0         | Validate full LLM autonomy |
+| Test Coverage      | 80%+      | Validate code quality      |
+| Documentation Sync | 100%      | Validate CDD maintenance   |
+| Task Completion    | Per scope | Validate SDD effectiveness |
+
+---
 
 ## Project Structure
 
 ```
 my-girok/
-├── apps/
-│   ├── web-girok/             # React web app
-│   ├── web-admin/            # Admin dashboard
-│   └── storybook/            # Component library
-├── services/
-│   ├── identity-service/     # Accounts, sessions, devices
-│   ├── auth-service/         # RBAC, operators, sanctions
-│   ├── legal-service/        # Consents, DSR, law registry
-│   ├── personal-service/     # Resume management
-│   ├── audit-service/        # Compliance logging (ClickHouse)
-│   └── analytics-service/    # Business analytics (ClickHouse)
-├── packages/
-│   ├── types/                # Shared TypeScript types
-│   ├── proto/                # Protobuf definitions
-│   ├── nest-common/          # NestJS utilities
-│   └── ui-components/        # React components
-├── .ai/                      # LLM-optimized docs
-└── docs/                     # Detailed documentation
+├── CLAUDE.md                 # LLM Entry Point (Claude-specific)
+├── AGENTS.md                 # Multi-LLM Standard Policy
+│
+├── .ai/                      # CDD Tier 1: Indicators
+├── .specs/                   # SDD: Specifications
+├── docs/llm/                 # CDD Tier 2: SSOT
+│
+├── apps/                     # Frontend applications
+├── services/                 # Backend microservices
+└── packages/                 # Shared packages
 ```
 
-## Services
+## Tech Stack (Test Subject)
 
-| Service   | REST  | gRPC  | Database      | Description                 |
-| --------- | ----- | ----- | ------------- | --------------------------- |
-| identity  | :3000 | 50051 | identity_db   | Accounts, sessions, devices |
-| auth      | :3001 | 50052 | auth_db       | RBAC, operators, sanctions  |
-| legal     | :3005 | 50053 | legal_db      | Consents, DSR, law registry |
-| personal  | :3002 | -     | personal_db   | Resume management           |
-| audit     | :3003 | -     | audit_db (CH) | Compliance logging          |
-| analytics | :3004 | -     | analytics_db  | Business analytics          |
+| Layer     | Technology                                         |
+| --------- | -------------------------------------------------- |
+| Frontend  | React 19.2, Vite 7.3, TypeScript 5.9, Tailwind 4.1 |
+| Backend   | Node.js 24, NestJS 11.1, Prisma 7, gRPC            |
+| Database  | PostgreSQL 16, ClickHouse                          |
+| Cache     | Valkey (Redis-compatible)                          |
+| Messaging | Redpanda (Kafka-compatible)                        |
+| Infra     | Kubernetes, Helm, ArgoCD                           |
 
-## Development
+---
 
-```bash
-# Run all tests
-pnpm test
+## Getting Started
 
-# Run specific service
-pnpm --filter auth-service dev
+### For Methodology Research
 
-# Database migrations
-goose -dir migrations/{service} postgres "$DATABASE_URL" up
+1. Read `docs/llm/policies/cdd.md` - CDD policy
+2. Read `docs/llm/policies/sdd.md` - SDD policy
+3. Read `docs/llm/policies/development-methodology.md` - ADD workflow
+4. Explore `.specs/apps/web-admin/` - Active SDD example
 
-# Build all
-pnpm build
+### For LLM Interaction
+
+1. Start with `CLAUDE.md` (Claude) or `AGENTS.md` (other LLMs)
+2. LLM loads context from `.ai/` based on task
+3. LLM follows SDD workflow for implementation
+
+---
+
+## Current Status
+
+### Active Scope: Email Service (Scope 1)
+
+```
+.specs/apps/web-admin/
+├── roadmap.md              # 6 scopes defined
+├── scopes/2026-scope1.md   # Email Service spec ✅
+└── tasks/2026-scope1.md    # 16 implementation steps
 ```
 
-## Git Flow
+See [roadmap](.specs/apps/web-admin/roadmap.md) for full scope list.
 
-```
-feat/* ──squash──> develop ──merge──> release ──merge──> main
-```
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
-
-## Documentation
-
-| Type        | Location    | Purpose                        |
-| ----------- | ----------- | ------------------------------ |
-| AI docs     | `.ai/`      | LLM-optimized, patterns & APIs |
-| Human docs  | `docs/`     | Detailed guides & policies     |
-| Entry point | `CLAUDE.md` | AI assistant navigation        |
-
-### Key Documents
-
-- [Architecture](./.ai/architecture.md)
-- [Database Migrations](./.ai/database.md)
-- [Testing Guide](./.ai/testing.md)
-- [CI/CD Pipeline](./docs/CI_CD.md)
-
-### Service Documentation
-
-- [Identity Service](./.ai/services/identity-service.md)
-- [Auth Service](./.ai/services/auth-service.md)
-- [Legal Service](./.ai/services/legal-service.md)
-- [Personal Service](./.ai/services/personal-service.md)
-- [Audit Service](./.ai/services/audit-service.md)
-- [Analytics Service](./.ai/services/analytics-service.md)
-
-## Security
-
-- Never commit credentials
-- Use environment variables
-- HTTPS-only in production
-- Rate limiting enabled
-- Input validation with class-validator
-
-**Report vulnerabilities**: beegy.net@gmail.com
+---
 
 ## License
 
 MIT License - see [LICENSE](LICENSE)
+
+---
+
+> **Note**: This is a hobby project. The methodologies defined here are experimental and under active refinement.
