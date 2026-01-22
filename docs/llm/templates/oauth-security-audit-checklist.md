@@ -367,8 +367,8 @@ This document provides a comprehensive security audit checklist for the OAuth au
 
 ## Sign-Off
 
-- **Security Auditor**: ****\*\*****\_****\*\*****
-- **Date**: ****\*\*****\_****\*\*****
+- **Security Auditor**: \***\*\*\*\*\***\_\***\*\*\*\*\***
+- **Date**: \***\*\*\*\*\***\_\***\*\*\*\*\***
 - **Approved**: ☐ Yes ☐ No ☐ With Conditions
 
 ---

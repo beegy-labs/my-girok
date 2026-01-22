@@ -1,6 +1,19 @@
-# Documentation Architecture (2026)
+# CDD (Context-Driven Development) Policy
 
-> SSOT documentation strategy with 4-tier structure
+> Context management system for LLM | **Last Updated**: 2026-01-22
+
+## Definition
+
+CDD is a **Constitution of Knowledge** - SSOT defining all rules and patterns for consistent, high-quality LLM output.
+
+## CDD vs SDD
+
+| Aspect     | CDD                     | SDD                       |
+| ---------- | ----------------------- | ------------------------- |
+| Focus      | How (context, patterns) | What (task, spec)         |
+| Location   | `.ai/`, `docs/llm/`     | `.specs/`                 |
+| History    | Git (document changes)  | Files → DB (task records) |
+| Human Role | None                    | Direction, Approval       |
 
 ## 4-Tier Structure
 
@@ -9,12 +22,57 @@
 (Pointer)     (SSOT)          (Generated)   (Translated)
 ```
 
-| Tier | Path        | Type       | Editable | Format                      |
-| ---- | ----------- | ---------- | -------- | --------------------------- |
-| 1    | `.ai/`      | Pointer    | **Yes**  | Tables, links, max 50 lines |
-| 2    | `docs/llm/` | **SSOT**   | **Yes**  | YAML, tables, code blocks   |
-| 3    | `docs/en/`  | Generated  | **No**   | Prose, examples, guides     |
-| 4    | `docs/kr/`  | Translated | **No**   | Same as docs/en/            |
+| Tier | Path        | Purpose                 | Audience | Editable | Format                      |
+| ---- | ----------- | ----------------------- | -------- | -------- | --------------------------- |
+| 1    | `.ai/`      | Indicators (≤50 lines)  | LLM      | **Yes**  | Tables, links, max 50 lines |
+| 2    | `docs/llm/` | Full specs (≤300 lines) | LLM      | **Yes**  | YAML, tables, code blocks   |
+| 3    | `docs/en/`  | Human-readable          | Human    | Auto-gen | Prose, examples, guides     |
+| 4    | `docs/kr/`  | Translation             | Human    | Auto-gen | Same as docs/en/            |
+
+## Tier Purpose Details
+
+**Tier 1, 2 (LLM-facing)**:
+
+- Core technical reference
+- Token-efficient, high-density
+- Always up-to-date with current patterns
+
+**Tier 3, 4 (Human-facing)**:
+
+- External memory for context switching
+- Reduce cognitive load of "deep context"
+- Onboarding material for new members
+
+## Scope
+
+| CDD Contains                     | CDD Does NOT Contain         |
+| -------------------------------- | ---------------------------- |
+| Service/package structure        | Current task details (→ SDD) |
+| API patterns, rules              | Roadmap, progress (→ SDD)    |
+| Coding conventions               | Task history (→ SDD)         |
+| Policies (security, testing, DB) |                              |
+
+## Directory Structure
+
+```
+my-girok/
+├── CLAUDE.md           # Claude entry point
+├── GEMINI.md           # Gemini entry point
+├── .ai/                # Tier 1 - EDITABLE (LLM pointers)
+│   ├── README.md       # Navigation hub
+│   ├── rules.md        # Core DO/DON'T
+│   ├── services/       # Service indicators
+│   ├── packages/       # Package indicators
+│   └── apps/           # App indicators
+├── docs/
+│   ├── llm/            # Tier 2 - EDITABLE (SSOT)
+│   │   ├── policies/   # Policy definitions
+│   │   ├── services/   # Service full specs
+│   │   ├── guides/     # Development guides
+│   │   └── packages/   # Package documentation
+│   ├── en/             # Tier 3 - NOT EDITABLE (Generated)
+│   └── kr/             # Tier 4 - NOT EDITABLE (Translated)
+```
 
 ## Edit Rules
 
@@ -24,6 +82,18 @@
 | Edit `docs/llm/` directly       | Edit `docs/kr/` directly |
 | Run generate after llm/ changes | Skip generation step     |
 | Run translate after en/ changes | Skip translation step    |
+
+## History Management
+
+**CDD History = Git**
+
+| Item                      | Method                 |
+| ------------------------- | ---------------------- |
+| Document changes          | `git log`, `git blame` |
+| Version tracking          | Git commits            |
+| No separate history files | Use Git                |
+
+**Note**: Task history is managed by SDD (`.specs/history/`), not CDD.
 
 ## CLI Commands
 
@@ -66,6 +136,13 @@ pnpm docs:translate --provider gemini       # Use Gemini provider
 | `--retry-failed` | Process only previously failed files            |
 | `--clean`        | Clear failed history and restart all            |
 
+## Supported Providers
+
+| Provider | Generate | Translate | Default Model |
+| -------- | -------- | --------- | ------------- |
+| Ollama   | ✓        | ✓         | gpt-oss:20b   |
+| Gemini   | ✓        | ✓         | gemini-pro    |
+
 ## Failed Files Recovery
 
 Scripts track failed files for retry:
@@ -91,16 +168,9 @@ pnpm docs:translate --locale kr --clean
 # Output: 🧹 Cleared failed files history
 ```
 
-## Supported Providers
-
-| Provider | Generate | Translate | Default Model |
-| -------- | -------- | --------- | ------------- |
-| Ollama   | ✓        | ✓         | gpt-oss:20b   |
-| Gemini   | ✓        | ✓         | gemini-pro    |
-
 ## Format Guidelines
 
-### .ai/ (Pointer)
+### .ai/ (Tier 1 - Pointer)
 
 ```yaml
 max_lines: 50
@@ -109,16 +179,17 @@ exclude: [prose, examples]
 purpose: quick navigation for LLM
 ```
 
-### docs/llm/ (SSOT)
+### docs/llm/ (Tier 2 - SSOT)
 
 ```yaml
+max_lines: 300
 optimization: token_efficiency
 human_readable: false
 format: [yaml, tables, code_blocks]
 prose: minimal (only when necessary)
 ```
 
-### docs/en/ (Generated)
+### docs/en/ (Tier 3 - Generated)
 
 ```yaml
 optimization: human_readable
@@ -146,8 +217,6 @@ format: [prose, examples, guides]
 
 ## Workflow Example
 
-### Basic Workflow
-
 ```bash
 # 1. Developer updates SSOT
 vim docs/llm/services/auth-service.md
@@ -163,38 +232,17 @@ git add docs/
 git commit -m "docs: update auth-service documentation"
 ```
 
-### With Error Recovery
+## Best Practices
 
-```bash
-# 1. Generate - some files may fail
-pnpm docs:generate
-# Output: Success: 40, Failed: 2
+| Practice              | Description                        |
+| --------------------- | ---------------------------------- |
+| Tier 1 = Pointer only | Never put full specs in .ai/       |
+| Tier 2 = SSOT         | Single source of truth for LLM     |
+| Git = History         | No separate changelog files in CDD |
+| Token efficiency      | Tables > prose, YAML > JSON        |
+| Cross-reference       | .ai/ always links to docs/llm/     |
 
-# 2. Retry failed files
-pnpm docs:generate --retry-failed
-# Output: Success: 2, Failed: 0
+## References
 
-# 3. Translate - some files may fail
-pnpm docs:translate --locale kr
-# Output: Success: 38, Failed: 4
-
-# 4. Retry failed translations
-pnpm docs:translate --locale kr --retry-failed
-# Output: Success: 4, Failed: 0
-
-# 5. If still failing, restart clean
-pnpm docs:translate --locale kr --clean
-```
-
-## Directory Structure
-
-```
-my-girok/
-├── CLAUDE.md           # Claude entry point
-├── GEMINI.md           # Gemini entry point
-├── .ai/                # EDITABLE - LLM pointers
-├── docs/
-│   ├── llm/            # EDITABLE - SSOT
-│   ├── en/             # NOT EDITABLE - Generated
-│   └── kr/             # NOT EDITABLE - Translated
-```
+- Methodology: `docs/llm/policies/development-methodology.md`
+- SDD Policy: `docs/llm/policies/sdd.md`
