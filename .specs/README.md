@@ -1,8 +1,16 @@
 # Specifications (SDD)
 
-> Task planning and tracking | **Last Updated**: 2026-01-22
+> Human-Commanded Staged Auto-Design | **Last Updated**: 2026-01-22
 
 **Policy**: `docs/llm/policies/sdd.md`
+
+## Core Concept
+
+SDD transforms massive roadmaps into executable plans through staged automation:
+
+- **Roadmap** defines WHAT to build (overall direction)
+- **Scope** defines WHEN to build (work range extraction)
+- **Tasks** defines HOW to build (detailed plan referencing CDD)
 
 ## Structure
 
@@ -10,28 +18,51 @@
 .specs/
 ├── README.md
 └── apps/{app}/
-    ├── {feature}.md              # Spec (What to build)
+    ├── {feature}.md              # Feature Spec (detailed requirements)
     │
-    ├── roadmap.md                # L1: Master roadmap
+    ├── roadmap.md                # WHAT: Overall feature spec & direction
     │
-    ├── scopes/                   # L2: Active scopes
+    ├── scopes/                   # WHEN: Work scope extraction from roadmap
     │   └── {year}-{period}.md   # e.g., 2026-Q1.md
     │
-    ├── tasks/                    # L3: Scope tasks
+    ├── tasks/                    # HOW: Detailed implementation (references CDD)
     │   └── {year}-{period}.md   # e.g., 2026-Q1.md
     │
     └── history/
-        ├── scopes/               # Completed scope archives
-        └── decisions/            # Roadmap decisions
+        ├── scopes/               # Completed scope + tasks archives
+        └── decisions/            # Roadmap decision records
 ```
 
-## 3-Layer Work
+## 3-Layer Structure: WHAT → WHEN → HOW
 
-| Layer | File                | Human Role             |
-| ----- | ------------------- | ---------------------- |
-| L1    | `roadmap.md`        | **Direction** (Master) |
-| L2    | `scopes/{scope}.md` | **Approve**            |
-| L3    | `tasks/{scope}.md`  | Monitor                |
+| Layer       | File                | Purpose       | Human Role       | LLM Role |
+| ----------- | ------------------- | ------------- | ---------------- | -------- |
+| **Roadmap** | `roadmap.md`        | WHAT to build | Design & Plan    | Document |
+| **Scope**   | `scopes/{scope}.md` | WHEN to build | Define range     | Document |
+| **Tasks**   | `tasks/{scope}.md`  | HOW to build  | Review & Approve | Generate |
+
+### Key Insight
+
+- Human never writes documents directly - LLM organizes and documents
+- `tasks/{scope}.md` references **CDD (Tier 1-2)** to generate detailed implementation
+- LLM autonomously divides tasks, determines order, groups parallel/sequential
+- Human reviews and approves the generated tasks
+
+## Task Execution Modes
+
+Tasks are organized by execution mode:
+
+```markdown
+### Phase 1 (Parallel)
+
+- [ ] Task A - can run simultaneously
+- [ ] Task B - can run simultaneously
+
+### Phase 2 (Sequential)
+
+- [ ] Task C - must complete before D
+- [ ] Task D - depends on C
+```
 
 ## Multi-Scope (Concurrent Work)
 
@@ -58,6 +89,6 @@ No Git conflicts, independent progress.
 
 ## Active Scopes
 
-| App       | Scope                                       | Status    |
-| --------- | ------------------------------------------- | --------- |
-| web-admin | [2026-Q1](apps/web-admin/scopes/2026-Q1.md) | ⏳ Active |
+| App       | Scope                                               | Status    |
+| --------- | --------------------------------------------------- | --------- |
+| web-admin | [2026-scope1](apps/web-admin/scopes/2026-scope1.md) | ⏳ Active |
