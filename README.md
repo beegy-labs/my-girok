@@ -1,147 +1,253 @@
 # My-Girok
 
-> Personal Information Management Platform
+> Personal Playground for LLM-Driven Development Methodology
 
-A comprehensive personal management platform for organizing professional profiles, resumes, and more. Built with TypeScript, NestJS, Prisma, and React.
+This is a **personal hobby project** serving as a testbed for establishing and validating LLM-driven development methodologies. The application itself (personal information management) is secondary - the primary goal is to define and refine **CDD**, **SDD**, and **ADD** workflows.
 
 ![Node](https://img.shields.io/badge/node-24.x-green.svg)
 ![TypeScript](https://img.shields.io/badge/typescript-5.9-blue.svg)
 ![NestJS](https://img.shields.io/badge/nestjs-11-red.svg)
 ![React](https://img.shields.io/badge/react-19-blue.svg)
 
-## Features
+---
 
-- **Resume Management**: Multiple resumes, work experience, education, skills, certifications
-- **File Attachments**: Profile photos, portfolios, certificates (MinIO storage)
-- **Sharing**: Public URLs, time-limited share links with analytics
-- **Multi-Provider Auth**: Local, Google, Kakao, Naver OAuth
-- **RBAC**: Role-based access control with H-RBAC hierarchy
-- **Legal Compliance**: GDPR, PIPA, CCPA, APPI consent management
+## Disclaimer
 
-## Tech Stack
+**This is a personal playground.**
 
-| Layer     | Technology                                         |
-| --------- | -------------------------------------------------- |
-| Frontend  | React 19.2, Vite 7.3, TypeScript 5.9, Tailwind 4.1 |
-| Backend   | Node.js 24, NestJS 11.1, Prisma 7                  |
-| Database  | PostgreSQL 16, ClickHouse (analytics/audit)        |
-| Cache     | Valkey (Redis-compatible)                          |
-| Messaging | Redpanda (Kafka-compatible)                        |
-| Storage   | MinIO (S3-compatible)                              |
-| Infra     | Kubernetes, Helm, ArgoCD, Cilium Gateway           |
+- Not intended for production use
+- Methodologies are experimental and under active refinement
+- No guarantees of stability or completeness
 
-## Quick Start
+---
 
-```bash
-# Install dependencies
-pnpm install
+## Validation Status
 
-# Start with Docker Compose
-cp docker-compose.yml.example docker-compose.yml
-docker compose up -d
+| Phase   | Methodology                      | Status         |
+| ------- | -------------------------------- | -------------- |
+| Phase 1 | CDD (Context-Driven Development) | ✅ Complete    |
+| Phase 2 | SDD (Spec-Driven Development)    | 🚧 In Progress |
+| Phase 3 | ADD (Agent-Driven Development)   | ⏳ Pending     |
 
-# Or start manually
-pnpm dev
+---
+
+## Policy: High-Quality LLM Development System Under Senior Developer Command
+
+### 1. Core Philosophy: Quality Assurance Through Senior Developer's Creative Immersion
+
+**Primary Goal**: Instead of mass-producing low-quality outputs, consistently guarantee **highest-quality deliverables**.
+
+**Economic Principle**: The most expensive element in development is not tools but **expert labor costs**. Therefore, all decisions are made to **maximize efficient use of senior developer's time and creative flow state (Vibe)**.
+
+**Execution Strategy**: Enable **senior developers** to command 3-5 projects simultaneously by aggressively delegating all non-creative work to LLM agents.
+
+> **Strategic Rationale**: This strategy is based on the clear observation that **"the quality of output can never exceed the CS (Computer Science) fundamentals of the developer who created it."** Developers lacking CS competency inevitably produce results matching their level. Therefore, the only way to absolutely guarantee high quality is to eliminate risk from human variance at its source. Automated LLM agents commanded by senior developers handle all implementation, completely blocking quality degradation from human developer capability differences.
+
+**Ultimate Goal ('Vibe Coding')**: This architecture aims to **support senior developers in focusing solely on project direction, big-picture design, and high-level creative problem-solving (Vibe Coding)** - perfectly protected from unnecessary context switching, repetitive tasks, implementation constraints, and unpredictable interruptions.
+
+---
+
+### 2. Collaboration Model: 'Commander' and 'Autonomous Implementer'
+
+#### Human (The Commander)
+
+| Aspect             | Description                                                                                                                                   |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Qualification**  | Senior-level expert understanding 80%+ of the project                                                                                         |
+| **Role**           | Instead of writing code directly, oversees entire project lifecycle: **planning, design, implementation architecture, and final code review** |
+| **Responsibility** | Designs overall 'Flow', reviews and approves LLM-generated plans, guarantees final output quality through code review                         |
+
+#### LLM (The Implementer & Assistant)
+
+| Aspect    | Description                                                                                            |
+| --------- | ------------------------------------------------------------------------------------------------------ |
+| **Role**  | Resolves **all concrete internal details** based on Commander's designed 'Flow'                        |
+| **Scope** | Detailed plan document generation, actual code implementation, and autonomous problem-solving attempts |
+
+---
+
+### 3. Three-Phase Policy & Workflow: CDD, SDD, ADD
+
+#### Phase 1: CDD (Context-Driven Development) — Constitution of Knowledge
+
+**Purpose**: **Single Source of Truth (SSOT)** defining all rules and patterns for LLM to generate consistent, high-quality outputs.
+
+**Core Functions**:
+
+| Tier      | Purpose                                                                                       | Optimization                                                                                     |
+| --------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Tier 1, 2 | Core technical docs and essential rules for current task                                      | Maintain optimal size and high density for token efficiency                                      |
+| Tier 3, 4 | Human-friendly docs (external memory) helping Commander quickly grasp context across projects | Reduces cognitive burden of maintaining 'deep context'; Onboarding material for new team members |
+
+**Structure**:
+
+```
+.ai/                    # Tier 1: Indicators (~20 lines each)
+docs/llm/               # Tier 2: SSOT (Full specifications)
+docs/en/                # Tier 3: Generated human docs
+docs/kr/                # Tier 4: Translated docs
 ```
 
-**Access:**
+---
 
-- Web App: http://localhost:3000
-- Auth Service: http://localhost:3001/api/docs
-- Personal Service: http://localhost:3002/api/docs
+#### Phase 2: SDD (Spec-Driven Development) — Human-Commanded Staged Auto-Design & Learning
+
+**Purpose**: Auto-convert each Commander-designated stage from massive roadmap into executable detailed plans, **learning from design feedback** to progressively improve.
+
+**Process**:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  1. [Human] Roadmap Command                                     │
+│     Commander decides which stage to execute from roadmap       │
+│     This becomes the specific Intent for LLM                    │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  2. [LLM] Stage-by-Stage Plan Generation                        │
+│     Planning LLM generates detailed execution plan              │
+│     References CDD, scoped to Commander-designated stage only   │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  3. [Human] Plan Review & Execution Approval                    │
+│     Commander reviews generated plan                            │
+│     Modifies directly if needed, then approves execution        │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  4. [System] Design Feedback Learning                           │
+│     If Commander modified plan, diff becomes learning data      │
+│     Analyzed through 'Experience Capitalization' process        │
+│     Used to improve Planning LLM's future output                │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Structure**:
+
+```
+.specs/
+└── apps/{app}/
+    ├── roadmap.md          # L1: Master direction (Human)
+    ├── scopes/{scope}.md   # L2: Implementation scope (Human + LLM)
+    └── tasks/{scope}.md    # L3: Detailed tasks (LLM autonomous)
+```
+
+---
+
+#### Phase 3: ADD (Agent-Driven Development) — Optimized Autonomous Execution & Learning
+
+**Purpose**: Autonomously execute approved plans, **capitalize experiences as system-wide knowledge** to progressively improve.
+
+**Process**:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  1. [LLM] L3 Implementation                                     │
+│     Coder LLM autonomously implements code per plan             │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  2. [LLM] Self-Resolution                                       │
+│     On problems, does NOT immediately interrupt human           │
+│     Summons peer implementers (multi-LLM)                       │
+│     Resolves through AI consensus + execution environment tests │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  3. [Human] Final Intervention (Only if consensus fails)        │
+│     System requests help with 'Incident Report'                 │
+│     Commander does NOT fix code directly                        │
+│     Instead: Updates design (SDD) or corrects policy (CDD)      │
+│     Then restarts system                                        │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  4. [System] Experience Capitalization (Distillation)           │
+│     All trials, problem-solving, human interventions recorded   │
+│     Extract abstracted core principles applicable system-wide   │
+│     Update CDD (Tier 1, 2)                                      │
+│     System improves through experience                          │
+│     Prevents active context bloat                               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 4. Long-Term Vision: Building Proprietary LLM Ecosystem
+
+All data accumulated through this architecture (human goal presentations, LLM plan generations, human plan modifications, LLM code implementations, final deliverables) transcends mere history to become **the most valuable asset for training a 'proprietary LLM' perfectly adapted to the company's unique development context**.
+
+Long-term, this system aims to **build an independent LLM ecosystem** that thinks and codes in our own way, reducing dependency on external general-purpose LLMs. This is the final stage of escaping technological dependency and making the company's development capability itself a permanent competitive advantage.
+
+---
+
+## Contribution Policy
+
+**All changes must be made through LLM.**
+
+- Do NOT submit Pull Requests directly
+- Create Issues to describe requirements
+- LLM will implement and create PRs
+
+This ensures methodology validation - if humans edit code directly, the experiment is invalidated.
+
+---
+
+## Validation Metrics
+
+| Metric             | Target    | Purpose                    |
+| ------------------ | --------- | -------------------------- |
+| Human Edits        | 0         | Validate full LLM autonomy |
+| Test Coverage      | 80%+      | Validate code quality      |
+| Documentation Sync | 100%      | Validate CDD maintenance   |
+| Task Completion    | Per scope | Validate SDD effectiveness |
+
+---
 
 ## Project Structure
 
 ```
 my-girok/
-├── apps/
-│   ├── web-girok/             # React web app
-│   ├── web-admin/            # Admin dashboard
-│   └── storybook/            # Component library
-├── services/
-│   ├── identity-service/     # Accounts, sessions, devices
-│   ├── auth-service/         # RBAC, operators, sanctions
-│   ├── legal-service/        # Consents, DSR, law registry
-│   ├── personal-service/     # Resume management
-│   ├── audit-service/        # Compliance logging (ClickHouse)
-│   └── analytics-service/    # Business analytics (ClickHouse)
-├── packages/
-│   ├── types/                # Shared TypeScript types
-│   ├── proto/                # Protobuf definitions
-│   ├── nest-common/          # NestJS utilities
-│   └── ui-components/        # React components
-├── .ai/                      # LLM-optimized docs
-└── docs/                     # Detailed documentation
+├── CLAUDE.md                 # LLM Entry Point (Claude-specific)
+├── AGENTS.md                 # Multi-LLM Standard Policy
+│
+├── .ai/                      # CDD Tier 1: Indicators
+├── .specs/                   # SDD: Specifications
+├── docs/llm/                 # CDD Tier 2: SSOT
+│
+├── apps/                     # Frontend applications
+├── services/                 # Backend microservices
+└── packages/                 # Shared packages
 ```
 
-## Services
+## Tech Stack (Test Subject)
 
-| Service   | REST  | gRPC  | Database      | Description                 |
-| --------- | ----- | ----- | ------------- | --------------------------- |
-| identity  | :3000 | 50051 | identity_db   | Accounts, sessions, devices |
-| auth      | :3001 | 50052 | auth_db       | RBAC, operators, sanctions  |
-| legal     | :3005 | 50053 | legal_db      | Consents, DSR, law registry |
-| personal  | :3002 | -     | personal_db   | Resume management           |
-| audit     | :3003 | -     | audit_db (CH) | Compliance logging          |
-| analytics | :3004 | -     | analytics_db  | Business analytics          |
+| Layer     | Technology                                         |
+| --------- | -------------------------------------------------- |
+| Frontend  | React 19.2, Vite 7.3, TypeScript 5.9, Tailwind 4.1 |
+| Backend   | Node.js 24, NestJS 11.1, Prisma 7, gRPC            |
+| Database  | PostgreSQL 16, ClickHouse                          |
+| Cache     | Valkey (Redis-compatible)                          |
+| Messaging | Redpanda (Kafka-compatible)                        |
+| Infra     | Kubernetes, Helm, ArgoCD                           |
 
-## Development
+---
 
-```bash
-# Run all tests
-pnpm test
+## Current Status
 
-# Run specific service
-pnpm --filter auth-service dev
-
-# Database migrations
-goose -dir migrations/{service} postgres "$DATABASE_URL" up
-
-# Build all
-pnpm build
-```
-
-## Git Flow
+### Active Scope: Email Service (Scope 1)
 
 ```
-feat/* ──squash──> develop ──merge──> release ──merge──> main
+.specs/apps/web-admin/
+├── roadmap.md              # 6 scopes defined
+├── scopes/2026-scope1.md   # Email Service spec (Complete)
+└── tasks/2026-scope1.md    # 16 implementation steps
 ```
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
+See [roadmap](.specs/apps/web-admin/roadmap.md) for full scope list.
 
-## Documentation
-
-| Type        | Location    | Purpose                        |
-| ----------- | ----------- | ------------------------------ |
-| AI docs     | `.ai/`      | LLM-optimized, patterns & APIs |
-| Human docs  | `docs/`     | Detailed guides & policies     |
-| Entry point | `CLAUDE.md` | AI assistant navigation        |
-
-### Key Documents
-
-- [Architecture](./.ai/architecture.md)
-- [Database Migrations](./.ai/database.md)
-- [Testing Guide](./.ai/testing.md)
-- [CI/CD Pipeline](./docs/CI_CD.md)
-
-### Service Documentation
-
-- [Identity Service](./.ai/services/identity-service.md)
-- [Auth Service](./.ai/services/auth-service.md)
-- [Legal Service](./.ai/services/legal-service.md)
-- [Personal Service](./.ai/services/personal-service.md)
-- [Audit Service](./.ai/services/audit-service.md)
-- [Analytics Service](./.ai/services/analytics-service.md)
-
-## Security
-
-- Never commit credentials
-- Use environment variables
-- HTTPS-only in production
-- Rate limiting enabled
-- Input validation with class-validator
-
-**Report vulnerabilities**: beegy.net@gmail.com
+---
 
 ## License
 
