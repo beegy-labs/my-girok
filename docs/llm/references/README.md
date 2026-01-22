@@ -21,6 +21,18 @@
 These documents are **reference material** from 2026 industry best practices.
 Consult when making architectural decisions or validating current patterns.
 
+## Migration Guide
+
+For code changes needed to align with these best practices:
+
+**See**: `policies/best-practices-migration.md`
+
+| Priority | Task                    | Status  |
+| -------- | ----------------------- | ------- |
+| P0       | React Compiler adoption | Pending |
+| P1       | Test coverage to 80%    | Pending |
+| P2       | UUIDv7 migration        | Pending |
+
 ## Update Policy
 
 - **Review**: Quarterly

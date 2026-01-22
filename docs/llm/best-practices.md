@@ -20,6 +20,8 @@ For detailed 2026 industry research, see `docs/llm/references/`:
 | API Design     | `api-design-2026.md`          | REST/GraphQL/gRPC      |
 | Kubernetes     | `kubernetes-2026.md`          | HPA, Helm              |
 
+**Migration Guide**: `policies/best-practices-migration.md` - 코드 변경 필요 사항 추적
+
 ## Database
 
 | Do                   | Don't            | Rationale                                                                              |
