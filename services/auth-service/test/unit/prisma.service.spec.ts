@@ -1,22 +1,31 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { Logger } from '@nestjs/common';
+
+// Mock PrismaClient before importing PrismaService
+vi.mock('../../node_modules/.prisma/auth-client', () => ({
+  PrismaClient: class MockPrismaClient {
+    $connect = vi.fn().mockResolvedValue(undefined);
+    $disconnect = vi.fn().mockResolvedValue(undefined);
+    $extends = vi.fn().mockReturnValue({ extended: true });
+  },
+}));
+
+// Mock the UUIDv7 extension
+vi.mock('@my-girok/nest-common/prisma', () => ({
+  uuidv7Extension: { name: 'uuidv7' },
+}));
+
+// Now import PrismaService after mocking
 import { PrismaService } from '../../src/database/prisma.service';
 
 describe('PrismaService', () => {
   let service: PrismaService;
-  let connectSpy: ReturnType<typeof vi.spyOn>;
-  let disconnectSpy: ReturnType<typeof vi.spyOn>;
+  let loggerLogSpy: ReturnType<typeof vi.spyOn>;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [PrismaService],
-    }).compile();
-
-    service = module.get<PrismaService>(PrismaService);
-
-    // Mock $connect and $disconnect to avoid actual database calls
-    connectSpy = vi.spyOn(service, '$connect').mockResolvedValue();
-    disconnectSpy = vi.spyOn(service, '$disconnect').mockResolvedValue();
+  beforeEach(() => {
+    service = new PrismaService();
+    loggerLogSpy = vi.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
+    vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -29,7 +38,8 @@ describe('PrismaService', () => {
       await service.onModuleInit();
 
       // Assert
-      expect(connectSpy).toHaveBeenCalled();
+      expect(service.$connect).toHaveBeenCalled();
+      expect(loggerLogSpy).toHaveBeenCalledWith('Prisma connected to PostgreSQL');
     });
   });
 
@@ -39,7 +49,8 @@ describe('PrismaService', () => {
       await service.onModuleDestroy();
 
       // Assert
-      expect(disconnectSpy).toHaveBeenCalled();
+      expect(service.$disconnect).toHaveBeenCalled();
+      expect(loggerLogSpy).toHaveBeenCalledWith('Prisma disconnected');
     });
   });
 
@@ -50,6 +61,7 @@ describe('PrismaService', () => {
 
       // Assert
       expect(extendedClient).toBeDefined();
+      expect(service.$extends).toHaveBeenCalled();
     });
   });
 });

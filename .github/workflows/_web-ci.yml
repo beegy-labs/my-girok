@@ -54,6 +54,7 @@ jobs:
       - name: Build dependencies
         run: |
           pnpm --filter @my-girok/types build
+          pnpm --filter @my-girok/otel-web-sdk build
           pnpm --filter @my-girok/tracking-sdk build
           pnpm --filter @my-girok/ui-components build
       - name: Lint and type-check

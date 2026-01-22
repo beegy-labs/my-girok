@@ -13,21 +13,15 @@ export default defineConfig({
 
     // Performance optimization: parallel execution
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        // Use 50% of CPU cores for parallel execution (per TESTING.md policy)
-        maxThreads: Math.max(1, Math.floor(os.cpus().length * 0.5)),
-        minThreads: 1,
-      },
+    // Vitest 4.0: poolOptions moved to top-level
+    threads: {
+      // Use 50% of CPU cores for parallel execution (per TESTING.md policy)
+      maxThreads: Math.max(1, Math.floor(os.cpus().length * 0.5)),
+      minThreads: 1,
     },
 
     // Individual test timeout: 10 seconds (per TESTING.md policy)
     testTimeout: 10000,
-
-    // Enable caching for faster subsequent runs
-    cache: {
-      dir: '../../.vitest-cache',
-    },
 
     // Coverage configuration
     coverage: {

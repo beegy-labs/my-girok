@@ -1,8 +1,24 @@
 # GEMINI.md
 
-> **AI Assistant Entry Point for my-girok project** | **Last Updated**: 2026-01-19
+> **Gemini Entry Point** | Based on [AGENTS.md](AGENTS.md) | **Last Updated**: 2026-01-21
 
-**Manifest**: [.ai/manifest.yaml](.ai/manifest.yaml) | **Changelog**: [.ai/CHANGELOG.md](.ai/CHANGELOG.md)
+## Standard Policy
+
+**MUST READ**: [AGENTS.md](AGENTS.md) - Multi-LLM Standard Policy (SSOT)
+
+When AGENTS.md changes, update this file accordingly while preserving Gemini-specific optimizations.
+
+---
+
+## Gemini-Specific Optimizations
+
+| Feature        | Optimization                                |
+| -------------- | ------------------------------------------- |
+| Context Window | 1M+ tokens - 전체 codebase 한번에 처리 가능 |
+| Multimodal     | 이미지/다이어그램 이해 가능                 |
+| Speed          | 빠른 응답, 간단한 작업에 적합               |
+
+---
 
 ## Quick Start
 
@@ -96,10 +112,10 @@ my-girok/
 
 | Layer         | Tech                                                   |
 | ------------- | ------------------------------------------------------ |
-| **Frontend**  | React 19.2, TypeScript 5.9, Tailwind CSS 4.1, Vite 7.2 |
+| **Frontend**  | React 19.2, TypeScript 5.9, Tailwind CSS 4.1, Vite 7.3 |
 | **Mobile**    | iOS (Swift), Android (Kotlin), Flutter                 |
-| **Backend**   | Node.js 24, NestJS 11, GraphQL Federation, gRPC        |
-| **Database**  | PostgreSQL 16, Prisma 6, Redis                         |
+| **Backend**   | Node.js 24, NestJS 11.1, GraphQL Federation, gRPC      |
+| **Database**  | PostgreSQL 16, Prisma 7, Valkey                        |
 | **Messaging** | Redpanda (Kafka-compatible)                            |
 | **AI**        | Python 3.13, FastAPI                                   |
 | **Deploy**    | Kubernetes, Kustomize, Cilium Gateway API              |

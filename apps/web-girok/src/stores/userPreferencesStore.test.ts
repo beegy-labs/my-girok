@@ -14,11 +14,15 @@ import {
   type UserPreferences,
 } from '../api/userPreferences';
 
-// Mock the API module
-vi.mock('../api/userPreferences', () => ({
-  getUserPreferences: vi.fn(),
-  updateUserPreferences: vi.fn(),
-}));
+// Mock the API module (preserve types/enums with importOriginal)
+vi.mock('../api/userPreferences', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../api/userPreferences')>();
+  return {
+    ...actual,
+    getUserPreferences: vi.fn(),
+    updateUserPreferences: vi.fn(),
+  };
+});
 
 // Mock the cookies module
 vi.mock('../utils/cookies', () => ({
@@ -98,8 +102,8 @@ describe('userPreferencesStore', () => {
       expect(state.preferences?.theme).toBe(Theme.LIGHT);
       expect(state.error).toBe('API Error');
 
-      // Cookie should be restored
-      expect(mockSetCookieJSON).toHaveBeenCalledWith('user-theme', 'light', { expires: 365 });
+      // Cookie should be restored (Theme.LIGHT = 'LIGHT')
+      expect(mockSetCookieJSON).toHaveBeenCalledWith('user-theme', Theme.LIGHT, { expires: 365 });
     });
 
     it('should delete cookie on rollback when no previous cookie existed', async () => {
@@ -242,7 +246,7 @@ describe('userPreferencesStore', () => {
       expect(state.error).toBe('API Error');
     });
 
-    it('should handle undefined sectionOrder (deletion)', async () => {
+    it('should handle null sectionOrder (deletion)', async () => {
       mockGetCookieJSON.mockReturnValue(null);
       mockUpdateUserPreferencesAPI.mockResolvedValue(undefined);
 
@@ -250,7 +254,7 @@ describe('userPreferencesStore', () => {
 
       await act(async () => {
         await store.updatePreferences({
-          sectionOrder: undefined,
+          sectionOrder: null as unknown as undefined, // null triggers deletion
         });
       });
 

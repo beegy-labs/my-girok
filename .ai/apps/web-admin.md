@@ -1,8 +1,8 @@
 # web-admin
 
-> Admin console for Girok H-RBAC multi-tenant system | Port: 3002 | **Last Updated**: 2026-01-17
+> Admin console for Girok H-RBAC multi-tenant system | Port: 3002
 
-**Stack**: React 19, Vite 7, TypeScript 5, Zustand, Tailwind 4, sonner (toast), Monaco Editor
+**Stack**: React 19, Vite 7, TypeScript 5, Zustand, Tailwind 4, sonner, Monaco Editor
 
 ## Key Routes
 
@@ -14,19 +14,17 @@
 | `/system/oauth`              | OAuthSettingsPage     | settings:read |
 | `/system/audit-logs`         | AuditLogsPage         | audit:read    |
 | `/system/session-recordings` | SessionRecordingsPage | session:read  |
-| `/system/session-analytics`  | SessionAnalyticsPage  | session:read  |
 
 ## Architecture
 
-| Pattern      | Implementation                                   |
-| ------------ | ------------------------------------------------ |
-| Components   | Atomic Design (atoms/molecules/organisms)        |
-| Config       | SSOT in `src/config/` (legal, tenant, region)    |
-| Auth         | Token refresh queue, MFA support                 |
-| Styling      | theme-\* classes (NO hardcoded colors)           |
-| Errors       | Centralized handler with AppError classification |
-| Toast        | sonner with auto-show on errors                  |
-| Code Editors | Monaco Editor for DSL (auth policies)            |
+| Pattern    | Implementation                            |
+| ---------- | ----------------------------------------- |
+| Components | Atomic Design (atoms/molecules/organisms) |
+| Config     | SSOT in `src/config/`                     |
+| Auth       | Token refresh queue, MFA support          |
+| Styling    | theme-\* classes (NO hardcoded colors)    |
+| Errors     | Centralized with AppError classification  |
+| Toast      | sonner with auto-show on errors           |
 
 ## Features
 
@@ -43,4 +41,6 @@ pnpm --filter @my-girok/web-admin dev    # Port 3002
 pnpm --filter @my-girok/web-admin build
 ```
 
-**SSOT**: `docs/llm/apps/web-admin.md`, `docs/llm/apps/web-admin-oauth.md`, `docs/llm/guides/frontend-error-handling.md`
+---
+
+**SSOT**: `docs/llm/apps/web-admin.md` | **SDD**: `.specs/apps/web-admin/`

@@ -18,7 +18,7 @@
     "test:e2e": "vitest run --config ./vitest-e2e.config.ts"
   },
   "dependencies": {
-    "@clickhouse/client": "^1.8.1",
+    "@clickhouse/client": "catalog:",
     "@keyv/redis": "^5.1.5",
     "@my-girok/nest-common": "workspace:*",
     "@my-girok/types": "workspace:*",

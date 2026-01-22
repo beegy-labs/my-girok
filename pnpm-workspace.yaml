@@ -18,7 +18,7 @@ catalog:
 
   # Build tools
   typescript: ^5.9.3
-  vite: ^7.2.7
+  vite: ^7.3.1
   tsup: ^8.5.1
 
   # Styling
@@ -31,8 +31,8 @@ catalog:
   '@dnd-kit/utilities': ^3.2.2
 
   # Testing
-  vitest: ^4.0.15
-  '@vitest/coverage-v8': ^4.0.15
+  vitest: ^4.0.17
+  '@vitest/coverage-v8': ^4.0.17
   '@testing-library/react': ^16.3.0
   '@testing-library/jest-dom': ^6.9.1
   '@playwright/test': ^1.57.0
@@ -42,29 +42,30 @@ catalog:
   '@types/jest': ^30.0.0
 
   # Linting
-  eslint: ^9.39.1
+  eslint: ^9.39.2
   '@typescript-eslint/eslint-plugin': ^8.49.0
   '@typescript-eslint/parser': ^8.49.0
 
   # NestJS ecosystem
-  '@nestjs/common': ^11.1.9
-  '@nestjs/core': ^11.1.9
+  '@nestjs/common': ^11.1.12
+  '@nestjs/core': ^11.1.12
   '@nestjs/config': ^4.0.2
   '@nestjs/jwt': ^11.0.2
-  '@nestjs/microservices': ^11.1.9
+  '@nestjs/microservices': ^11.1.12
   '@nestjs/passport': ^11.0.5
-  '@nestjs/platform-express': ^11.1.9
+  '@nestjs/platform-express': ^11.1.12
   '@nestjs/swagger': ^11.2.3
-  '@nestjs/testing': ^11.1.9
-  '@nestjs/cli': ^11.0.14
+  '@nestjs/testing': ^11.1.12
+  '@nestjs/cli': ^11.0.16
   '@nestjs/schedule': ^6.0.0
 
   # Messaging (Kafka/Redpanda)
   kafkajs: ^2.2.4
 
   # Database
-  '@prisma/client': ^6.19.0
-  prisma: ^6.19.0
+  '@prisma/client': ^7.3.0
+  prisma: ^7.3.0
+  '@clickhouse/client': ^1.16.0
 
   # Security (fixed versions for CVE patches)
   passport: ^0.7.0
@@ -72,5 +73,5 @@ catalog:
   helmet: ^8.1.0
 
   # Node types
-  '@types/node': ^25.0.1
+  '@types/node': ^25.0.3
   '@types/express': ^5.0.6
