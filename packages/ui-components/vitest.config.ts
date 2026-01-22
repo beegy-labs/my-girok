@@ -99,13 +99,12 @@ export default defineConfig({
 
           // Pool configuration for parallel testing
           pool: 'threads',
-          poolOptions: {
-            threads: {
-              singleThread: false,
-              isolate: true,
-              minThreads: 1,
-              maxThreads: 4,
-            },
+          // Vitest 4.0: poolOptions moved to top-level
+          threads: {
+            singleThread: false,
+            isolate: true,
+            minThreads: 1,
+            maxThreads: 4,
           },
         },
       },

@@ -61,7 +61,7 @@
     "keyv": "^5.5.5"
   },
   "devDependencies": {
-    "@clickhouse/client": "^1.8.1",
+    "@clickhouse/client": "catalog:",
     "@my-girok/vitest-config": "workspace:*",
     "@nestjs/cli": "catalog:",
     "@nestjs/schematics": "^11.0.9",

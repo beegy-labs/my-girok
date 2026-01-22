@@ -137,10 +137,10 @@ DROP TABLE IF EXISTS t;
 
 | Cat     | Tech                                 |
 | ------- | ------------------------------------ |
-| Web     | React 19.2, Vite 7.2, TS 5.9, TW 4.1 |
+| Web     | React 19.2, Vite 7.3, TS 5.9, TW 4.1 |
 | Mobile  | Swift, Kotlin, Flutter               |
-| Backend | Node 24, NestJS 11                   |
-| DB      | PG 16, Prisma 6, Valkey              |
+| Backend | Node 24, NestJS 11.1                 |
+| DB      | PG 16, Prisma 7, Valkey              |
 | Deploy  | K8s, Kustomize                       |
 
 ## Imports

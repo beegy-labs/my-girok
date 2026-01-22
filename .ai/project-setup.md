@@ -34,8 +34,8 @@ docker compose up -d
 
 | Category | Technology                         |
 | -------- | ---------------------------------- |
-| Backend  | Node.js 24, NestJS 11, Prisma 6    |
-| Frontend | React 19.2, Vite 7.2, Tailwind 4.1 |
+| Backend  | Node.js 24, NestJS 11.1, Prisma 7  |
+| Frontend | React 19.2, Vite 7.3, Tailwind 4.1 |
 | Database | PostgreSQL 16, Valkey              |
 | Monorepo | pnpm 9, Turborepo 2                |
 

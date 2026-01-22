@@ -52,17 +52,17 @@ helm install my-girok-auth services/auth-service/helm -f values.yaml
 ```
 my-girok/
   docs/{.ai/, llm/, en/, kr/}
-  apps/web-girok/           # React 19.2 + Vite 7.2
-  services/auth-service/   # NestJS 11 + Prisma 6
+  apps/web-girok/           # React 19.2 + Vite 7.3
+  services/auth-service/   # NestJS 11.1 + Prisma 7
   packages/types/          # Shared types
 ```
 
 ## Stack
 
 ```yaml
-Backend: Node.js 24, NestJS 11, TypeScript 5.9, Prisma 6
-Frontend: React 19.2, Vite 7.2, Tailwind CSS 4.1
-Database: PostgreSQL 16, Redis 7
+Backend: Node.js 24, NestJS 11.1, TypeScript 5.9, Prisma 7
+Frontend: React 19.2, Vite 7.3, Tailwind CSS 4.1
+Database: PostgreSQL 16, Valkey 8
 Deploy: Docker, Kubernetes (Helm)
 Monorepo: pnpm 9, Turborepo 2
 ```

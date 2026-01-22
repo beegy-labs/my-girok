@@ -20,15 +20,15 @@ A comprehensive personal management platform for organizing professional profile
 
 ## Tech Stack
 
-| Layer     | Technology                                   |
-| --------- | -------------------------------------------- |
-| Frontend  | React 19, Vite 7, TypeScript 5.9, Tailwind 4 |
-| Backend   | Node.js 24, NestJS 11, Prisma 6              |
-| Database  | PostgreSQL 16, ClickHouse (analytics/audit)  |
-| Cache     | Valkey (Redis-compatible)                    |
-| Messaging | Redpanda (Kafka-compatible)                  |
-| Storage   | MinIO (S3-compatible)                        |
-| Infra     | Kubernetes, Helm, ArgoCD, Cilium Gateway     |
+| Layer     | Technology                                         |
+| --------- | -------------------------------------------------- |
+| Frontend  | React 19.2, Vite 7.3, TypeScript 5.9, Tailwind 4.1 |
+| Backend   | Node.js 24, NestJS 11.1, Prisma 7                  |
+| Database  | PostgreSQL 16, ClickHouse (analytics/audit)        |
+| Cache     | Valkey (Redis-compatible)                          |
+| Messaging | Redpanda (Kafka-compatible)                        |
+| Storage   | MinIO (S3-compatible)                              |
+| Infra     | Kubernetes, Helm, ArgoCD, Cilium Gateway           |
 
 ## Quick Start
 

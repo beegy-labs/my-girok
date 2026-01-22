@@ -19,9 +19,9 @@ Personal data management microservice for My-Girok platform.
 
 ## Tech Stack
 
-- NestJS 11
-- TypeScript 5.7
-- PostgreSQL 16 + Prisma 6
+- NestJS 11.1
+- TypeScript 5.9
+- PostgreSQL 16 + Prisma 7
 - Passport JWT
 
 ## Setup
@@ -65,6 +65,7 @@ FRONTEND_URL="http://localhost:3000"
 ## API Endpoints
 
 ### Resume
+
 - `POST /v1/resume` - Create resume
 - `GET /v1/resume` - Get my resume
 - `PUT /v1/resume` - Update resume
@@ -73,6 +74,7 @@ FRONTEND_URL="http://localhost:3000"
 - `PATCH /v1/resume/sections/visibility` - Toggle section visibility
 
 ### Share
+
 - `POST /v1/share/resume` - Create share link
 - `GET /v1/share` - Get my share links
 - `GET /v1/share/:id` - Get share link by ID
@@ -81,4 +83,5 @@ FRONTEND_URL="http://localhost:3000"
 - `GET /v1/share/public/:token` - Get public resume (no auth)
 
 ### Health
+
 - `GET /health` - Health check

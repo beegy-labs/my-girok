@@ -25,10 +25,10 @@ ALL documentation in English: README, API docs, comments, commits.
 
 | Category  | Tech                                       |
 | --------- | ------------------------------------------ |
-| Web       | React 19.2, Vite 7.2, TS 5.9, Tailwind 4.1 |
+| Web       | React 19.2, Vite 7.3, TS 5.9, Tailwind 4.1 |
 | Mobile    | iOS (Swift), Android (Kotlin), Flutter     |
-| Backend   | Node.js 24, NestJS 11                      |
-| Database  | PostgreSQL 16, Prisma 6, Valkey 8          |
+| Backend   | Node.js 24, NestJS 11.1                    |
+| Database  | PostgreSQL 16, Prisma 7, Valkey 8          |
 | Gateway   | Cilium Gateway API                         |
 | Protocols | GraphQL (external), gRPC (internal), NATS  |
 

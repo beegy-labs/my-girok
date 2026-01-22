@@ -12,13 +12,12 @@ export default defineConfig({
     setupFiles: ['./test/setup.ts'],
     testTimeout: 10000,
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: false,
-        isolate: true,
-        minThreads: 1,
-        maxThreads: 4,
-      },
+    // Vitest 4.0: poolOptions moved to top-level
+    threads: {
+      singleThread: false,
+      isolate: true,
+      minThreads: 1,
+      maxThreads: 4,
     },
     coverage: {
       provider: 'v8',

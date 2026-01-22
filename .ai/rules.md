@@ -40,8 +40,8 @@
 
 | Category | Technology                                         |
 | -------- | -------------------------------------------------- |
-| Web      | React 19.2, Vite 7.2, TypeScript 5.9, Tailwind 4.1 |
-| Backend  | Node.js 24, NestJS 11                              |
-| Database | PostgreSQL 16, Prisma 6, Valkey                    |
+| Web      | React 19.2, Vite 7.3, TypeScript 5.9, Tailwind 4.1 |
+| Backend  | Node.js 24, NestJS 11.1                            |
+| Database | PostgreSQL 16, Prisma 7, Valkey                    |
 
 **SSOT**: `docs/llm/rules.md`

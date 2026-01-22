@@ -5,7 +5,7 @@
 | Component | Tool          | Purpose            |
 | --------- | ------------- | ------------------ |
 | Migration | goose         | SQL schema (SSOT)  |
-| ORM       | Prisma 6      | Type-safe client   |
+| ORM       | Prisma 7      | Type-safe client   |
 | RDBMS     | PostgreSQL 16 | Primary store      |
 | Analytics | ClickHouse    | Analytics/Audit    |
 | GitOps    | ArgoCD        | PreSync migrations |

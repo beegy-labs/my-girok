@@ -6,10 +6,27 @@
 
 이 문서는 `docs/llm/references/` 2026 Best Practices를 기반으로 코드베이스에 필요한 변경 사항을 추적합니다.
 
+**Version Reference**: `references/package-versions-2026.md`
+
+## Package Version Status
+
+| Package           | Current | Latest Stable | Status |
+| ----------------- | ------- | ------------- | ------ |
+| React             | 19.2.3  | 19.2.3        | ✅     |
+| TypeScript        | 5.9.3   | 5.9.3         | ✅     |
+| Vite              | 7.3.1   | 7.3.1         | ✅     |
+| Vitest            | 4.0.17  | 4.0.17        | ✅     |
+| NestJS            | 11.1.12 | 11.1.12       | ✅     |
+| Prisma            | 7.2.0   | 7.2.0         | ✅     |
+| ClickHouse Client | 1.16.0  | 1.16.0        | ✅     |
+| Tailwind          | 4.1.18  | 4.1.18        | ✅     |
+| ESLint            | 9.39.2  | 9.39.2        | ✅     |
+
 ## Migration Status
 
 | Category            | Status     | Priority |
 | ------------------- | ---------- | -------- |
+| Package Versions    | 🟢 Updated | -        |
 | Frontend (React 19) | 🟡 Partial | High     |
 | Backend (NestJS)    | 🟢 Aligned | -        |
 | Database            | 🟡 Partial | Medium   |
@@ -288,6 +305,46 @@ ALTER COLUMN id SET DEFAULT gen_random_uuidv7();
 
 ---
 
+## Prisma 7 Migration
+
+**Reference**: `references/prisma-orm-2026.md`, `references/package-versions-2026.md`
+
+| Current | Target | Status                  |
+| ------- | ------ | ----------------------- |
+| 7.2.0   | 7.2.0  | ✅ Updated (2026-01-22) |
+
+### Key Changes in Prisma 7
+
+- Rust-free TypeScript runtime (90% smaller bundle)
+- 3x faster query execution
+- ~98% fewer types for schema evaluation
+- **Note**: MongoDB NOT supported (PostgreSQL only)
+
+### Post-Migration Tasks
+
+```
+[x] Confirm project uses PostgreSQL only (no MongoDB)
+[x] Update pnpm-workspace.yaml to ^7.2.0
+[ ] Create prisma.config.ts file (required for migrations)
+[ ] Update generator configuration if needed
+[ ] Test all database operations
+[ ] Benchmark query performance
+```
+
+### prisma.config.ts Example
+
+```typescript
+// prisma.config.ts (required for Prisma 7)
+import { defineConfig } from 'prisma/config';
+
+export default defineConfig({
+  earlyAccess: [],
+  schema: './prisma/schema.prisma',
+});
+```
+
+---
+
 ## Priority Matrix
 
 | Priority | Category                | Effort | Impact               |
@@ -298,6 +355,7 @@ ALTER COLUMN id SET DEFAULT gen_random_uuidv7();
 | P3       | use() hook refactoring  | Medium | Medium (DX)          |
 | P4       | SBOM implementation     | Low    | Low (compliance)     |
 | P5       | CodeQL/SAST in CI       | Low    | Medium (security)    |
+| ~~P6~~   | ~~Prisma 7 migration~~  | -      | ✅ Done              |
 
 ---
 

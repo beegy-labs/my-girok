@@ -1,6 +1,6 @@
 # Web Girok App
 
-> Public-facing web application | React 19.2, Vite 7.2, TypeScript 5.9, Tailwind 4.1 | **Last Updated**: 2026-01-16
+> Public-facing web application | React 19.2, Vite 7.3, TypeScript 5.9, Tailwind 4.1 | **Last Updated**: 2026-01-22
 
 **Stack**: React Router v7, Zustand 5.0, react-i18next
 

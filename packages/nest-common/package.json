@@ -98,7 +98,7 @@
     }
   },
   "devDependencies": {
-    "@clickhouse/client": "^1.8.1",
+    "@clickhouse/client": "catalog:",
     "@grpc/grpc-js": "^1.12.5",
     "@my-girok/vitest-config": "workspace:*",
     "@nestjs/common": "catalog:",

@@ -11,11 +11,10 @@ export default defineConfig({
     environment: 'node',
     testTimeout: 30000,
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true,
-        isolate: true,
-      },
+    // Vitest 4.0: poolOptions moved to top-level
+    threads: {
+      singleThread: true,
+      isolate: true,
     },
     deps: {
       inline: [/@my-girok\/types/, /@protobuf-ts/],
