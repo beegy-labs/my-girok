@@ -184,6 +184,7 @@ purpose: Quick navigation, pointers to Tier 2
 
 | Path              | Max Lines | Tokens | Rationale                     |
 | ----------------- | --------- | ------ | ----------------------------- |
+| `*.md` (root)     | 200       | ~2,000 | Core reference documents      |
 | `policies/`       | 200       | ~2,000 | Core rules, frequently loaded |
 | `services/`       | 200       | ~2,000 | Per-service SSOT              |
 | `guides/`         | 150       | ~1,500 | Focused how-to, splittable    |
@@ -193,6 +194,14 @@ purpose: Quick navigation, pointers to Tier 2
 | `templates/`      | 100       | ~1,000 | Small templates               |
 | `features/`       | 100       | ~1,000 | Feature specifications        |
 | `infrastructure/` | 150       | ~1,500 | Infra documentation           |
+
+### Tolerance (Minor Over-Limit)
+
+Files exceeding limit by **1-10 lines** are acceptable:
+
+- Splitting would cause excessive fragmentation
+- No significant RAG retrieval impact
+- Review during major updates
 
 ### Exceptions (Framework Documents)
 
@@ -209,6 +218,42 @@ These documents define the methodology itself and are exempt from line limits:
 - Document defines the framework/methodology itself
 - Requires full context to understand (splitting breaks comprehension)
 - Loaded infrequently (onboarding, planning sessions only)
+
+### Split Guidelines
+
+**Minimum sizes after split:**
+
+| Document Type | Main File | Companion File | Total Before Split |
+| ------------- | --------- | -------------- | ------------------ |
+| policies/     | ≥120      | ≥60            | >200               |
+| services/     | ≥120      | ≥60            | >200               |
+| guides/       | ≥90       | ≥50            | >150               |
+| apps/         | ≥90       | ≥50            | >150               |
+| packages/     | ≥90       | ≥50            | >150               |
+| components/   | ≥60       | ≥40            | >100               |
+
+**Split decision criteria:**
+
+| Condition                      | Action                   |
+| ------------------------------ | ------------------------ |
+| Over limit by 1-10 lines       | Keep as-is (tolerance)   |
+| Over limit by 11-30 lines      | Evaluate semantic split  |
+| Over limit by >30 lines        | Split required           |
+| Companion would be <50 lines   | Keep as-is (fragmented)  |
+| Clear semantic boundary exists | Split (impl/testing/ops) |
+| Independent lookup value       | Split (enums, tables)    |
+
+**Split naming conventions:**
+
+| Content Type   | Suffix Example              |
+| -------------- | --------------------------- |
+| Implementation | `-impl.md`                  |
+| Testing        | `-testing.md`               |
+| Operations     | `-operations.md`, `-ops.md` |
+| Advanced       | `-advanced.md`              |
+| Patterns       | `-patterns.md`              |
+| Security       | `-security.md`              |
+| Architecture   | `-arch.md`                  |
 
 ### Context Budget (128k)
 
