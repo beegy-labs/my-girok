@@ -43,6 +43,22 @@ CDD is a **Constitution of Knowledge** - SSOT defining all rules and patterns fo
 - Reduce cognitive load of "deep context"
 - Onboarding material for new members
 
+### Tier 3/4 Generation Rules
+
+When generating human-readable docs (Tier 3/4) from Tier 2:
+
+| Tier 2 Pattern              | Tier 3 Output   | Rationale                      |
+| --------------------------- | --------------- | ------------------------------ |
+| `foo.md` + `foo-impl.md`    | Single `foo.md` | Humans prefer complete context |
+| `foo.md` + `foo-testing.md` | Single `foo.md` | No token limits for humans     |
+| Split companion files       | Merge into main | Readability over retrieval     |
+
+**Why merge?**
+
+- Tier 2 splits optimize for LLM token limits and RAG retrieval
+- Humans read sequentially; fragmented docs hurt comprehension
+- `docs:generate` script handles merge automatically
+
 ## Scope
 
 | CDD Contains                     | CDD Does NOT Contain         |
@@ -194,6 +210,7 @@ purpose: Quick navigation, pointers to Tier 2
 | `templates/`      | 100       | ~1,000 | Small templates               |
 | `features/`       | 100       | ~1,000 | Feature specifications        |
 | `infrastructure/` | 150       | ~1,500 | Infra documentation           |
+| `references/`     | 300       | ~3,000 | External knowledge, complete  |
 
 ### Tolerance (Minor Over-Limit)
 

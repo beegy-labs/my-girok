@@ -1,6 +1,10 @@
 # Best Practices 2026
 
-**Review**: Monthly | **Updated**: 2026-01-17
+**Review**: Monthly | **Updated**: 2026-01-22
+
+## Quick Reference
+
+Detailed research: `docs/llm/references/` (RAG, frontend, backend, DB, testing, security, CI/CD, API, K8s)
 
 ## Stack
 

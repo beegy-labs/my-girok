@@ -1,8 +1,24 @@
 # 2026 Best Practices (SSOT)
 
-> **Last Updated**: 2026-01-18
+> **Last Updated**: 2026-01-22
 >
 > This is the Single Source of Truth for best practices. The `.ai/best-practices.md` is a condensed version.
+
+## Quick Reference
+
+For detailed 2026 industry research, see `docs/llm/references/`:
+
+| Topic          | File                          | Key Points             |
+| -------------- | ----------------------------- | ---------------------- |
+| RAG & Chunking | `rag-chunking-2026.md`        | 300-800 tokens optimal |
+| Frontend       | `frontend-react-2026.md`      | React Compiler, use()  |
+| Backend        | `backend-nestjs-2026.md`      | Module design, gRPC    |
+| Database       | `database-postgresql-2026.md` | UUIDv7, pgvector       |
+| Testing        | `testing-2026.md`             | Pyramid, 80% coverage  |
+| Security       | `security-2026.md`            | OWASP Top 10           |
+| CI/CD          | `cicd-devops-2026.md`         | GitHub Actions         |
+| API Design     | `api-design-2026.md`          | REST/GraphQL/gRPC      |
+| Kubernetes     | `kubernetes-2026.md`          | HPA, Helm              |
 
 ## Database
 
