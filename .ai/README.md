@@ -1,8 +1,15 @@
 # AI Assistant Navigation
 
-> LLM-optimized pointers | **Last Updated**: 2026-01-13
+> CDD Tier 1 - Indicator (≤50 lines) | Multi-LLM Compatible
 
-**Manifest**: [manifest.yaml](manifest.yaml) | **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+## Tier 1 Role
+
+| Rule        | Description                                    |
+| ----------- | ---------------------------------------------- |
+| Max Lines   | ≤50 lines per file                             |
+| Purpose     | Quick reference, SSOT links                    |
+| Detail      | Refer to `docs/llm/` (Tier 2)                  |
+| Methodology | `docs/llm/policies/development-methodology.md` |
 
 ## Core Files
 
@@ -33,12 +40,10 @@
 
 ## Quick Links
 
-| Topic             | File                                                         |
-| ----------------- | ------------------------------------------------------------ |
-| Database          | [database.md](database.md) → `docs/llm/policies/database.md` |
-| Testing           | [testing.md](testing.md) → `docs/llm/policies/testing.md`    |
-| Error Handling    | `docs/llm/guides/frontend-error-handling.md`                 |
-| E2E Tests         | `apps/web-admin/e2e/README.md`                               |
-| Telemetry Gateway | `docs/llm/guides/telemetry-gateway-deployment.md`            |
+| Topic    | Tier 2 SSOT                                  |
+| -------- | -------------------------------------------- |
+| Database | `docs/llm/policies/database.md`              |
+| Testing  | `docs/llm/policies/testing.md`               |
+| Errors   | `docs/llm/guides/frontend-error-handling.md` |
 
-**SSOT Policy**: `docs/llm/policies/documentation-architecture.md`
+**CDD Policy**: `docs/llm/policies/cdd.md`
