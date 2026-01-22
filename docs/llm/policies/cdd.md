@@ -22,12 +22,12 @@ CDD is a **Constitution of Knowledge** - SSOT defining all rules and patterns fo
 (Pointer)     (SSOT)          (Generated)   (Translated)
 ```
 
-| Tier | Path        | Purpose                 | Audience | Editable | Format                      |
-| ---- | ----------- | ----------------------- | -------- | -------- | --------------------------- |
-| 1    | `.ai/`      | Indicators (≤50 lines)  | LLM      | **Yes**  | Tables, links, max 50 lines |
-| 2    | `docs/llm/` | Full specs (≤300 lines) | LLM      | **Yes**  | YAML, tables, code blocks   |
-| 3    | `docs/en/`  | Human-readable          | Human    | Auto-gen | Prose, examples, guides     |
-| 4    | `docs/kr/`  | Translation             | Human    | Auto-gen | Same as docs/en/            |
+| Tier | Path        | Purpose        | Audience | Editable | Format                    |
+| ---- | ----------- | -------------- | -------- | -------- | ------------------------- |
+| 1    | `.ai/`      | Indicators     | LLM      | **Yes**  | Tables, links, ≤50 lines  |
+| 2    | `docs/llm/` | Full specs     | LLM      | **Yes**  | YAML, tables, code blocks |
+| 3    | `docs/en/`  | Human-readable | Human    | Auto-gen | Prose, examples, guides   |
+| 4    | `docs/kr/`  | Translation    | Human    | Auto-gen | Same as docs/en/          |
 
 ## Tier Purpose Details
 
@@ -168,35 +168,58 @@ pnpm docs:translate --locale kr --clean
 # Output: 🧹 Cleared failed files history
 ```
 
-## Format Guidelines
+## Line Limits (RAG Optimized)
 
-### .ai/ (Tier 1 - Pointer)
+Based on 128k context window optimization and RAG best practices.
+
+### Tier 1 (.ai/)
 
 ```yaml
 max_lines: 50
-content: [tables, links]
-exclude: [prose, examples]
-purpose: quick navigation for LLM
+tokens: ~500
+purpose: Quick navigation, pointers to Tier 2
 ```
 
-### docs/llm/ (Tier 2 - SSOT)
+### Tier 2 (docs/llm/) - By Document Type
 
-```yaml
-max_lines: 300
-optimization: token_efficiency
-human_readable: false
-format: [yaml, tables, code_blocks]
-prose: minimal (only when necessary)
+| Path              | Max Lines | Tokens | Rationale                     |
+| ----------------- | --------- | ------ | ----------------------------- |
+| `policies/`       | 200       | ~2,000 | Core rules, frequently loaded |
+| `services/`       | 200       | ~2,000 | Per-service SSOT              |
+| `guides/`         | 150       | ~1,500 | Focused how-to, splittable    |
+| `apps/`           | 150       | ~1,500 | Per-app specification         |
+| `packages/`       | 150       | ~1,500 | Package documentation         |
+| `components/`     | 100       | ~1,000 | Single component spec         |
+| `templates/`      | 100       | ~1,000 | Small templates               |
+| `features/`       | 100       | ~1,000 | Feature specifications        |
+| `infrastructure/` | 150       | ~1,500 | Infra documentation           |
+
+### Context Budget (128k)
+
+```
+128k context allocation:
+├── System prompt:     ~5k tokens
+├── Conversation:     ~20k tokens
+├── Code context:     ~30k tokens
+└── Documents:        ~70k tokens (35 × 2,000 avg)
 ```
 
-### docs/en/ (Tier 3 - Generated)
+### Format Rules
 
-```yaml
-optimization: human_readable
-source: docs/llm/
-editable: false
-format: [prose, examples, guides]
-```
+| Tier | Format                     | Optimization      |
+| ---- | -------------------------- | ----------------- |
+| 1    | Tables, links only         | Minimal tokens    |
+| 2    | YAML, tables, code blocks  | Token efficiency  |
+| 3    | Prose, examples (auto-gen) | Human readability |
+
+### Language Policy
+
+**All CDD documents MUST be written in English.**
+
+- Code: English
+- Documentation: English
+- Comments: English
+- Commits: English
 
 ## Update Requirements
 

@@ -23,22 +23,22 @@ SDD is a system where Human designs plans with LLM and tracks task execution. Sp
 └── apps/{app}/
     ├── {feature}.md              # Spec (What to build)
     │
-    ├── roadmap.md                # L1: Master roadmap (전체 방향)
-    │                             # - Planning 세션에서만 로드
+    ├── roadmap.md                # L1: Master roadmap (overall direction)
+    │                             # - Load only during planning sessions
     │
-    ├── scopes/                   # L2: Active scopes (동시 작업 지원)
+    ├── scopes/                   # L2: Active scopes (concurrent work support)
     │   ├── 2026-Q1.md           # Scope A (Person A)
     │   └── 2026-Q2.md           # Scope B (Person B)
     │
-    ├── tasks/                    # L3: Scope별 tasks
+    ├── tasks/                    # L3: Scope-specific tasks
     │   ├── 2026-Q1.md           # Tasks for Scope A
     │   └── 2026-Q2.md           # Tasks for Scope B
     │
     └── history/
-        ├── scopes/               # 완료된 scope 아카이브
-        │   └── 2025-Q4.md       # Scope + tasks 통합 기록
+        ├── scopes/               # Completed scope archives
+        │   └── 2025-Q4.md       # Scope + tasks combined record
         │
-        └── decisions/            # 로드맵 결정 기록
+        └── decisions/            # Roadmap decision records
             └── {date}-{decision}.md
 ```
 
@@ -52,13 +52,13 @@ SDD is a system where Human designs plans with LLM and tracks task execution. Sp
 
 ## File Roles (Token Optimization)
 
-| File                 | Content               | Token Strategy           |
-| -------------------- | --------------------- | ------------------------ |
-| `roadmap.md`         | Master roadmap (전체) | **Planning 시에만** 로드 |
-| `scopes/{scope}.md`  | 현재 작업 범위        | 작업 시작 시 로드        |
-| `tasks/{scope}.md`   | 상세 작업             | 작업 중 항상 로드        |
-| `history/scopes/`    | 완료된 scope          | **작업 중 스킵**         |
-| `history/decisions/` | 결정 기록             | 필요 시만 로드           |
+| File                 | Content              | Token Strategy          |
+| -------------------- | -------------------- | ----------------------- |
+| `roadmap.md`         | Master roadmap (all) | **Planning only** load  |
+| `scopes/{scope}.md`  | Current work scope   | Load at work start      |
+| `tasks/{scope}.md`   | Detailed tasks       | Always load during work |
+| `history/scopes/`    | Completed scopes     | **Skip during work**    |
+| `history/decisions/` | Decision records     | Load only when needed   |
 
 ## Multi-Scope: Concurrent Work Support
 
@@ -77,19 +77,19 @@ files:
     skip: ['roadmap.md', 'scopes/2026-Q1.md', 'tasks/2026-Q1.md', 'history/*']
 
 benefit:
-  - 'Git 충돌 없음'
-  - '토큰 수 동일 (2파일)'
-  - '독립적 진행'
+  - 'No Git conflicts'
+  - 'Same token count (2 files)'
+  - 'Independent progress'
 ```
 
 ## Token Load Strategy
 
-| Situation     | Load                                    | Skip                                  |
-| ------------- | --------------------------------------- | ------------------------------------- |
-| **계획 수립** | `roadmap.md`                            | `scopes/*`, `tasks/*`, `history/*`    |
-| **작업 시작** | `scopes/{scope}.md`, `tasks/{scope}.md` | `roadmap.md`, 다른 scope, `history/*` |
-| **작업 계속** | `tasks/{scope}.md`                      | 나머지 전부                           |
-| **완료 검토** | `history/scopes/{scope}.md`             | 활성 파일                             |
+| Situation       | Load                                    | Skip                                    |
+| --------------- | --------------------------------------- | --------------------------------------- |
+| **Planning**    | `roadmap.md`                            | `scopes/*`, `tasks/*`, `history/*`      |
+| **Work Start**  | `scopes/{scope}.md`, `tasks/{scope}.md` | `roadmap.md`, other scopes, `history/*` |
+| **Continue**    | `tasks/{scope}.md`                      | Everything else                         |
+| **Review Done** | `history/scopes/{scope}.md`             | Active files                            |
 
 ## Scope ID Format
 
@@ -97,21 +97,21 @@ benefit:
 {year}-{period}
 ```
 
-| Component | Description | Example              |
-| --------- | ----------- | -------------------- |
-| year      | 연도        | `2026`               |
-| period    | 분기/단위   | `Q1`, `Q2`, `Phase1` |
-| Full ID   | Combined    | `2026-Q1`            |
+| Component | Description   | Example              |
+| --------- | ------------- | -------------------- |
+| year      | Year          | `2026`               |
+| period    | Quarter/Phase | `Q1`, `Q2`, `Phase1` |
+| Full ID   | Combined      | `2026-Q1`            |
 
 ## Workflow
 
 ```
 L1: roadmap.md (Master direction)
-    ↓ Architect가 범위 선택
+    ↓ Architect selects scope
 L2: scopes/{scope}.md (Human approval)
-    ↓ LLM이 상세화
+    ↓ LLM details
 L3: tasks/{scope}.md (LLM execution)
-    ↓ 완료
+    ↓ Complete
 history/scopes/{scope}.md (Archive)
     ↓
 Post-Task: CDD Update
@@ -249,13 +249,13 @@ Settings UI implementation
 
 ## Best Practices
 
-| Practice                 | Description                     |
-| ------------------------ | ------------------------------- |
-| Roadmap = Planning only  | 작업 시 로드하지 않음           |
-| Scope = 1 person 1 scope | 동시 작업 시 scope 분리         |
-| Tasks = Focused          | 현재 scope 작업만 포함          |
-| History = Archive only   | 완료 후 통합 저장, 작업 중 스킵 |
-| Naming = Consistent      | `{year}-{period}` 형식 준수     |
+| Practice                 | Description                             |
+| ------------------------ | --------------------------------------- |
+| Roadmap = Planning only  | Do not load during work                 |
+| Scope = 1 person 1 scope | Separate scopes for concurrent work     |
+| Tasks = Focused          | Include only current scope tasks        |
+| History = Archive only   | Save after completion, skip during work |
+| Naming = Consistent      | Follow `{year}-{period}` format         |
 
 ## Future: DB Migration
 
@@ -271,5 +271,5 @@ Future:  DB MCP
 ## References
 
 - Methodology: `docs/llm/policies/development-methodology.md`
-- CDD Structure: `docs/llm/policies/documentation-architecture.md`
+- CDD Policy: `docs/llm/policies/cdd.md`
 - Industry Best Practices: Thoughtworks SDD, Addy Osmani Workflow
