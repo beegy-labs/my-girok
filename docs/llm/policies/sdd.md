@@ -1,19 +1,23 @@
 # Spec-Driven Development (SDD) Policy
 
-> Task planning and tracking system | **Last Updated**: 2026-01-22
+> Human-Commanded Staged Auto-Design | **Last Updated**: 2026-01-22
 
 ## Definition
 
-SDD is a system where Human designs plans with LLM and tracks task execution. Specifications define what to build, while CDD provides how to build.
+SDD is a system where Human Commander orchestrates development through staged design automation. The Commander designates work stages from the roadmap, and LLM auto-converts them into executable detailed plans by referencing CDD.
 
-## CDD vs SDD
+**Core Principle**: Transform massive roadmap into manageable execution plans, stage by stage, under human command.
 
-| Aspect     | CDD                     | SDD                       |
-| ---------- | ----------------------- | ------------------------- |
-| Focus      | How (context, patterns) | What (task, spec)         |
-| Location   | `.ai/`, `docs/llm/`     | `.specs/`                 |
-| History    | Git (document changes)  | Files → DB (task records) |
-| Human Role | None                    | Direction, Approval       |
+## CDD ↔ SDD Relationship
+
+| Aspect       | CDD                      | SDD                             |
+| ------------ | ------------------------ | ------------------------------- |
+| **Focus**    | HOW (patterns, context)  | WHAT (specs, tasks)             |
+| **Location** | `.ai/`, `docs/llm/`      | `.specs/`                       |
+| **Role**     | Implementation reference | Task planning & tracking        |
+| **Link**     | Referenced by tasks      | Tasks reference CDD to know HOW |
+
+**Key Insight**: `tasks/{scope}.md` references CDD (Tier 1-2) to generate detailed implementation methods. CDD defines patterns, SDD defines what to build using those patterns.
 
 ## Directory Structure
 
@@ -21,46 +25,136 @@ SDD is a system where Human designs plans with LLM and tracks task execution. Sp
 .specs/
 ├── README.md
 └── apps/{app}/
-    ├── {feature}.md              # Spec (What to build)
+    ├── {feature}.md              # Feature Spec (detailed requirements)
     │
-    ├── roadmap.md                # L1: Master roadmap (overall direction)
-    │                             # - Load only during planning sessions
+    ├── roadmap.md                # WHAT: Overall feature spec & direction
+    │                             # - All planned features
+    │                             # - Priorities & dependencies
+    │                             # - Load only during planning
     │
-    ├── scopes/                   # L2: Active scopes (concurrent work support)
-    │   ├── 2026-Q1.md           # Scope A (Person A)
-    │   └── 2026-Q2.md           # Scope B (Person B)
+    ├── scopes/                   # WHEN: Work scope extraction
+    │   ├── 2026-Q1.md           # Q1 work scope (from roadmap)
+    │   └── 2026-Q2.md           # Q2 work scope (from roadmap)
     │
-    ├── tasks/                    # L3: Scope-specific tasks
-    │   ├── 2026-Q1.md           # Tasks for Scope A
-    │   └── 2026-Q2.md           # Tasks for Scope B
+    ├── tasks/                    # HOW: Detailed implementation plan
+    │   ├── 2026-Q1.md           # Q1 tasks (references CDD)
+    │   └── 2026-Q2.md           # Q2 tasks (references CDD)
     │
-    └── history/
-        ├── scopes/               # Completed scope archives
-        │   └── 2025-Q4.md       # Scope + tasks combined record
-        │
+    └── history/                  # DONE: Completed archives
+        ├── scopes/               # Completed scope + tasks merged
         └── decisions/            # Roadmap decision records
-            └── {date}-{decision}.md
 ```
 
-## 3-Layer Work Structure
+## 3-Layer Structure: WHAT → WHEN → HOW
 
-| Layer          | File                | Owner     | Human Role         |
-| -------------- | ------------------- | --------- | ------------------ |
-| **L1 Roadmap** | `roadmap.md`        | Human     | Direction (Master) |
-| **L2 Scope**   | `scopes/{scope}.md` | Human+LLM | **Approval**       |
-| **L3 Tasks**   | `tasks/{scope}.md`  | LLM       | Autonomous         |
+| Layer       | File                | Purpose           | Human Role       | LLM Role |
+| ----------- | ------------------- | ----------------- | ---------------- | -------- |
+| **Roadmap** | `roadmap.md`        | **WHAT** to build | Design & Plan    | Document |
+| **Scope**   | `scopes/{scope}.md` | **WHEN** to build | Define range     | Document |
+| **Tasks**   | `tasks/{scope}.md`  | **HOW** to build  | Review & Approve | Generate |
 
-## File Roles (Token Optimization)
+### Roadmap (WHAT)
 
-| File                 | Content              | Token Strategy          |
-| -------------------- | -------------------- | ----------------------- |
-| `roadmap.md`         | Master roadmap (all) | **Planning only** load  |
-| `scopes/{scope}.md`  | Current work scope   | Load at work start      |
-| `tasks/{scope}.md`   | Detailed tasks       | Always load during work |
-| `history/scopes/`    | Completed scopes     | **Skip during work**    |
-| `history/decisions/` | Decision records     | Load only when needed   |
+- Overall development direction
+- Complete feature specification
+- All planned items with priorities
+- Feature dependencies
+- **Human designs & plans**: Commander defines what to build
+- **LLM documents**: LLM organizes and writes the roadmap document
+
+### Scope (WHEN)
+
+- Work range extracted from roadmap
+- Time-based division (Q1, Q2, Phase1, etc.)
+- Specific items to implement this period
+- Success criteria for the scope
+- **Human defines range**: Commander specifies which items to work on
+- **LLM documents**: LLM organizes and writes the scope document
+
+### Tasks (HOW)
+
+- Detailed implementation plan for scope items
+- Step-by-step execution order
+- Parallel vs sequential task designation
+- Verification methods for each task
+- **LLM generates**: Autonomously divides tasks, determines order, groups parallel/sequential
+- **CDD-referenced**: Consults CDD (Tier 1-2) for implementation patterns
+- **Human approves**: Commander reviews and approves the generated tasks
+
+## Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  1. [Human→LLM] Roadmap Design                                  │
+│     Human designs & plans overall direction                     │
+│     LLM organizes and documents roadmap.md                      │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  2. [Human→LLM] Scope Definition                                │
+│     Human defines work range (which items, which period)        │
+│     LLM organizes and documents scopes/{scope}.md               │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  3. [LLM] Task Generation                                       │
+│     LLM autonomously generates tasks/{scope}.md                 │
+│     References CDD (Tier 1-2) for implementation patterns       │
+│     Divides tasks, determines order, groups parallel/sequential │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  4. [Human] Task Review & Approval                              │
+│     Commander reviews generated tasks                           │
+│     Modifies if needed, then approves execution                 │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  5. [LLM] Execution (ADD Phase)                                 │
+│     Coder LLM implements tasks following approved plan          │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  6. [System] Completion & Archive                               │
+│     Merge scope + tasks → history/scopes/{scope}.md             │
+│     Update CDD if new patterns discovered                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Task Execution Modes
+
+Tasks can be designated as parallel or sequential:
+
+```yaml
+# Example: tasks/{scope}.md structure
+execution_order:
+  - phase: 1
+    mode: parallel
+    tasks:
+      - Setup database schema
+      - Create API interfaces
+      - Initialize frontend components
+
+  - phase: 2
+    mode: sequential
+    tasks:
+      - Implement authentication flow
+      - Add authorization checks
+      - Integrate with existing services
+
+  - phase: 3
+    mode: parallel
+    tasks:
+      - Write unit tests
+      - Write integration tests
+```
+
+**Parallel**: Independent tasks that can be executed simultaneously by multiple agents
+**Sequential**: Dependent tasks that must be executed in order
 
 ## Multi-Scope: Concurrent Work Support
+
+Multiple developers can work on different scopes simultaneously:
 
 ```yaml
 scenario:
@@ -76,56 +170,32 @@ files:
     load: ['scopes/2026-Q2.md', 'tasks/2026-Q2.md']
     skip: ['roadmap.md', 'scopes/2026-Q1.md', 'tasks/2026-Q1.md', 'history/*']
 
-benefit:
-  - 'No Git conflicts'
-  - 'Same token count (2 files)'
-  - 'Independent progress'
+benefits:
+  - No Git conflicts
+  - Same token count (2 files per person)
+  - Independent progress
 ```
 
 ## Token Load Strategy
 
-| Situation       | Load                                    | Skip                                    |
-| --------------- | --------------------------------------- | --------------------------------------- |
-| **Planning**    | `roadmap.md`                            | `scopes/*`, `tasks/*`, `history/*`      |
-| **Work Start**  | `scopes/{scope}.md`, `tasks/{scope}.md` | `roadmap.md`, other scopes, `history/*` |
-| **Continue**    | `tasks/{scope}.md`                      | Everything else                         |
-| **Review Done** | `history/scopes/{scope}.md`             | Active files                            |
-
-## Scope ID Format
-
-```
-{year}-{period}
-```
-
-| Component | Description   | Example              |
-| --------- | ------------- | -------------------- |
-| year      | Year          | `2026`               |
-| period    | Quarter/Phase | `Q1`, `Q2`, `Phase1` |
-| Full ID   | Combined      | `2026-Q1`            |
-
-## Workflow
-
-```
-L1: roadmap.md (Master direction)
-    ↓ Architect selects scope
-L2: scopes/{scope}.md (Human approval)
-    ↓ LLM details
-L3: tasks/{scope}.md (LLM execution)
-    ↓ Complete
-history/scopes/{scope}.md (Archive)
-    ↓
-Post-Task: CDD Update
-```
+| Situation       | Load                                    | Skip                           |
+| --------------- | --------------------------------------- | ------------------------------ |
+| **Planning**    | `roadmap.md`                            | scopes, tasks, history         |
+| **Work Start**  | `scopes/{scope}.md`, `tasks/{scope}.md` | roadmap, other scopes, history |
+| **Continue**    | `tasks/{scope}.md`                      | Everything else                |
+| **Review Done** | `history/scopes/{scope}.md`             | Active files                   |
 
 ## Scope Lifecycle
 
 ```yaml
 create:
-  trigger: 'Architect selects range from roadmap'
-  action: 'Create scopes/{scope}.md + tasks/{scope}.md'
+  trigger: 'Commander selects range from roadmap'
+  action:
+    - 'Create scopes/{scope}.md (work range)'
+    - 'LLM generates tasks/{scope}.md (referencing CDD)'
 
 active:
-  work: 'LLM implements tasks'
+  work: 'LLM implements tasks per approved plan'
   update: 'Progress tracked in tasks/{scope}.md'
 
 complete:
@@ -138,32 +208,37 @@ complete:
 
 ## File Templates
 
-### roadmap.md (L1)
+### roadmap.md (WHAT)
 
 ```markdown
-# Roadmap
+# {App} Roadmap
 
-> L1: Master direction | Load on planning only
+> WHAT: Overall feature spec & direction | Load on planning only
 
 ## 2026
 
-| Q   | Priority | Feature        | Status              |
-| --- | -------- | -------------- | ------------------- |
-| Q1  | P0       | Menu structure | → scopes/2026-Q1.md |
-| Q2  | P0       | Dashboard      | Pending             |
-| Q3  | P0       | Audit center   | Pending             |
+| Q   | Priority | Feature        | Status  | Scope               |
+| --- | -------- | -------------- | ------- | ------------------- |
+| Q1  | P0       | Menu structure | Active  | → scopes/2026-Q1.md |
+| Q2  | P0       | Dashboard      | Pending | -                   |
+| Q3  | P0       | Audit center   | Pending | -                   |
 
 ## Dependencies
 
-- Menu → Dashboard → Audit
+Menu → Dashboard → Audit
+
+## Feature Specs
+
+- menu-structure.md
+- dashboard.md
 ```
 
-### scopes/{scope}.md (L2)
+### scopes/{scope}.md (WHEN)
 
 ```markdown
 # Scope: 2026-Q1
 
-> L2: Human approval required | Extracted from roadmap
+> WHEN: Work range from roadmap | Requires Human approval
 
 ## Target
 
@@ -173,7 +248,7 @@ Menu structure implementation
 
 2026-01-01 ~ 2026-03-31
 
-## Items
+## Items (from Roadmap)
 
 | Priority | Feature           | Status |
 | -------- | ----------------- | ------ |
@@ -186,90 +261,88 @@ Menu structure implementation
 - All menu items functional
 - Permission-based visibility
 - 80% test coverage
+
+## References
+
+- Feature Spec: `menu-structure.md`
+- Tasks: `tasks/2026-Q1.md`
 ```
 
-### tasks/{scope}.md (L3)
+### tasks/{scope}.md (HOW)
 
 ```markdown
 # Tasks: 2026-Q1
 
-> L3: LLM autonomous | Based on scopes/2026-Q1.md
+> HOW: Detailed implementation plan | References CDD | LLM autonomous
 
-## Active
+## CDD References
 
-- [ ] Update menu.config.ts
+- `.ai/apps/web-admin.md` - App patterns
+- `docs/llm/guides/react-patterns.md` - React conventions
 
-## Pending
+## Execution Plan
 
-- [ ] Add Identity routes
-- [ ] Add Access routes
-- [ ] Implement permission checks
+### Phase 1 (Parallel)
 
-## Completed
+- [ ] Update menu.config.ts structure
+- [ ] Create route definitions
+- [ ] Setup permission constants
 
-- [x] Analyze current structure (01-20)
+### Phase 2 (Sequential)
 
-## Blocked
+- [ ] Implement menu rendering logic
+- [ ] Add permission checks
+- [ ] Integrate breadcrumb navigation
+
+### Phase 3 (Parallel)
+
+- [ ] Write unit tests
+- [ ] Write integration tests
+
+## Verification
+
+| Task        | Verification Command             |
+| ----------- | -------------------------------- |
+| Menu config | `pnpm test:unit menu.config`     |
+| Routes      | `pnpm dev` → Navigate all routes |
+| Tests       | `pnpm test:coverage` → 80%+      |
+
+## Progress
+
+### Completed
+
+(none)
+
+### Blocked
 
 (none)
 ```
 
-### history/scopes/{scope}.md
+## Learning Loop (Future Enhancement)
 
-```markdown
-# Completed: 2025-Q4
-
-> Archived scope + tasks
-
-## Summary
-
-Settings UI implementation
-
-## Period
-
-2025-10-01 ~ 2025-12-31
-
-## Deliverables
-
-- Settings pages (Phase 9)
-- Permission management (Phase 4)
-
-## Tasks Completed
-
-| Task             | Date  |
-| ---------------- | ----- |
-| Settings config  | 12-15 |
-| Feature flags UI | 12-20 |
-| Country config   | 12-28 |
-
-## CDD Updated
-
-- .ai/apps/web-admin.md
 ```
+LLM generates plan
+    ↓
+Human reviews & modifies
+    ↓
+Diff extracted → Learning data
+    ↓
+Planning LLM improves over time
+```
+
+When Commander modifies LLM-generated plans, the diff becomes valuable training data for future fine-tuning.
 
 ## Best Practices
 
-| Practice                 | Description                             |
-| ------------------------ | --------------------------------------- |
-| Roadmap = Planning only  | Do not load during work                 |
-| Scope = 1 person 1 scope | Separate scopes for concurrent work     |
-| Tasks = Focused          | Include only current scope tasks        |
-| History = Archive only   | Save after completion, skip during work |
-| Naming = Consistent      | Follow `{year}-{period}` format         |
-
-## Future: DB Migration
-
-```
-Current: .specs/history/*.md (Git)
-    ↓
-Future:  DB MCP
-         - Searchable
-         - Zero tokens (query on demand)
-         - Analytics support
-```
+| Practice                 | Description                                    |
+| ------------------------ | ---------------------------------------------- |
+| Roadmap = Planning only  | Do not load during implementation              |
+| Scope = 1 person 1 scope | Separate scopes for concurrent work            |
+| Tasks = CDD reference    | Always consult CDD for implementation patterns |
+| Tasks = Explicit modes   | Clearly mark parallel vs sequential tasks      |
+| History = Archive only   | Skip during active work                        |
 
 ## References
 
 - Methodology: `docs/llm/policies/development-methodology.md`
 - CDD Policy: `docs/llm/policies/cdd.md`
-- Industry Best Practices: Thoughtworks SDD, Addy Osmani Workflow

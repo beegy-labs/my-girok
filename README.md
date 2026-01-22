@@ -90,87 +90,134 @@ docs/kr/                # Tier 4: Translated docs
 
 ---
 
-#### Phase 2: SDD (Spec-Driven Development) — Human-Commanded Staged Auto-Design & Learning
+#### Phase 2: SDD (Spec-Driven Development) — Human-Commanded Staged Auto-Design
 
-**Purpose**: Auto-convert each Commander-designated stage from massive roadmap into executable detailed plans, **learning from design feedback** to progressively improve.
+**Purpose**: Transform massive roadmap into executable detailed plans, stage by stage, under human command. LLM references CDD to generate implementation details.
+
+**3-Layer Structure: WHAT → WHEN → HOW**
+
+| Layer       | File                | Purpose           | Human Role       | LLM Role |
+| ----------- | ------------------- | ----------------- | ---------------- | -------- |
+| **Roadmap** | `roadmap.md`        | **WHAT** to build | Design & Plan    | Document |
+| **Scope**   | `scopes/{scope}.md` | **WHEN** to build | Define range     | Document |
+| **Tasks**   | `tasks/{scope}.md`  | **HOW** to build  | Review & Approve | Generate |
+
+**Key Insight**: Human never writes documents directly. LLM organizes and documents based on human direction. `tasks/{scope}.md` references **CDD (Tier 1-2)** to generate detailed implementation methods.
 
 **Process**:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  1. [Human] Roadmap Command                                     │
-│     Commander decides which stage to execute from roadmap       │
-│     This becomes the specific Intent for LLM                    │
+│  1. [Human→LLM] Roadmap Design                                  │
+│     Human designs & plans overall direction                     │
+│     LLM organizes and documents roadmap.md                      │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│  2. [LLM] Stage-by-Stage Plan Generation                        │
-│     Planning LLM generates detailed execution plan              │
-│     References CDD, scoped to Commander-designated stage only   │
+│  2. [Human→LLM] Scope Definition                                │
+│     Human defines work range (which items, which period)        │
+│     LLM organizes and documents scopes/{scope}.md               │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│  3. [Human] Plan Review & Execution Approval                    │
-│     Commander reviews generated plan                            │
-│     Modifies directly if needed, then approves execution        │
+│  3. [LLM] Task Generation                                       │
+│     LLM autonomously generates tasks/{scope}.md                 │
+│     References CDD for patterns, divides tasks                  │
+│     Determines order, groups parallel/sequential                │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│  4. [System] Design Feedback Learning                           │
+│  4. [Human] Task Review & Approval                              │
+│     Commander reviews generated tasks                           │
+│     Modifies if needed, then approves execution                 │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  5. [System] Learning Loop (Future)                             │
 │     If Commander modified plan, diff becomes learning data      │
-│     Analyzed through 'Experience Capitalization' process        │
 │     Used to improve Planning LLM's future output                │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+**Task Execution Modes**:
+
+- **Parallel**: Independent tasks executed simultaneously by multiple agents
+- **Sequential**: Dependent tasks executed in order
 
 **Structure**:
 
 ```
 .specs/
 └── apps/{app}/
-    ├── roadmap.md          # L1: Master direction (Human)
-    ├── scopes/{scope}.md   # L2: Implementation scope (Human + LLM)
-    └── tasks/{scope}.md    # L3: Detailed tasks (LLM autonomous)
+    ├── roadmap.md          # WHAT: Overall feature spec & direction
+    ├── scopes/{scope}.md   # WHEN: Work scope from roadmap
+    └── tasks/{scope}.md    # HOW: Detailed implementation (refs CDD)
 ```
 
 ---
 
-#### Phase 3: ADD (Agent-Driven Development) — Optimized Autonomous Execution & Learning
+#### Phase 3: ADD (Agent-Driven Development) — Multi-Agent Orchestration
 
-**Purpose**: Autonomously execute approved plans, **capitalize experiences as system-wide knowledge** to progressively improve.
+**Purpose**: Execute approved SDD tasks through multi-agent collaboration (Claude Code, Gemini CLI, etc.), with self-resolution and automatic knowledge capitalization.
+
+**Architecture: Multi-Terminal Orchestration**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Main Agent (Orchestrator)                     │
+│  - Reads approved tasks/{scope}.md from SDD                     │
+│  - Distributes tasks based on parallel/sequential mode          │
+│  - Collects results, performs cross-validation (Consensus)      │
+└─────────────────────────────────────────────────────────────────┘
+        │                    │                    │
+        ▼                    ▼                    ▼
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│  Terminal 1  │    │  Terminal 2  │    │  Terminal 3  │
+│  Claude Code │    │  Gemini CLI  │    │  Local LLM   │
+└──────────────┘    └──────────────┘    └──────────────┘
+```
 
 **Process**:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  1. [LLM] L3 Implementation                                     │
-│     Coder LLM autonomously implements code per plan             │
+│  1. [System] Task Distribution                                  │
+│     Main agent reads approved tasks from SDD                    │
+│     Distributes based on parallel/sequential designation        │
+│     Assigns agents based on task complexity                     │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│  2. [LLM] Self-Resolution                                       │
-│     On problems, does NOT immediately interrupt human           │
-│     Summons peer implementers (multi-LLM)                       │
-│     Resolves through AI consensus + execution environment tests │
+│  2. [LLM] Autonomous Implementation                             │
+│     Sub-agents implement assigned tasks                         │
+│     Reference CDD (Tier 1-2) for implementation patterns        │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│  3. [Human] Final Intervention (Only if consensus fails)        │
-│     System requests help with 'Incident Report'                 │
+│  3. [LLM] Self-Resolution (On Problems)                         │
+│     Does NOT immediately interrupt human                        │
+│     Summons peer agents for AI consensus                        │
+│     Resolves through collaboration + test execution             │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  4. [Human] Final Intervention (Only if consensus fails)        │
+│     System generates 'Incident Report'                          │
 │     Commander does NOT fix code directly                        │
-│     Instead: Updates design (SDD) or corrects policy (CDD)      │
-│     Then restarts system                                        │
+│     Instead: Updates SDD (tasks) or CDD (patterns)              │
+│     Then restarts affected agents                               │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│  4. [System] Experience Capitalization (Distillation)           │
-│     All trials, problem-solving, human interventions recorded   │
-│     Extract abstracted core principles applicable system-wide   │
-│     Update CDD (Tier 1, 2)                                      │
+│  5. [System] Experience Capitalization (Distillation)           │
+│     All trials and problem-solving recorded                     │
+│     Extract abstracted principles                               │
+│     Auto-update CDD (Tier 1-2)                                  │
 │     System improves through experience                          │
-│     Prevents active context bloat                               │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+**Current Status**: Research & design in progress with Claude Code and Gemini CLI.
 
 ---
 
