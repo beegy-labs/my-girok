@@ -40,10 +40,16 @@ import {
   createIdentityGrpcOptions,
   createAuthGrpcOptions,
   createLegalGrpcOptions,
+  createAuditGrpcOptions,
+  createMailGrpcOptions,
+  createNotificationGrpcOptions,
 } from './grpc.options';
 import { IdentityGrpcClient } from './identity-grpc.client';
 import { AuthGrpcClient } from './auth-grpc.client';
 import { LegalGrpcClient } from './legal-grpc.client';
+import { AuditGrpcClient } from './audit-grpc.client';
+import { MailGrpcClient } from './mail-grpc.client';
+import { NotificationGrpcClient } from './notification-grpc.client';
 
 /**
  * Options for which clients to register
@@ -66,6 +72,24 @@ export interface GrpcClientsOptions {
    * @default true
    */
   legal?: boolean | GrpcClientConfig;
+
+  /**
+   * Enable Audit service client (port 50054)
+   * @default false
+   */
+  audit?: boolean | GrpcClientConfig;
+
+  /**
+   * Enable Mail service client (port 50054)
+   * @default false
+   */
+  mail?: boolean | GrpcClientConfig;
+
+  /**
+   * Enable Notification service client (port 50055)
+   * @default false
+   */
+  notification?: boolean | GrpcClientConfig;
 }
 
 /**
@@ -82,7 +106,7 @@ export class GrpcClientsModule {
   /**
    * Register gRPC clients synchronously
    *
-   * @param options - Which clients to register (all by default)
+   * @param options - Which clients to register (identity, auth, legal by default)
    */
   static forRoot(options?: GrpcClientsOptions): DynamicModule {
     const opts = options ?? { identity: true, auth: true, legal: true };
@@ -162,6 +186,39 @@ export class GrpcClientsModule {
       exports.push(GRPC_SERVICES.LEGAL);
     }
 
+    // Audit client
+    if (options.audit) {
+      const config = typeof options.audit === 'object' ? options.audit : undefined;
+      clientsModuleOptions.push({
+        name: GRPC_SERVICES.AUDIT,
+        ...createAuditGrpcOptions(config),
+      });
+      providers.push(AuditGrpcClient);
+      exports.push(GRPC_SERVICES.AUDIT);
+    }
+
+    // Mail client
+    if (options.mail) {
+      const config = typeof options.mail === 'object' ? options.mail : undefined;
+      clientsModuleOptions.push({
+        name: GRPC_SERVICES.MAIL,
+        ...createMailGrpcOptions(config),
+      });
+      providers.push(MailGrpcClient);
+      exports.push(GRPC_SERVICES.MAIL);
+    }
+
+    // Notification client
+    if (options.notification) {
+      const config = typeof options.notification === 'object' ? options.notification : undefined;
+      clientsModuleOptions.push({
+        name: GRPC_SERVICES.NOTIFICATION,
+        ...createNotificationGrpcOptions(config),
+      });
+      providers.push(NotificationGrpcClient);
+      exports.push(GRPC_SERVICES.NOTIFICATION);
+    }
+
     return { clientsModuleOptions, providers, exports };
   }
 
@@ -169,7 +226,14 @@ export class GrpcClientsModule {
    * Create async providers for clients
    */
   private static createAsyncProviders(_options: GrpcClientsAsyncOptions): Provider[] {
-    return [IdentityGrpcClient, AuthGrpcClient, LegalGrpcClient];
+    return [
+      IdentityGrpcClient,
+      AuthGrpcClient,
+      LegalGrpcClient,
+      AuditGrpcClient,
+      MailGrpcClient,
+      NotificationGrpcClient,
+    ];
   }
 
   /**
@@ -211,6 +275,34 @@ export class GrpcClientsModule {
         },
         inject,
       },
+      {
+        name: GRPC_SERVICES.AUDIT,
+        useFactory: async (...args: unknown[]) => {
+          const config = await factory(...args);
+          const auditConfig = typeof config.audit === 'object' ? config.audit : undefined;
+          return createAuditGrpcOptions(auditConfig);
+        },
+        inject,
+      },
+      {
+        name: GRPC_SERVICES.MAIL,
+        useFactory: async (...args: unknown[]) => {
+          const config = await factory(...args);
+          const mailConfig = typeof config.mail === 'object' ? config.mail : undefined;
+          return createMailGrpcOptions(mailConfig);
+        },
+        inject,
+      },
+      {
+        name: GRPC_SERVICES.NOTIFICATION,
+        useFactory: async (...args: unknown[]) => {
+          const config = await factory(...args);
+          const notificationConfig =
+            typeof config.notification === 'object' ? config.notification : undefined;
+          return createNotificationGrpcOptions(notificationConfig);
+        },
+        inject,
+      },
     ];
   }
 }
@@ -223,8 +315,6 @@ export class IdentityGrpcClientModule {
   static forRoot(config?: GrpcClientConfig): DynamicModule {
     return GrpcClientsModule.forRoot({
       identity: config ?? true,
-      auth: false,
-      legal: false,
     });
   }
 }
@@ -236,9 +326,7 @@ export class IdentityGrpcClientModule {
 export class AuthGrpcClientModule {
   static forRoot(config?: GrpcClientConfig): DynamicModule {
     return GrpcClientsModule.forRoot({
-      identity: false,
       auth: config ?? true,
-      legal: false,
     });
   }
 }
@@ -250,9 +338,43 @@ export class AuthGrpcClientModule {
 export class LegalGrpcClientModule {
   static forRoot(config?: GrpcClientConfig): DynamicModule {
     return GrpcClientsModule.forRoot({
-      identity: false,
-      auth: false,
       legal: config ?? true,
+    });
+  }
+}
+
+/**
+ * Register only Audit client
+ */
+@Module({})
+export class AuditGrpcClientModule {
+  static forRoot(config?: GrpcClientConfig): DynamicModule {
+    return GrpcClientsModule.forRoot({
+      audit: config ?? true,
+    });
+  }
+}
+
+/**
+ * Register only Mail client
+ */
+@Module({})
+export class MailGrpcClientModule {
+  static forRoot(config?: GrpcClientConfig): DynamicModule {
+    return GrpcClientsModule.forRoot({
+      mail: config ?? true,
+    });
+  }
+}
+
+/**
+ * Register only Notification client
+ */
+@Module({})
+export class NotificationGrpcClientModule {
+  static forRoot(config?: GrpcClientConfig): DynamicModule {
+    return GrpcClientsModule.forRoot({
+      notification: config ?? true,
     });
   }
 }

@@ -140,6 +140,44 @@ export var AuthEventType;
      * @generated from protobuf enum value: AUTH_EVENT_TYPE_OPERATOR_LOGOUT = 25;
      */
     AuthEventType[AuthEventType["OPERATOR_LOGOUT"] = 25] = "OPERATOR_LOGOUT";
+    /**
+     * Email events (for compliance tracking)
+     *
+     * @generated from protobuf enum value: AUTH_EVENT_TYPE_EMAIL_VERIFICATION_SENT = 26;
+     */
+    AuthEventType[AuthEventType["EMAIL_VERIFICATION_SENT"] = 26] = "EMAIL_VERIFICATION_SENT";
+    /**
+     * @generated from protobuf enum value: AUTH_EVENT_TYPE_EMAIL_VERIFICATION_CLICKED = 27;
+     */
+    AuthEventType[AuthEventType["EMAIL_VERIFICATION_CLICKED"] = 27] = "EMAIL_VERIFICATION_CLICKED";
+    /**
+     * @generated from protobuf enum value: AUTH_EVENT_TYPE_PASSWORD_RESET_EMAIL_SENT = 28;
+     */
+    AuthEventType[AuthEventType["PASSWORD_RESET_EMAIL_SENT"] = 28] = "PASSWORD_RESET_EMAIL_SENT";
+    /**
+     * @generated from protobuf enum value: AUTH_EVENT_TYPE_PASSWORD_RESET_EMAIL_CLICKED = 29;
+     */
+    AuthEventType[AuthEventType["PASSWORD_RESET_EMAIL_CLICKED"] = 29] = "PASSWORD_RESET_EMAIL_CLICKED";
+    /**
+     * @generated from protobuf enum value: AUTH_EVENT_TYPE_MFA_CODE_EMAIL_SENT = 30;
+     */
+    AuthEventType[AuthEventType["MFA_CODE_EMAIL_SENT"] = 30] = "MFA_CODE_EMAIL_SENT";
+    /**
+     * @generated from protobuf enum value: AUTH_EVENT_TYPE_ACCOUNT_LOCKED_EMAIL_SENT = 31;
+     */
+    AuthEventType[AuthEventType["ACCOUNT_LOCKED_EMAIL_SENT"] = 31] = "ACCOUNT_LOCKED_EMAIL_SENT";
+    /**
+     * @generated from protobuf enum value: AUTH_EVENT_TYPE_ACCOUNT_UNLOCKED_EMAIL_SENT = 32;
+     */
+    AuthEventType[AuthEventType["ACCOUNT_UNLOCKED_EMAIL_SENT"] = 32] = "ACCOUNT_UNLOCKED_EMAIL_SENT";
+    /**
+     * @generated from protobuf enum value: AUTH_EVENT_TYPE_ADMIN_INVITE_EMAIL_SENT = 33;
+     */
+    AuthEventType[AuthEventType["ADMIN_INVITE_EMAIL_SENT"] = 33] = "ADMIN_INVITE_EMAIL_SENT";
+    /**
+     * @generated from protobuf enum value: AUTH_EVENT_TYPE_PARTNER_INVITE_EMAIL_SENT = 34;
+     */
+    AuthEventType[AuthEventType["PARTNER_INVITE_EMAIL_SENT"] = 34] = "PARTNER_INVITE_EMAIL_SENT";
 })(AuthEventType || (AuthEventType = {}));
 /**
  * AccountType identifies the type of account
@@ -269,6 +307,24 @@ export var SecurityEventType;
      * @generated from protobuf enum value: SECURITY_EVENT_TYPE_BULK_DATA_EXPORT = 14;
      */
     SecurityEventType[SecurityEventType["BULK_DATA_EXPORT"] = 14] = "BULK_DATA_EXPORT";
+    /**
+     * Email delivery issues (for security monitoring)
+     *
+     * @generated from protobuf enum value: SECURITY_EVENT_TYPE_EMAIL_HARD_BOUNCE = 15;
+     */
+    SecurityEventType[SecurityEventType["EMAIL_HARD_BOUNCE"] = 15] = "EMAIL_HARD_BOUNCE";
+    /**
+     * @generated from protobuf enum value: SECURITY_EVENT_TYPE_EMAIL_SOFT_BOUNCE = 16;
+     */
+    SecurityEventType[SecurityEventType["EMAIL_SOFT_BOUNCE"] = 16] = "EMAIL_SOFT_BOUNCE";
+    /**
+     * @generated from protobuf enum value: SECURITY_EVENT_TYPE_EMAIL_COMPLAINT = 17;
+     */
+    SecurityEventType[SecurityEventType["EMAIL_COMPLAINT"] = 17] = "EMAIL_COMPLAINT";
+    /**
+     * @generated from protobuf enum value: SECURITY_EVENT_TYPE_EMAIL_DELIVERY_FAILED = 18;
+     */
+    SecurityEventType[SecurityEventType["EMAIL_DELIVERY_FAILED"] = 18] = "EMAIL_DELIVERY_FAILED";
 })(SecurityEventType || (SecurityEventType = {}));
 /**
  * SecurityEventSeverity indicates the severity level
@@ -620,21 +676,24 @@ export const AuthEvent = new AuthEvent$Type();
 class LogAuthEventRequest$Type extends MessageType {
     constructor() {
         super("audit.v1.LogAuthEventRequest", [
-            { no: 1, name: "event_type", kind: "enum", T: () => ["audit.v1.AuthEventType", AuthEventType, "AUTH_EVENT_TYPE_"] },
-            { no: 2, name: "account_type", kind: "enum", T: () => ["audit.v1.AccountType", AccountType, "ACCOUNT_TYPE_"] },
-            { no: 3, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "session_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "ip_address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "user_agent", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 7, name: "device_fingerprint", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 8, name: "country_code", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 9, name: "result", kind: "enum", T: () => ["audit.v1.AuthEventResult", AuthEventResult, "AUTH_EVENT_RESULT_"] },
-            { no: 10, name: "failure_reason", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 11, name: "metadata", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } }
+            { no: 1, name: "tenant_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "event_type", kind: "enum", T: () => ["audit.v1.AuthEventType", AuthEventType, "AUTH_EVENT_TYPE_"] },
+            { no: 3, name: "account_type", kind: "enum", T: () => ["audit.v1.AccountType", AccountType, "ACCOUNT_TYPE_"] },
+            { no: 4, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "session_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "ip_address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "user_agent", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "device_fingerprint", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 9, name: "country_code", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 10, name: "result", kind: "enum", T: () => ["audit.v1.AuthEventResult", AuthEventResult, "AUTH_EVENT_RESULT_"] },
+            { no: 11, name: "failure_reason", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 12, name: "metadata", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } },
+            { no: 13, name: "source_service", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value) {
         const message = globalThis.Object.create((this.messagePrototype));
+        message.tenantId = "";
         message.eventType = 0;
         message.accountType = 0;
         message.accountId = "";
@@ -646,6 +705,7 @@ class LogAuthEventRequest$Type extends MessageType {
         message.result = 0;
         message.failureReason = "";
         message.metadata = {};
+        message.sourceService = "";
         if (value !== undefined)
             reflectionMergePartial(this, message, value);
         return message;
@@ -655,38 +715,44 @@ class LogAuthEventRequest$Type extends MessageType {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* audit.v1.AuthEventType event_type */ 1:
+                case /* string tenant_id */ 1:
+                    message.tenantId = reader.string();
+                    break;
+                case /* audit.v1.AuthEventType event_type */ 2:
                     message.eventType = reader.int32();
                     break;
-                case /* audit.v1.AccountType account_type */ 2:
+                case /* audit.v1.AccountType account_type */ 3:
                     message.accountType = reader.int32();
                     break;
-                case /* string account_id */ 3:
+                case /* string account_id */ 4:
                     message.accountId = reader.string();
                     break;
-                case /* string session_id */ 4:
+                case /* string session_id */ 5:
                     message.sessionId = reader.string();
                     break;
-                case /* string ip_address */ 5:
+                case /* string ip_address */ 6:
                     message.ipAddress = reader.string();
                     break;
-                case /* string user_agent */ 6:
+                case /* string user_agent */ 7:
                     message.userAgent = reader.string();
                     break;
-                case /* string device_fingerprint */ 7:
+                case /* string device_fingerprint */ 8:
                     message.deviceFingerprint = reader.string();
                     break;
-                case /* string country_code */ 8:
+                case /* string country_code */ 9:
                     message.countryCode = reader.string();
                     break;
-                case /* audit.v1.AuthEventResult result */ 9:
+                case /* audit.v1.AuthEventResult result */ 10:
                     message.result = reader.int32();
                     break;
-                case /* string failure_reason */ 10:
+                case /* string failure_reason */ 11:
                     message.failureReason = reader.string();
                     break;
-                case /* map<string, string> metadata */ 11:
-                    this.binaryReadMap11(message.metadata, reader, options);
+                case /* map<string, string> metadata */ 12:
+                    this.binaryReadMap12(message.metadata, reader, options);
+                    break;
+                case /* string source_service */ 13:
+                    message.sourceService = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -699,7 +765,7 @@ class LogAuthEventRequest$Type extends MessageType {
         }
         return message;
     }
-    binaryReadMap11(map, reader, options) {
+    binaryReadMap12(map, reader, options) {
         let len = reader.uint32(), end = reader.pos + len, key, val;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
@@ -716,39 +782,45 @@ class LogAuthEventRequest$Type extends MessageType {
         map[key ?? ""] = val ?? "";
     }
     internalBinaryWrite(message, writer, options) {
-        /* audit.v1.AuthEventType event_type = 1; */
+        /* string tenant_id = 1; */
+        if (message.tenantId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tenantId);
+        /* audit.v1.AuthEventType event_type = 2; */
         if (message.eventType !== 0)
-            writer.tag(1, WireType.Varint).int32(message.eventType);
-        /* audit.v1.AccountType account_type = 2; */
+            writer.tag(2, WireType.Varint).int32(message.eventType);
+        /* audit.v1.AccountType account_type = 3; */
         if (message.accountType !== 0)
-            writer.tag(2, WireType.Varint).int32(message.accountType);
-        /* string account_id = 3; */
+            writer.tag(3, WireType.Varint).int32(message.accountType);
+        /* string account_id = 4; */
         if (message.accountId !== "")
-            writer.tag(3, WireType.LengthDelimited).string(message.accountId);
-        /* string session_id = 4; */
+            writer.tag(4, WireType.LengthDelimited).string(message.accountId);
+        /* string session_id = 5; */
         if (message.sessionId !== "")
-            writer.tag(4, WireType.LengthDelimited).string(message.sessionId);
-        /* string ip_address = 5; */
+            writer.tag(5, WireType.LengthDelimited).string(message.sessionId);
+        /* string ip_address = 6; */
         if (message.ipAddress !== "")
-            writer.tag(5, WireType.LengthDelimited).string(message.ipAddress);
-        /* string user_agent = 6; */
+            writer.tag(6, WireType.LengthDelimited).string(message.ipAddress);
+        /* string user_agent = 7; */
         if (message.userAgent !== "")
-            writer.tag(6, WireType.LengthDelimited).string(message.userAgent);
-        /* string device_fingerprint = 7; */
+            writer.tag(7, WireType.LengthDelimited).string(message.userAgent);
+        /* string device_fingerprint = 8; */
         if (message.deviceFingerprint !== "")
-            writer.tag(7, WireType.LengthDelimited).string(message.deviceFingerprint);
-        /* string country_code = 8; */
+            writer.tag(8, WireType.LengthDelimited).string(message.deviceFingerprint);
+        /* string country_code = 9; */
         if (message.countryCode !== "")
-            writer.tag(8, WireType.LengthDelimited).string(message.countryCode);
-        /* audit.v1.AuthEventResult result = 9; */
+            writer.tag(9, WireType.LengthDelimited).string(message.countryCode);
+        /* audit.v1.AuthEventResult result = 10; */
         if (message.result !== 0)
-            writer.tag(9, WireType.Varint).int32(message.result);
-        /* string failure_reason = 10; */
+            writer.tag(10, WireType.Varint).int32(message.result);
+        /* string failure_reason = 11; */
         if (message.failureReason !== "")
-            writer.tag(10, WireType.LengthDelimited).string(message.failureReason);
-        /* map<string, string> metadata = 11; */
+            writer.tag(11, WireType.LengthDelimited).string(message.failureReason);
+        /* map<string, string> metadata = 12; */
         for (let k of globalThis.Object.keys(message.metadata))
-            writer.tag(11, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.metadata[k]).join();
+            writer.tag(12, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.metadata[k]).join();
+        /* string source_service = 13; */
+        if (message.sourceService !== "")
+            writer.tag(13, WireType.LengthDelimited).string(message.sourceService);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1182,21 +1254,24 @@ export const SecurityEvent = new SecurityEvent$Type();
 class LogSecurityEventRequest$Type extends MessageType {
     constructor() {
         super("audit.v1.LogSecurityEventRequest", [
-            { no: 1, name: "event_type", kind: "enum", T: () => ["audit.v1.SecurityEventType", SecurityEventType, "SECURITY_EVENT_TYPE_"] },
-            { no: 2, name: "severity", kind: "enum", T: () => ["audit.v1.SecurityEventSeverity", SecurityEventSeverity, "SECURITY_EVENT_SEVERITY_"] },
-            { no: 3, name: "subject_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "subject_type", kind: "enum", T: () => ["audit.v1.AccountType", AccountType, "ACCOUNT_TYPE_"] },
-            { no: 5, name: "ip_address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "user_agent", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 7, name: "country_code", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 8, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 9, name: "metadata", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } },
-            { no: 10, name: "action_taken", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 11, name: "action_description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "tenant_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "event_type", kind: "enum", T: () => ["audit.v1.SecurityEventType", SecurityEventType, "SECURITY_EVENT_TYPE_"] },
+            { no: 3, name: "severity", kind: "enum", T: () => ["audit.v1.SecurityEventSeverity", SecurityEventSeverity, "SECURITY_EVENT_SEVERITY_"] },
+            { no: 4, name: "subject_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "subject_type", kind: "enum", T: () => ["audit.v1.AccountType", AccountType, "ACCOUNT_TYPE_"] },
+            { no: 6, name: "ip_address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "user_agent", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "country_code", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 9, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 10, name: "metadata", kind: "map", K: 9 /*ScalarType.STRING*/, V: { kind: "scalar", T: 9 /*ScalarType.STRING*/ } },
+            { no: 11, name: "action_taken", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 12, name: "action_description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 13, name: "source_service", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value) {
         const message = globalThis.Object.create((this.messagePrototype));
+        message.tenantId = "";
         message.eventType = 0;
         message.severity = 0;
         message.subjectId = "";
@@ -1208,6 +1283,7 @@ class LogSecurityEventRequest$Type extends MessageType {
         message.metadata = {};
         message.actionTaken = false;
         message.actionDescription = "";
+        message.sourceService = "";
         if (value !== undefined)
             reflectionMergePartial(this, message, value);
         return message;
@@ -1217,38 +1293,44 @@ class LogSecurityEventRequest$Type extends MessageType {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* audit.v1.SecurityEventType event_type */ 1:
+                case /* string tenant_id */ 1:
+                    message.tenantId = reader.string();
+                    break;
+                case /* audit.v1.SecurityEventType event_type */ 2:
                     message.eventType = reader.int32();
                     break;
-                case /* audit.v1.SecurityEventSeverity severity */ 2:
+                case /* audit.v1.SecurityEventSeverity severity */ 3:
                     message.severity = reader.int32();
                     break;
-                case /* string subject_id */ 3:
+                case /* string subject_id */ 4:
                     message.subjectId = reader.string();
                     break;
-                case /* audit.v1.AccountType subject_type */ 4:
+                case /* audit.v1.AccountType subject_type */ 5:
                     message.subjectType = reader.int32();
                     break;
-                case /* string ip_address */ 5:
+                case /* string ip_address */ 6:
                     message.ipAddress = reader.string();
                     break;
-                case /* string user_agent */ 6:
+                case /* string user_agent */ 7:
                     message.userAgent = reader.string();
                     break;
-                case /* string country_code */ 7:
+                case /* string country_code */ 8:
                     message.countryCode = reader.string();
                     break;
-                case /* string description */ 8:
+                case /* string description */ 9:
                     message.description = reader.string();
                     break;
-                case /* map<string, string> metadata */ 9:
-                    this.binaryReadMap9(message.metadata, reader, options);
+                case /* map<string, string> metadata */ 10:
+                    this.binaryReadMap10(message.metadata, reader, options);
                     break;
-                case /* bool action_taken */ 10:
+                case /* bool action_taken */ 11:
                     message.actionTaken = reader.bool();
                     break;
-                case /* string action_description */ 11:
+                case /* string action_description */ 12:
                     message.actionDescription = reader.string();
+                    break;
+                case /* string source_service */ 13:
+                    message.sourceService = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1261,7 +1343,7 @@ class LogSecurityEventRequest$Type extends MessageType {
         }
         return message;
     }
-    binaryReadMap9(map, reader, options) {
+    binaryReadMap10(map, reader, options) {
         let len = reader.uint32(), end = reader.pos + len, key, val;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
@@ -1278,39 +1360,45 @@ class LogSecurityEventRequest$Type extends MessageType {
         map[key ?? ""] = val ?? "";
     }
     internalBinaryWrite(message, writer, options) {
-        /* audit.v1.SecurityEventType event_type = 1; */
+        /* string tenant_id = 1; */
+        if (message.tenantId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tenantId);
+        /* audit.v1.SecurityEventType event_type = 2; */
         if (message.eventType !== 0)
-            writer.tag(1, WireType.Varint).int32(message.eventType);
-        /* audit.v1.SecurityEventSeverity severity = 2; */
+            writer.tag(2, WireType.Varint).int32(message.eventType);
+        /* audit.v1.SecurityEventSeverity severity = 3; */
         if (message.severity !== 0)
-            writer.tag(2, WireType.Varint).int32(message.severity);
-        /* string subject_id = 3; */
+            writer.tag(3, WireType.Varint).int32(message.severity);
+        /* string subject_id = 4; */
         if (message.subjectId !== "")
-            writer.tag(3, WireType.LengthDelimited).string(message.subjectId);
-        /* audit.v1.AccountType subject_type = 4; */
+            writer.tag(4, WireType.LengthDelimited).string(message.subjectId);
+        /* audit.v1.AccountType subject_type = 5; */
         if (message.subjectType !== 0)
-            writer.tag(4, WireType.Varint).int32(message.subjectType);
-        /* string ip_address = 5; */
+            writer.tag(5, WireType.Varint).int32(message.subjectType);
+        /* string ip_address = 6; */
         if (message.ipAddress !== "")
-            writer.tag(5, WireType.LengthDelimited).string(message.ipAddress);
-        /* string user_agent = 6; */
+            writer.tag(6, WireType.LengthDelimited).string(message.ipAddress);
+        /* string user_agent = 7; */
         if (message.userAgent !== "")
-            writer.tag(6, WireType.LengthDelimited).string(message.userAgent);
-        /* string country_code = 7; */
+            writer.tag(7, WireType.LengthDelimited).string(message.userAgent);
+        /* string country_code = 8; */
         if (message.countryCode !== "")
-            writer.tag(7, WireType.LengthDelimited).string(message.countryCode);
-        /* string description = 8; */
+            writer.tag(8, WireType.LengthDelimited).string(message.countryCode);
+        /* string description = 9; */
         if (message.description !== "")
-            writer.tag(8, WireType.LengthDelimited).string(message.description);
-        /* map<string, string> metadata = 9; */
+            writer.tag(9, WireType.LengthDelimited).string(message.description);
+        /* map<string, string> metadata = 10; */
         for (let k of globalThis.Object.keys(message.metadata))
-            writer.tag(9, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.metadata[k]).join();
-        /* bool action_taken = 10; */
+            writer.tag(10, WireType.LengthDelimited).fork().tag(1, WireType.LengthDelimited).string(k).tag(2, WireType.LengthDelimited).string(message.metadata[k]).join();
+        /* bool action_taken = 11; */
         if (message.actionTaken !== false)
-            writer.tag(10, WireType.Varint).bool(message.actionTaken);
-        /* string action_description = 11; */
+            writer.tag(11, WireType.Varint).bool(message.actionTaken);
+        /* string action_description = 12; */
         if (message.actionDescription !== "")
-            writer.tag(11, WireType.LengthDelimited).string(message.actionDescription);
+            writer.tag(12, WireType.LengthDelimited).string(message.actionDescription);
+        /* string source_service = 13; */
+        if (message.sourceService !== "")
+            writer.tag(13, WireType.LengthDelimited).string(message.sourceService);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

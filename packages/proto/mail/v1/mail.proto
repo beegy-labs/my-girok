@@ -1,0 +1,172 @@
+syntax = "proto3";
+
+package mail.v1;
+
+option go_package = "github.com/beegy-labs/my-girok/gen/mail/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// MailService provides email sending and inbox management operations
+service MailService {
+  // Send a single email
+  rpc SendEmail(SendEmailRequest) returns (SendEmailResponse);
+
+  // Send bulk emails
+  rpc SendBulkEmail(SendBulkEmailRequest) returns (SendBulkEmailResponse);
+
+  // Get email status by ID
+  rpc GetEmailStatus(GetEmailStatusRequest) returns (GetEmailStatusResponse);
+
+  // Get inbox for an account
+  rpc GetInbox(GetInboxRequest) returns (GetInboxResponse);
+
+  // Mark inbox item as read
+  rpc MarkAsRead(MarkAsReadRequest) returns (MarkAsReadResponse);
+}
+
+// EmailTemplate represents predefined email templates
+enum EmailTemplate {
+  EMAIL_TEMPLATE_UNSPECIFIED = 0;
+  EMAIL_TEMPLATE_ADMIN_INVITE = 1;
+  EMAIL_TEMPLATE_PARTNER_INVITE = 2;
+  EMAIL_TEMPLATE_PASSWORD_RESET = 3;
+  EMAIL_TEMPLATE_WELCOME = 4;
+  EMAIL_TEMPLATE_EMAIL_VERIFICATION = 5;
+  EMAIL_TEMPLATE_MFA_CODE = 6;
+  EMAIL_TEMPLATE_ACCOUNT_LOCKED = 7;
+  EMAIL_TEMPLATE_ACCOUNT_UNLOCKED = 8;
+}
+
+// EmailStatus represents the delivery status of an email
+enum EmailStatus {
+  EMAIL_STATUS_UNSPECIFIED = 0;
+  EMAIL_STATUS_PENDING = 1;
+  EMAIL_STATUS_SENT = 2;
+  EMAIL_STATUS_FAILED = 3;
+  EMAIL_STATUS_BOUNCED = 4;
+  EMAIL_STATUS_OPENED = 5;
+  EMAIL_STATUS_CLICKED = 6;
+}
+
+// SendEmailRequest for sending a single email
+message SendEmailRequest {
+  string tenant_id = 1;
+  string account_id = 2;           // Recipient account ID (optional - for inbox creation)
+  string to_email = 3;
+  EmailTemplate template = 4;
+  string locale = 5;               // ko, en, ja, zh
+  map<string, string> variables = 6;
+  string source_service = 7;       // auth-bff, identity-service
+  string from_email = 8;           // noreply@, support@
+  map<string, string> metadata = 9;
+}
+
+// SendEmailResponse
+message SendEmailResponse {
+  bool success = 1;
+  string email_log_id = 2;
+  string message = 3;
+}
+
+// SendBulkEmailRequest for sending multiple emails
+message SendBulkEmailRequest {
+  string tenant_id = 1;
+  repeated BulkEmailItem emails = 2;
+  string source_service = 3;
+  string from_email = 4;
+}
+
+// BulkEmailItem represents a single email in bulk send
+message BulkEmailItem {
+  string account_id = 1;
+  string to_email = 2;
+  EmailTemplate template = 3;
+  string locale = 4;
+  map<string, string> variables = 5;
+  map<string, string> metadata = 6;
+}
+
+// SendBulkEmailResponse
+message SendBulkEmailResponse {
+  bool success = 1;
+  int32 total_count = 2;
+  int32 queued_count = 3;
+  int32 failed_count = 4;
+  repeated BulkEmailResult results = 5;
+  string message = 6;
+}
+
+// BulkEmailResult for individual email in bulk send
+message BulkEmailResult {
+  string to_email = 1;
+  bool success = 2;
+  string email_log_id = 3;
+  string error = 4;
+}
+
+// GetEmailStatusRequest
+message GetEmailStatusRequest {
+  string email_log_id = 1;
+}
+
+// GetEmailStatusResponse
+message GetEmailStatusResponse {
+  string email_log_id = 1;
+  string tenant_id = 2;
+  string to_email = 3;
+  EmailTemplate template = 4;
+  EmailStatus status = 5;
+  string source_service = 6;
+  string from_email = 7;
+  google.protobuf.Timestamp sent_at = 8;
+  google.protobuf.Timestamp opened_at = 9;
+  google.protobuf.Timestamp clicked_at = 10;
+  string error = 11;
+  google.protobuf.Timestamp created_at = 12;
+}
+
+// GetInboxRequest
+message GetInboxRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+  bool include_read = 5;
+}
+
+// GetInboxResponse
+message GetInboxResponse {
+  repeated InboxItem items = 1;
+  int32 total_count = 2;
+  int32 unread_count = 3;
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+// InboxItem represents an email in the inbox
+message InboxItem {
+  string id = 1;
+  string email_log_id = 2;
+  string subject = 3;
+  string preview = 4;
+  EmailTemplate template = 5;
+  string from_email = 6;
+  string source_service = 7;
+  bool is_read = 8;
+  google.protobuf.Timestamp read_at = 9;
+  google.protobuf.Timestamp created_at = 10;
+}
+
+// MarkAsReadRequest
+message MarkAsReadRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+  repeated string inbox_ids = 3;
+}
+
+// MarkAsReadResponse
+message MarkAsReadResponse {
+  bool success = 1;
+  int32 updated_count = 2;
+  string message = 3;
+}

@@ -85,51 +85,59 @@ export interface AuthEvent {
  */
 export interface LogAuthEventRequest {
   /**
-   * @generated from protobuf field: audit.v1.AuthEventType event_type = 1
+   * @generated from protobuf field: string tenant_id = 1
+   */
+  tenantId: string;
+  /**
+   * @generated from protobuf field: audit.v1.AuthEventType event_type = 2
    */
   eventType: AuthEventType;
   /**
-   * @generated from protobuf field: audit.v1.AccountType account_type = 2
+   * @generated from protobuf field: audit.v1.AccountType account_type = 3
    */
   accountType: AccountType;
   /**
-   * @generated from protobuf field: string account_id = 3
+   * @generated from protobuf field: string account_id = 4
    */
   accountId: string;
   /**
-   * @generated from protobuf field: string session_id = 4
+   * @generated from protobuf field: string session_id = 5
    */
   sessionId: string;
   /**
-   * @generated from protobuf field: string ip_address = 5
+   * @generated from protobuf field: string ip_address = 6
    */
   ipAddress: string;
   /**
-   * @generated from protobuf field: string user_agent = 6
+   * @generated from protobuf field: string user_agent = 7
    */
   userAgent: string;
   /**
-   * @generated from protobuf field: string device_fingerprint = 7
+   * @generated from protobuf field: string device_fingerprint = 8
    */
   deviceFingerprint: string;
   /**
-   * @generated from protobuf field: string country_code = 8
+   * @generated from protobuf field: string country_code = 9
    */
   countryCode: string;
   /**
-   * @generated from protobuf field: audit.v1.AuthEventResult result = 9
+   * @generated from protobuf field: audit.v1.AuthEventResult result = 10
    */
   result: AuthEventResult;
   /**
-   * @generated from protobuf field: string failure_reason = 10
+   * @generated from protobuf field: string failure_reason = 11
    */
   failureReason: string;
   /**
-   * @generated from protobuf field: map<string, string> metadata = 11
+   * @generated from protobuf field: map<string, string> metadata = 12
    */
   metadata: {
     [key: string]: string;
   };
+  /**
+   * @generated from protobuf field: string source_service = 13
+   */
+  sourceService: string;
 }
 /**
  * @generated from protobuf message audit.v1.LogAuthEventResponse
@@ -310,51 +318,59 @@ export interface SecurityEvent {
  */
 export interface LogSecurityEventRequest {
   /**
-   * @generated from protobuf field: audit.v1.SecurityEventType event_type = 1
+   * @generated from protobuf field: string tenant_id = 1
+   */
+  tenantId: string;
+  /**
+   * @generated from protobuf field: audit.v1.SecurityEventType event_type = 2
    */
   eventType: SecurityEventType;
   /**
-   * @generated from protobuf field: audit.v1.SecurityEventSeverity severity = 2
+   * @generated from protobuf field: audit.v1.SecurityEventSeverity severity = 3
    */
   severity: SecurityEventSeverity;
   /**
-   * @generated from protobuf field: string subject_id = 3
+   * @generated from protobuf field: string subject_id = 4
    */
   subjectId: string;
   /**
-   * @generated from protobuf field: audit.v1.AccountType subject_type = 4
+   * @generated from protobuf field: audit.v1.AccountType subject_type = 5
    */
   subjectType: AccountType;
   /**
-   * @generated from protobuf field: string ip_address = 5
+   * @generated from protobuf field: string ip_address = 6
    */
   ipAddress: string;
   /**
-   * @generated from protobuf field: string user_agent = 6
+   * @generated from protobuf field: string user_agent = 7
    */
   userAgent: string;
   /**
-   * @generated from protobuf field: string country_code = 7
+   * @generated from protobuf field: string country_code = 8
    */
   countryCode: string;
   /**
-   * @generated from protobuf field: string description = 8
+   * @generated from protobuf field: string description = 9
    */
   description: string;
   /**
-   * @generated from protobuf field: map<string, string> metadata = 9
+   * @generated from protobuf field: map<string, string> metadata = 10
    */
   metadata: {
     [key: string]: string;
   };
   /**
-   * @generated from protobuf field: bool action_taken = 10
+   * @generated from protobuf field: bool action_taken = 11
    */
   actionTaken: boolean;
   /**
-   * @generated from protobuf field: string action_description = 11
+   * @generated from protobuf field: string action_description = 12
    */
   actionDescription: string;
+  /**
+   * @generated from protobuf field: string source_service = 13
+   */
+  sourceService: string;
 }
 /**
  * @generated from protobuf message audit.v1.LogSecurityEventResponse
@@ -876,6 +892,44 @@ export declare enum AuthEventType {
    * @generated from protobuf enum value: AUTH_EVENT_TYPE_OPERATOR_LOGOUT = 25;
    */
   OPERATOR_LOGOUT = 25,
+  /**
+   * Email events (for compliance tracking)
+   *
+   * @generated from protobuf enum value: AUTH_EVENT_TYPE_EMAIL_VERIFICATION_SENT = 26;
+   */
+  EMAIL_VERIFICATION_SENT = 26,
+  /**
+   * @generated from protobuf enum value: AUTH_EVENT_TYPE_EMAIL_VERIFICATION_CLICKED = 27;
+   */
+  EMAIL_VERIFICATION_CLICKED = 27,
+  /**
+   * @generated from protobuf enum value: AUTH_EVENT_TYPE_PASSWORD_RESET_EMAIL_SENT = 28;
+   */
+  PASSWORD_RESET_EMAIL_SENT = 28,
+  /**
+   * @generated from protobuf enum value: AUTH_EVENT_TYPE_PASSWORD_RESET_EMAIL_CLICKED = 29;
+   */
+  PASSWORD_RESET_EMAIL_CLICKED = 29,
+  /**
+   * @generated from protobuf enum value: AUTH_EVENT_TYPE_MFA_CODE_EMAIL_SENT = 30;
+   */
+  MFA_CODE_EMAIL_SENT = 30,
+  /**
+   * @generated from protobuf enum value: AUTH_EVENT_TYPE_ACCOUNT_LOCKED_EMAIL_SENT = 31;
+   */
+  ACCOUNT_LOCKED_EMAIL_SENT = 31,
+  /**
+   * @generated from protobuf enum value: AUTH_EVENT_TYPE_ACCOUNT_UNLOCKED_EMAIL_SENT = 32;
+   */
+  ACCOUNT_UNLOCKED_EMAIL_SENT = 32,
+  /**
+   * @generated from protobuf enum value: AUTH_EVENT_TYPE_ADMIN_INVITE_EMAIL_SENT = 33;
+   */
+  ADMIN_INVITE_EMAIL_SENT = 33,
+  /**
+   * @generated from protobuf enum value: AUTH_EVENT_TYPE_PARTNER_INVITE_EMAIL_SENT = 34;
+   */
+  PARTNER_INVITE_EMAIL_SENT = 34,
 }
 /**
  * AccountType identifies the type of account
@@ -999,6 +1053,24 @@ export declare enum SecurityEventType {
    * @generated from protobuf enum value: SECURITY_EVENT_TYPE_BULK_DATA_EXPORT = 14;
    */
   BULK_DATA_EXPORT = 14,
+  /**
+   * Email delivery issues (for security monitoring)
+   *
+   * @generated from protobuf enum value: SECURITY_EVENT_TYPE_EMAIL_HARD_BOUNCE = 15;
+   */
+  EMAIL_HARD_BOUNCE = 15,
+  /**
+   * @generated from protobuf enum value: SECURITY_EVENT_TYPE_EMAIL_SOFT_BOUNCE = 16;
+   */
+  EMAIL_SOFT_BOUNCE = 16,
+  /**
+   * @generated from protobuf enum value: SECURITY_EVENT_TYPE_EMAIL_COMPLAINT = 17;
+   */
+  EMAIL_COMPLAINT = 17,
+  /**
+   * @generated from protobuf enum value: SECURITY_EVENT_TYPE_EMAIL_DELIVERY_FAILED = 18;
+   */
+  EMAIL_DELIVERY_FAILED = 18,
 }
 /**
  * SecurityEventSeverity indicates the severity level
@@ -1207,7 +1279,7 @@ declare class LogAuthEventRequest$Type extends MessageType<LogAuthEventRequest> 
     options: BinaryReadOptions,
     target?: LogAuthEventRequest,
   ): LogAuthEventRequest;
-  private binaryReadMap11;
+  private binaryReadMap12;
   internalBinaryWrite(
     message: LogAuthEventRequest,
     writer: IBinaryWriter,
@@ -1304,7 +1376,7 @@ declare class LogSecurityEventRequest$Type extends MessageType<LogSecurityEventR
     options: BinaryReadOptions,
     target?: LogSecurityEventRequest,
   ): LogSecurityEventRequest;
-  private binaryReadMap9;
+  private binaryReadMap10;
   internalBinaryWrite(
     message: LogSecurityEventRequest,
     writer: IBinaryWriter,
