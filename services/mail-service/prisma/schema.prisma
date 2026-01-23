@@ -25,6 +25,7 @@ model EmailLog {
   template      String      @db.VarChar(100)
   locale        String      @default("en") @db.VarChar(10)
   subject       String      @db.VarChar(500)
+  body          String?     @db.Text
   status        EmailStatus @default(PENDING)
   messageId     String?     @map("message_id") @db.VarChar(255)
   sentAt        DateTime?   @map("sent_at") @db.Timestamptz(6)
@@ -48,6 +49,7 @@ model EmailLog {
   @@index([sourceService])
   @@index([createdAt])
   @@index([tenantId, status, createdAt])
+  @@index([messageId])
   @@map("email_logs")
 }
 

@@ -218,6 +218,12 @@ export interface GetAuthEventsRequest {
    * @generated from protobuf field: bool descending = 12
    */
   descending: boolean;
+  /**
+   * Multi-tenant support
+   *
+   * @generated from protobuf field: string tenant_id = 15
+   */
+  tenantId: string;
 }
 /**
  * @generated from protobuf message audit.v1.GetAuthEventsResponse

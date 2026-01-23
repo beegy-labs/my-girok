@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TemplateService } from '../templates/template.service';
 import { KafkaProducerService } from '../kafka/kafka-producer.service';
+import { SesService } from '../ses/ses.service';
 import {
   SendEmailRequest,
   SendEmailResponse,
@@ -15,7 +16,11 @@ import {
   MarkAsReadResponse,
   EmailTemplate,
   EmailStatus,
+  BulkEmailItem,
 } from './mail.interface';
+
+/** Concurrency limit for bulk email processing */
+const BULK_EMAIL_CONCURRENCY_LIMIT = 10;
 
 @Injectable()
 export class MailService {
@@ -25,6 +30,7 @@ export class MailService {
     private readonly prisma: PrismaService,
     private readonly templateService: TemplateService,
     private readonly kafkaProducer: KafkaProducerService,
+    private readonly sesService: SesService,
   ) {}
 
   private templateToString(template: EmailTemplate): string {
@@ -80,32 +86,36 @@ export class MailService {
         request.variables,
       );
 
-      // Create email log
-      const emailLog = await this.prisma.emailLog.create({
-        data: {
-          tenantId: request.tenantId,
-          accountId: request.accountId || null,
-          sourceService: request.sourceService,
-          fromEmail: request.fromEmail,
-          toEmail: request.toEmail,
-          template: this.templateToString(request.template),
-          locale: request.locale || 'en',
-          subject: rendered.subject,
-          status: 'PENDING',
-          metadata: request.metadata || {},
-        },
-      });
-
-      // Create inbox entry if accountId is provided
-      if (request.accountId) {
-        await this.prisma.inbox.create({
+      // Create email log and inbox entry in a transaction for atomicity
+      const { emailLog } = await this.prisma.$transaction(async (tx) => {
+        const emailLog = await tx.emailLog.create({
           data: {
             tenantId: request.tenantId,
-            accountId: request.accountId,
-            emailLogId: emailLog.id,
+            accountId: request.accountId || null,
+            sourceService: request.sourceService,
+            fromEmail: request.fromEmail,
+            toEmail: request.toEmail,
+            template: this.templateToString(request.template),
+            locale: request.locale || 'en',
+            subject: rendered.subject,
+            status: 'PENDING',
+            metadata: request.metadata || {},
           },
         });
-      }
+
+        // Create inbox entry if accountId is provided
+        if (request.accountId) {
+          await tx.inbox.create({
+            data: {
+              tenantId: request.tenantId,
+              accountId: request.accountId,
+              emailLogId: emailLog.id,
+            },
+          });
+        }
+
+        return { emailLog };
+      });
 
       // Publish to Kafka for async processing
       if (this.kafkaProducer.isKafkaEnabled()) {
@@ -125,62 +135,121 @@ export class MailService {
 
         this.logger.log(`Email queued to Kafka: ${emailLog.id} to ${request.toEmail}`);
       } else {
-        // Kafka disabled - log warning
-        this.logger.warn(
-          `Kafka disabled. Email ${emailLog.id} created but not queued for delivery`,
-        );
+        // Fallback: Send synchronously when Kafka is disabled
+        this.logger.warn(`Kafka disabled. Sending email ${emailLog.id} synchronously`);
+        try {
+          const sesResult = await this.sesService.sendEmail({
+            to: request.toEmail,
+            from: request.fromEmail,
+            subject: rendered.subject,
+            htmlBody: rendered.body,
+            emailLogId: emailLog.id,
+          });
+
+          if (sesResult.success) {
+            await this.prisma.emailLog.update({
+              where: { id: emailLog.id },
+              data: { status: 'SENT', sentAt: new Date() },
+            });
+          } else {
+            await this.prisma.emailLog.update({
+              where: { id: emailLog.id },
+              data: { status: 'FAILED', error: sesResult.error },
+            });
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          await this.prisma.emailLog.update({
+            where: { id: emailLog.id },
+            data: { status: 'FAILED', error: errorMessage },
+          });
+          this.logger.error(`Synchronous email send failed: ${errorMessage}`);
+        }
       }
 
       return {
         success: true,
         emailLogId: emailLog.id,
-        message: 'Email queued for delivery',
+        message: this.kafkaProducer.isKafkaEnabled()
+          ? 'Email queued for delivery'
+          : 'Email sent synchronously',
       };
     } catch (error) {
-      this.logger.error(`Failed to queue email: ${error}`);
+      this.logger.error(
+        `Failed to queue email: ${error}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       return {
         success: false,
         emailLogId: '',
-        message: `Failed to queue email: ${error}`,
+        message: 'Failed to queue email. Please try again later.',
       };
     }
   }
 
   async sendBulkEmail(request: SendBulkEmailRequest): Promise<SendBulkEmailResponse> {
-    const results = [];
+    const emails = request.emails || [];
+    const results: Array<{
+      toEmail: string;
+      success: boolean;
+      emailLogId: string;
+      error?: string;
+    }> = [];
     let queuedCount = 0;
     let failedCount = 0;
 
-    for (const email of request.emails || []) {
-      const result = await this.sendEmail({
-        tenantId: request.tenantId,
-        accountId: email.accountId,
-        toEmail: email.toEmail,
-        template: email.template,
-        locale: email.locale,
-        variables: email.variables,
-        sourceService: request.sourceService,
-        fromEmail: request.fromEmail,
-        metadata: email.metadata,
-      });
+    // Process emails in batches with concurrency limit
+    for (let i = 0; i < emails.length; i += BULK_EMAIL_CONCURRENCY_LIMIT) {
+      const batch = emails.slice(i, i + BULK_EMAIL_CONCURRENCY_LIMIT);
 
-      results.push({
-        toEmail: email.toEmail,
-        success: result.success,
-        emailLogId: result.emailLogId,
-        error: result.success ? undefined : result.message,
-      });
+      const batchResults = await Promise.allSettled(
+        batch.map((email: BulkEmailItem) =>
+          this.sendEmail({
+            tenantId: request.tenantId,
+            accountId: email.accountId,
+            toEmail: email.toEmail,
+            template: email.template,
+            locale: email.locale,
+            variables: email.variables,
+            sourceService: request.sourceService,
+            fromEmail: request.fromEmail,
+            metadata: email.metadata,
+          }),
+        ),
+      );
 
-      if (result.success) {
-        queuedCount++;
-      } else {
-        failedCount++;
-      }
+      // Process batch results
+      batchResults.forEach((settledResult, index) => {
+        const email = batch[index];
+        if (settledResult.status === 'fulfilled') {
+          const result = settledResult.value;
+          results.push({
+            toEmail: email.toEmail,
+            success: result.success,
+            emailLogId: result.emailLogId,
+            error: result.success ? undefined : result.message,
+          });
+          if (result.success) {
+            queuedCount++;
+          } else {
+            failedCount++;
+          }
+        } else {
+          // Promise rejected
+          results.push({
+            toEmail: email.toEmail,
+            success: false,
+            emailLogId: '',
+            error: settledResult.reason?.message || 'Unknown error',
+          });
+          failedCount++;
+        }
+      });
     }
 
     return {
       success: failedCount === 0,
-      totalCount: request.emails?.length || 0,
+      totalCount: emails.length,
       queuedCount,
       failedCount,
       results,
@@ -259,7 +328,7 @@ export class MailService {
         id: item.id,
         emailLogId: item.emailLogId,
         subject: item.emailLog.subject,
-        preview: item.emailLog.subject.substring(0, 100),
+        preview: (item.emailLog.body || item.emailLog.subject || '').substring(0, 100),
         template: this.stringToTemplate(item.emailLog.template),
         fromEmail: item.emailLog.fromEmail,
         sourceService: item.emailLog.sourceService,
@@ -294,11 +363,14 @@ export class MailService {
         message: `Marked ${result.count} items as read`,
       };
     } catch (error) {
-      this.logger.error(`Failed to mark as read: ${error}`);
+      this.logger.error(
+        `Failed to mark as read: ${error}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       return {
         success: false,
         updatedCount: 0,
-        message: `Failed to mark as read: ${error}`,
+        message: 'Failed to mark as read. Please try again later.',
       };
     }
   }

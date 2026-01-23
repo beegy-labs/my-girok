@@ -172,6 +172,7 @@ export interface GetAuthEventsRequest {
   page_size: number;
   order_by?: string;
   descending?: boolean;
+  tenant_id?: string;
 }
 
 export interface AuthEvent {

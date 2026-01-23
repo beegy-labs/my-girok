@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { status } from '@grpc/grpc-js';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
-import { ChannelRouterService, RouteResult } from '../channels/channel-router.service';
+import { ChannelRouterService } from '../channels/channel-router.service';
 import { InappService } from '../channels/inapp/inapp.service';
 import { AuditService } from '../audit/audit.service';
 import {
@@ -36,12 +38,44 @@ export class NotificationService {
    * Send a single notification
    */
   async sendNotification(request: SendNotificationRequest): Promise<SendNotificationResponse> {
-    const notificationId = request.idempotencyKey || uuidv4();
+    // Validate required fields
+    if (!request.tenantId) {
+      throw new RpcException({
+        code: status.INVALID_ARGUMENT,
+        message: 'tenant_id is required',
+      });
+    }
+    if (!request.accountId) {
+      throw new RpcException({
+        code: status.INVALID_ARGUMENT,
+        message: 'account_id is required',
+      });
+    }
+    if (!request.title?.trim()) {
+      throw new RpcException({
+        code: status.INVALID_ARGUMENT,
+        message: 'title is required',
+      });
+    }
+    if (!request.body?.trim()) {
+      throw new RpcException({
+        code: status.INVALID_ARGUMENT,
+        message: 'body is required',
+      });
+    }
+    if (!request.channels?.length) {
+      throw new RpcException({
+        code: status.INVALID_ARGUMENT,
+        message: 'at least one channel is required',
+      });
+    }
+
+    const notificationId = uuidv4();
 
     // Check for idempotency
     if (request.idempotencyKey) {
       const existing = await this.prisma.notification.findFirst({
-        where: { id: request.idempotencyKey },
+        where: { idempotencyKey: request.idempotencyKey },
       });
 
       if (existing) {
@@ -69,13 +103,8 @@ export class NotificationService {
         priority: request.priority,
       };
 
-      // Route to channels
-      const channels =
-        request.channels.length > 0
-          ? request.channels
-          : this.channelRouter.getRecommendedChannels(request.type, request.priority);
-
-      const results = await this.channelRouter.route(deliveryRequest, channels);
+      // Route to channels (validation ensures at least one channel)
+      const results = await this.channelRouter.route(deliveryRequest, request.channels);
 
       // Check if any channel succeeded
       const anySuccess = results.some((r) => r.result.success);

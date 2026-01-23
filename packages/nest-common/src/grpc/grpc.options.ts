@@ -162,8 +162,8 @@ export const GRPC_PORTS = {
   AUTH: 50052,
   LEGAL: 50053,
   AUDIT: 50054,
-  MAIL: 50054,
   NOTIFICATION: 50055,
+  MAIL: 50056,
 } as const;
 
 /**

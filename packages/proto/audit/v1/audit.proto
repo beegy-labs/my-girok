@@ -168,6 +168,9 @@ message GetAuthEventsRequest {
   // Sorting
   string order_by = 11;  // "timestamp", "event_type", etc.
   bool descending = 12;
+
+  // Multi-tenant support
+  string tenant_id = 15;
 }
 
 message GetAuthEventsResponse {

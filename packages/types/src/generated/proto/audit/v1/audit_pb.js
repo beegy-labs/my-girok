@@ -909,7 +909,8 @@ class GetAuthEventsRequest$Type extends MessageType {
             { no: 9, name: "page", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 10, name: "page_size", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 11, name: "order_by", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 12, name: "descending", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 12, name: "descending", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 15, name: "tenant_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value) {
@@ -918,6 +919,7 @@ class GetAuthEventsRequest$Type extends MessageType {
         message.pageSize = 0;
         message.orderBy = "";
         message.descending = false;
+        message.tenantId = "";
         if (value !== undefined)
             reflectionMergePartial(this, message, value);
         return message;
@@ -962,6 +964,9 @@ class GetAuthEventsRequest$Type extends MessageType {
                     break;
                 case /* bool descending */ 12:
                     message.descending = reader.bool();
+                    break;
+                case /* string tenant_id */ 15:
+                    message.tenantId = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1011,6 +1016,9 @@ class GetAuthEventsRequest$Type extends MessageType {
         /* bool descending = 12; */
         if (message.descending !== false)
             writer.tag(12, WireType.Varint).bool(message.descending);
+        /* string tenant_id = 15; */
+        if (message.tenantId !== "")
+            writer.tag(15, WireType.LengthDelimited).string(message.tenantId);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
