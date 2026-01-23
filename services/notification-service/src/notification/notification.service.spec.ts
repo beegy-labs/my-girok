@@ -2,7 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { NotificationService } from './notification.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { ChannelRouterService, RouteResult } from '../channels/channel-router.service';
+import { ChannelRouterService } from '../channels/channel-router.service';
+
+// Type for route results
+interface RouteResult {
+  channel: NotificationChannel;
+  result: { success: boolean; externalId?: string; error?: string };
+}
 import { InappService } from '../channels/inapp/inapp.service';
 import { AuditService } from '../audit/audit.service';
 import {
@@ -141,30 +147,47 @@ describe('NotificationService', () => {
       expect(auditService.logNotificationSent).toHaveBeenCalled();
     });
 
-    it('should use recommended channels when no channels specified', async () => {
+    it('should throw validation error when no channels specified', async () => {
       const requestNoChannels: SendNotificationRequest = {
         ...validRequest,
         channels: [],
       };
 
-      channelRouter.getRecommendedChannels.mockReturnValue([
-        NotificationChannel.NOTIFICATION_CHANNEL_IN_APP,
-        NotificationChannel.NOTIFICATION_CHANNEL_EMAIL,
-      ]);
-      channelRouter.route.mockResolvedValue([
-        {
-          channel: NotificationChannel.NOTIFICATION_CHANNEL_IN_APP,
-          result: { success: true },
-        },
-      ]);
-      auditService.logNotificationSent.mockResolvedValue(undefined);
-
-      await service.sendNotification(requestNoChannels);
-
-      expect(channelRouter.getRecommendedChannels).toHaveBeenCalledWith(
-        NotificationType.NOTIFICATION_TYPE_SYSTEM,
-        Priority.PRIORITY_NORMAL,
+      await expect(service.sendNotification(requestNoChannels)).rejects.toThrow(
+        'at least one channel is required',
       );
+      expect(channelRouter.route).not.toHaveBeenCalled();
+    });
+
+    it('should throw validation error when tenant_id is missing', async () => {
+      const requestNoTenant: SendNotificationRequest = {
+        ...validRequest,
+        tenantId: '',
+      };
+
+      await expect(service.sendNotification(requestNoTenant)).rejects.toThrow(
+        'tenant_id is required',
+      );
+    });
+
+    it('should throw validation error when account_id is missing', async () => {
+      const requestNoAccount: SendNotificationRequest = {
+        ...validRequest,
+        accountId: '',
+      };
+
+      await expect(service.sendNotification(requestNoAccount)).rejects.toThrow(
+        'account_id is required',
+      );
+    });
+
+    it('should throw validation error when title is empty', async () => {
+      const requestNoTitle: SendNotificationRequest = {
+        ...validRequest,
+        title: '   ',
+      };
+
+      await expect(service.sendNotification(requestNoTitle)).rejects.toThrow('title is required');
     });
 
     it('should return existing notification for duplicate idempotency key', async () => {
@@ -591,7 +614,7 @@ describe('NotificationService', () => {
       });
 
       expect(prisma.notification.findFirst).toHaveBeenCalledWith({
-        where: { id: 'unique-key-123' },
+        where: { idempotencyKey: 'unique-key-123' },
       });
     });
   });
