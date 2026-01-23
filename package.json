@@ -18,7 +18,9 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "prepare": "husky",
     "docs:generate": "node --experimental-strip-types scripts/docs/generate.ts",
-    "docs:translate": "node --experimental-strip-types scripts/docs/translate.ts"
+    "docs:translate": "node --experimental-strip-types scripts/docs/translate.ts",
+    "sync:protocol": "scripts/sync-protocol.sh",
+    "sync:protocol:check": "scripts/sync-protocol.sh --check"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
