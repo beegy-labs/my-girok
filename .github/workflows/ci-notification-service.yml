@@ -1,0 +1,38 @@
+name: CI - Notification Service
+
+on:
+  push:
+    branches: [develop, release, main]
+    paths:
+      - 'services/notification-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    branches: [develop, release, main]
+    paths:
+      - 'services/notification-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force rebuild even if image exists'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_service-ci.yml
+    with:
+      service_name: notification-service
+      service_path: services/notification-service
+      image_name: beegy-labs/notification-service
+      gitops_file_prefix: my-girok-notification-service
+      needs_prisma: true
+      pnpm_filter: '@my-girok/notification-service'
+      force_build: ${{ github.event.inputs.force_build == 'true' }}
+    secrets:
+      GITEA_USERNAME: ${{ secrets.GITEA_USERNAME }}
+      GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+      GITOPS_PAT: ${{ secrets.GITOPS_PAT }}
