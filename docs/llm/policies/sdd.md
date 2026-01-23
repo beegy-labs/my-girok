@@ -201,10 +201,35 @@ active:
 complete:
   trigger: 'All tasks done'
   action:
-    - 'Merge scope + tasks → history/scopes/{scope}.md'
-    - 'Delete active files'
+    - 'Merge scope + tasks → history/scopes/{date}-{descriptive-name}.md'
+    - 'Delete active files (optional)'
     - 'Update CDD if patterns found'
 ```
+
+### History File Naming Convention
+
+Archive files should use descriptive names that indicate what was accomplished:
+
+```
+history/scopes/{YYYY-MM}-{descriptive-name}.md
+
+Examples:
+- 2026-01-mail-notification-services.md
+- 2026-02-identity-platform-enhancements.md
+- 2026-03-analytics-dashboard.md
+
+history/decisions/{YYYY-MM-DD}-{decision-topic}.md
+
+Examples:
+- 2026-01-21-menu-structure-priority.md
+- 2026-02-15-auth-provider-selection.md
+```
+
+**Why descriptive names?**
+
+- Quick identification of what was done without opening the file
+- Easy to search and reference later
+- Clear timeline of project evolution
 
 ## File Templates
 
@@ -316,6 +341,48 @@ Menu structure implementation
 ### Blocked
 
 (none)
+```
+
+### history/scopes/{date}-{name}.md (DONE)
+
+```markdown
+# Completed: {Scope Title}
+
+> **Archived**: YYYY-MM-DD | **Duration**: YYYY-MM ~ YYYY-MM
+
+## Summary
+
+Brief description of what was accomplished in this scope.
+
+## Deliverables
+
+| Deliverable | Path                  | Status |
+| ----------- | --------------------- | ------ |
+| service-a   | `services/service-a/` | ✅     |
+| proto       | `packages/proto/...`  | ✅     |
+
+## Key Decisions
+
+- Decision 1: Why we chose X over Y
+- Decision 2: Architecture pattern adopted
+
+## CDD Updates
+
+| File                     | Action  |
+| ------------------------ | ------- |
+| `.ai/services/xxx.md`    | Created |
+| `docs/llm/guides/yyy.md` | Updated |
+
+## Lessons Learned
+
+- What went well
+- What could be improved
+- Patterns to reuse
+
+## References
+
+- Original scope: `scopes/{scope}.md` (archived)
+- Original tasks: `tasks/{scope}.md` (archived)
 ```
 
 ## Learning Loop (Future Enhancement)
