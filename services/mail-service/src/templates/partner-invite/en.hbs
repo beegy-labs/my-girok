@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Partner Invitation</title>
+</head>
+<body>
+  <h1>Partner Invitation</h1>
+  <p>Hello,</p>
+  <p>{{inviterName}} has invited you to join as a partner.</p>
+  <p>
+    <a href="{{inviteLink}}">Accept Invitation</a>
+  </p>
+  {{#if temporaryPassword}}
+  <p>Your temporary password: <strong>{{temporaryPassword}}</strong></p>
+  {{/if}}
+  <p>This invitation expires on: {{expiresAt}}</p>
+  <p>If you did not expect this invitation, please ignore this email.</p>
+</body>
+</html>

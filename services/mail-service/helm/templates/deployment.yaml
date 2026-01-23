@@ -1,0 +1,197 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mail-service.fullname" . }}
+  labels:
+    {{- include "mail-service.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "mail-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "mail-service.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "mail-service.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.app.httpPort }}
+          protocol: TCP
+        - name: grpc
+          containerPort: {{ .Values.app.grpcPort }}
+          protocol: TCP
+        env:
+        # ============================================================
+        # Basic Configuration
+        # ============================================================
+        - name: NODE_ENV
+          value: {{ .Values.app.nodeEnv | quote }}
+        - name: HTTP_PORT
+          value: {{ .Values.app.httpPort | quote }}
+        - name: GRPC_PORT
+          value: {{ .Values.app.grpcPort | quote }}
+        {{- if .Values.app.corsOrigins }}
+        - name: CORS_ORIGINS
+          value: {{ .Values.app.corsOrigins | quote }}
+        {{- end }}
+
+        # ============================================================
+        # Database URL
+        # ============================================================
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mail-service.fullname" . }}-secret
+              key: database-url
+
+        # ============================================================
+        # Kafka Configuration (for mail.send queue only)
+        # ============================================================
+        - name: KAFKA_BROKERS
+          value: {{ .Values.app.kafka.brokers | quote }}
+        - name: KAFKA_CLIENT_ID
+          value: {{ .Values.app.kafka.clientId | quote }}
+        - name: KAFKA_CONSUMER_GROUP
+          value: {{ .Values.app.kafka.consumerGroup | quote }}
+        - name: KAFKA_TOPIC_PREFIX
+          value: {{ .Values.app.kafka.topicPrefix | quote }}
+        - name: KAFKA_TOPIC_SEND
+          value: {{ .Values.app.kafka.topics.send | quote }}
+        - name: KAFKA_TOPIC_DLQ
+          value: {{ .Values.app.kafka.topics.dlq | quote }}
+        {{- if .Values.app.kafka.sasl.enabled }}
+        - name: KAFKA_SASL_ENABLED
+          value: "true"
+        - name: KAFKA_SASL_MECHANISM
+          value: {{ .Values.app.kafka.sasl.mechanism | quote }}
+        - name: KAFKA_SASL_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mail-service.fullname" . }}-secret
+              key: kafka-sasl-username
+        - name: KAFKA_SASL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mail-service.fullname" . }}-secret
+              key: kafka-sasl-password
+        {{- else }}
+        - name: KAFKA_SASL_ENABLED
+          value: "false"
+        {{- end }}
+
+        # ============================================================
+        # Audit Service (gRPC) - for auth-related compliance tracking
+        # Flow: mail-service → audit-service gRPC → OTEL Collector → Kafka → ClickHouse
+        # ============================================================
+        {{- if .Values.app.audit.enabled }}
+        - name: AUDIT_SERVICE_ENABLED
+          value: "true"
+        - name: AUDIT_SERVICE_GRPC_URL
+          value: {{ .Values.app.audit.grpcUrl | quote }}
+        {{- else }}
+        - name: AUDIT_SERVICE_ENABLED
+          value: "false"
+        {{- end }}
+
+        # ============================================================
+        # AWS SES Configuration
+        # ============================================================
+        - name: AWS_REGION
+          value: {{ .Values.app.ses.region | quote }}
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mail-service.fullname" . }}-secret
+              key: aws-access-key-id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mail-service.fullname" . }}-secret
+              key: aws-secret-access-key
+        - name: SES_FROM_EMAIL_DEFAULT
+          value: {{ .Values.app.ses.fromAddresses.default | quote }}
+        - name: SES_FROM_EMAIL_SUPPORT
+          value: {{ .Values.app.ses.fromAddresses.support | quote }}
+        - name: SES_CONFIGURATION_SET
+          value: {{ .Values.app.ses.configurationSet | quote }}
+
+        # ============================================================
+        # i18n Configuration
+        # ============================================================
+        - name: I18N_DEFAULT_LOCALE
+          value: {{ .Values.app.i18n.defaultLocale | quote }}
+        - name: I18N_SUPPORTED_LOCALES
+          value: {{ .Values.app.i18n.supportedLocales | quote }}
+        - name: I18N_FALLBACK_LOCALE
+          value: {{ .Values.app.i18n.fallbackLocale | quote }}
+
+        # ============================================================
+        # Retry Configuration
+        # ============================================================
+        - name: RETRY_MAX_ATTEMPTS
+          value: {{ .Values.app.retry.maxAttempts | quote }}
+        - name: RETRY_BACKOFF_MS
+          value: {{ .Values.app.retry.backoffMs | quote }}
+        - name: RETRY_BACKOFF_MULTIPLIER
+          value: {{ .Values.app.retry.backoffMultiplier | quote }}
+
+        # ============================================================
+        # OpenTelemetry Configuration
+        # ============================================================
+        {{- if .Values.app.otel.enabled }}
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: {{ .Values.app.otel.endpoint | quote }}
+        - name: OTEL_SERVICE_NAME
+          value: {{ .Values.app.otel.serviceName | default (include "mail-service.fullname" .) | quote }}
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: {{ printf "service.namespace=%s,deployment.environment=%s" .Release.Namespace (.Values.app.nodeEnv | default "production") | quote }}
+        {{- end }}
+
+        {{- with .Values.livenessProbe }}
+        livenessProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.readinessProbe }}
+        readinessProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

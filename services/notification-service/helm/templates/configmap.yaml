@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "notification-service.fullname" . }}-config
+  labels:
+    {{- include "notification-service.labels" . | nindent 4 }}
+data:
+  # ============================================================
+  # Application Configuration (Non-sensitive)
+  # ============================================================
+  NODE_ENV: {{ .Values.app.nodeEnv | quote }}
+  HTTP_PORT: {{ .Values.app.httpPort | quote }}
+  GRPC_PORT: {{ .Values.app.grpcPort | quote }}
+
+  # ============================================================
+  # Database Configuration (host/port/name only, no credentials)
+  # ============================================================
+  DB_HOST: {{ .Values.app.database.host | quote }}
+  DB_PORT: {{ .Values.app.database.port | quote }}
+  DB_NAME: {{ .Values.app.database.name | quote }}
+  DB_USER: {{ .Values.app.database.user | quote }}
+
+  # ============================================================
+  # FCM Configuration (non-sensitive)
+  # ============================================================
+  FCM_ENABLED: {{ .Values.app.fcm.enabled | quote }}
+  {{- if .Values.app.fcm.enabled }}
+  FCM_PROJECT_ID: {{ .Values.app.fcm.projectId | quote }}
+  {{- end }}
+
+  # ============================================================
+  # SMS Configuration (non-sensitive)
+  # ============================================================
+  SMS_ENABLED: {{ .Values.app.sms.enabled | quote }}
+  {{- if .Values.app.sms.enabled }}
+  SMS_PROVIDER: {{ .Values.app.sms.provider | quote }}
+  {{- if eq .Values.app.sms.provider "twilio" }}
+  TWILIO_ACCOUNT_SID: {{ .Values.app.sms.twilio.accountSid | quote }}
+  TWILIO_FROM_NUMBER: {{ .Values.app.sms.twilio.fromNumber | quote }}
+  {{- else if eq .Values.app.sms.provider "aws_sns" }}
+  AWS_SNS_REGION: {{ .Values.app.sms.sns.region | quote }}
+  {{- end }}
+  {{- end }}
+
+  # ============================================================
+  # Service Dependencies
+  # ============================================================
+  MAIL_SERVICE_ENABLED: {{ .Values.app.mailService.enabled | quote }}
+  {{- if .Values.app.mailService.enabled }}
+  MAIL_SERVICE_GRPC_URL: {{ .Values.app.mailService.grpcUrl | quote }}
+  {{- end }}
+
+  AUDIT_SERVICE_ENABLED: {{ .Values.app.auditService.enabled | quote }}
+  {{- if .Values.app.auditService.enabled }}
+  AUDIT_SERVICE_GRPC_URL: {{ .Values.app.auditService.grpcUrl | quote }}
+  {{- end }}
+
+  # ============================================================
+  # Kafka Configuration (non-sensitive)
+  # ============================================================
+  KAFKA_BROKERS: {{ .Values.app.kafka.brokers | quote }}
+  KAFKA_CLIENT_ID: {{ .Values.app.kafka.clientId | quote }}
+  KAFKA_CONSUMER_GROUP: {{ .Values.app.kafka.consumerGroup | quote }}
+  KAFKA_TOPIC_PREFIX: {{ .Values.app.kafka.topicPrefix | quote }}
+  KAFKA_TOPIC_NOTIFY: {{ .Values.app.kafka.topics.notify | quote }}
+  KAFKA_TOPIC_STATUS: {{ .Values.app.kafka.topics.status | quote }}
+  KAFKA_TOPIC_DLQ: {{ .Values.app.kafka.topics.dlq | quote }}
+  KAFKA_SASL_ENABLED: {{ .Values.app.kafka.sasl.enabled | quote }}
+  {{- if .Values.app.kafka.sasl.enabled }}
+  KAFKA_SASL_MECHANISM: {{ .Values.app.kafka.sasl.mechanism | quote }}
+  {{- end }}
+
+  # ============================================================
+  # Retry Configuration
+  # ============================================================
+  RETRY_MAX_ATTEMPTS: {{ .Values.app.retry.maxAttempts | quote }}
+  RETRY_BACKOFF_MS: {{ .Values.app.retry.backoffMs | quote }}
+  RETRY_BACKOFF_MULTIPLIER: {{ .Values.app.retry.backoffMultiplier | quote }}
+
+  # ============================================================
+  # OpenTelemetry Configuration
+  # ============================================================
+  {{- if .Values.app.otel.enabled }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.app.otel.endpoint | quote }}
+  OTEL_SERVICE_NAME: {{ .Values.app.otel.serviceName | default (include "notification-service.fullname" .) | quote }}
+  {{- end }}

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>파트너 초대</title>
+</head>
+<body>
+  <h1>파트너 초대</h1>
+  <p>안녕하세요,</p>
+  <p>{{inviterName}}님이 귀하를 파트너로 초대했습니다.</p>
+  <p>
+    <a href="{{inviteLink}}">초대 수락하기</a>
+  </p>
+  {{#if temporaryPassword}}
+  <p>임시 비밀번호: <strong>{{temporaryPassword}}</strong></p>
+  {{/if}}
+  <p>이 초대는 {{expiresAt}}에 만료됩니다.</p>
+  <p>이 초대를 예상하지 않았다면 이 이메일을 무시하세요.</p>
+</body>
+</html>

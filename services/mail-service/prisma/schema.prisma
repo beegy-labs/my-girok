@@ -1,0 +1,94 @@
+// Mail Service - Mail DB Schema
+// Manages: email logs, inbox
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../node_modules/.prisma/mail-client"
+  previewFeatures = ["relationJoins", "typedSql"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// EMAIL LOGS
+// ============================================================
+
+model EmailLog {
+  id            String      @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  tenantId      String      @map("tenant_id") @db.Uuid
+  accountId     String?     @map("account_id") @db.Uuid
+  sourceService String      @map("source_service") @db.VarChar(100)
+  fromEmail     String      @map("from_email") @db.VarChar(255)
+  toEmail       String      @map("to_email") @db.VarChar(255)
+  template      String      @db.VarChar(100)
+  locale        String      @default("en") @db.VarChar(10)
+  subject       String      @db.VarChar(500)
+  status        EmailStatus @default(PENDING)
+  messageId     String?     @map("message_id") @db.VarChar(255)
+  sentAt        DateTime?   @map("sent_at") @db.Timestamptz(6)
+  openedAt      DateTime?   @map("opened_at") @db.Timestamptz(6)
+  clickedAt     DateTime?   @map("clicked_at") @db.Timestamptz(6)
+  bouncedAt     DateTime?   @map("bounced_at") @db.Timestamptz(6)
+  bounceType    String?     @map("bounce_type") @db.VarChar(50)
+  bounceReason  String?     @map("bounce_reason")
+  error         String?
+  metadata      Json?       @db.JsonB
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  inbox Inbox?
+
+  @@index([tenantId])
+  @@index([accountId])
+  @@index([toEmail])
+  @@index([status])
+  @@index([template])
+  @@index([sourceService])
+  @@index([createdAt])
+  @@index([tenantId, status, createdAt])
+  @@map("email_logs")
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+  BOUNCED
+  OPENED
+  CLICKED
+
+  @@map("email_status")
+}
+
+// ============================================================
+// INBOX
+// ============================================================
+
+model Inbox {
+  id         String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  accountId  String    @map("account_id") @db.Uuid
+  emailLogId String    @unique @map("email_log_id") @db.Uuid
+  emailLog   EmailLog  @relation(fields: [emailLogId], references: [id], onDelete: Cascade)
+  readAt     DateTime? @map("read_at") @db.Timestamptz(6)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([tenantId, accountId])
+  @@index([tenantId, accountId, readAt])
+  @@index([accountId, deletedAt])
+  @@map("inboxes")
+}
+
+// ============================================================
+// GOOSE DB VERSION (for migration tracking)
+// ============================================================
+
+model goose_db_version {
+  id         Int      @id @default(autoincrement())
+  version_id BigInt
+  is_applied Boolean
+  tstamp     DateTime @default(now()) @db.Timestamp(6)
+}

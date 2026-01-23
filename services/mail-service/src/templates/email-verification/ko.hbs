@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>이메일 인증</title>
+</head>
+<body>
+  <h1>이메일 주소 인증</h1>
+  <p>안녕하세요 {{userName}}님,</p>
+  <p>아래 버튼을 클릭하여 이메일 주소를 인증해 주세요.</p>
+  <p>
+    <a href="{{verificationLink}}">이메일 인증하기</a>
+  </p>
+  <p>이 링크는 {{expiresIn}} 후에 만료됩니다.</p>
+  <p>계정을 생성하지 않으셨다면 이 이메일을 무시해 주세요.</p>
+</body>
+</html>

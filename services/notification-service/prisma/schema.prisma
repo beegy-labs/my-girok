@@ -1,0 +1,173 @@
+// Notification Service - Notification DB Schema
+// Manages: notifications, preferences, device tokens, quiet hours
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../node_modules/.prisma/notification-client"
+  previewFeatures = ["relationJoins", "typedSql"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+model Notification {
+  id             String             @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  tenantId       String             @map("tenant_id") @db.Uuid
+  accountId      String             @map("account_id") @db.Uuid
+  type           String             @db.VarChar(50)
+  channel        NotificationChannel
+  title          String             @db.VarChar(255)
+  body           String
+  data           Json?              @db.JsonB
+  sourceService  String             @map("source_service") @db.VarChar(100)
+  priority       Priority           @default(NORMAL)
+  status         NotificationStatus @default(PENDING)
+  externalId     String?            @map("external_id") @db.VarChar(255)
+  idempotencyKey String?            @unique @map("idempotency_key") @db.VarChar(255)
+  sentAt         DateTime?          @map("sent_at") @db.Timestamptz(6)
+  deliveredAt    DateTime?          @map("delivered_at") @db.Timestamptz(6)
+  failedAt       DateTime?          @map("failed_at") @db.Timestamptz(6)
+  readAt         DateTime?          @map("read_at") @db.Timestamptz(6)
+  error          String?
+  retryCount     Int                @default(0) @map("retry_count")
+  expiresAt      DateTime?          @map("expires_at") @db.Timestamptz(6)
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([tenantId, accountId])
+  @@index([tenantId, accountId, readAt])
+  @@index([tenantId, accountId, channel])
+  @@index([status])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============================================================
+// CHANNEL PREFERENCES
+// ============================================================
+
+model ChannelPreference {
+  id        String              @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  tenantId  String              @map("tenant_id") @db.Uuid
+  accountId String              @map("account_id") @db.Uuid
+  channel   NotificationChannel
+  enabled   Boolean             @default(true)
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, accountId, channel])
+  @@map("channel_preferences")
+}
+
+// ============================================================
+// TYPE PREFERENCES
+// ============================================================
+
+model TypePreference {
+  id               String              @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  tenantId         String              @map("tenant_id") @db.Uuid
+  accountId        String              @map("account_id") @db.Uuid
+  notificationType String              @map("notification_type") @db.VarChar(50)
+  enabledChannels  NotificationChannel[] @map("enabled_channels")
+  createdAt        DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, accountId, notificationType])
+  @@map("type_preferences")
+}
+
+// ============================================================
+// DEVICE TOKENS
+// ============================================================
+
+model DeviceToken {
+  id         String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  accountId  String   @map("account_id") @db.Uuid
+  token      String   @unique @db.VarChar(500)
+  platform   Platform
+  deviceId   String?  @map("device_id") @db.VarChar(255)
+  deviceInfo Json?    @map("device_info") @db.JsonB
+  lastUsedAt DateTime @default(now()) @map("last_used_at") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([tenantId, accountId])
+  @@map("device_tokens")
+}
+
+// ============================================================
+// QUIET HOURS
+// ============================================================
+
+model QuietHours {
+  id        String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  accountId String   @map("account_id") @db.Uuid
+  enabled   Boolean  @default(true)
+  startTime String   @map("start_time") @db.VarChar(5)
+  endTime   String   @map("end_time") @db.VarChar(5)
+  timezone  String   @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, accountId])
+  @@map("quiet_hours")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum NotificationChannel {
+  IN_APP
+  PUSH
+  SMS
+  EMAIL
+
+  @@map("notification_channel")
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  READ
+
+  @@map("notification_status")
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+
+  @@map("priority")
+}
+
+enum Platform {
+  IOS
+  ANDROID
+  WEB
+
+  @@map("platform")
+}
+
+// ============================================================
+// GOOSE DB VERSION (for migration tracking)
+// ============================================================
+
+model goose_db_version {
+  id         Int      @id @default(autoincrement())
+  version_id BigInt
+  is_applied Boolean
+  tstamp     DateTime @default(now()) @db.Timestamp(6)
+}

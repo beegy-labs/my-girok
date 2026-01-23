@@ -35,6 +35,32 @@ services:
     networks:
       - my-girok-network
 
+  # Redpanda (Kafka-compatible message broker)
+  redpanda:
+    image: redpandadata/redpanda:v24.1.1
+    container_name: my-girok-redpanda
+    restart: unless-stopped
+    command:
+      - redpanda start
+      - --smp 1
+      - --memory 512M
+      - --overprovisioned
+      - --kafka-addr PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:9092
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
+      - "${SCHEMA_REGISTRY_PORT:-8081}:8081"
+      - "${KAFKA_REST_PORT:-8082}:8082"
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD", "rpk", "cluster", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - my-girok-network
+
   # Redis Cache (Optional)
   redis:
     image: redis:7-alpine
@@ -303,6 +329,122 @@ services:
     networks:
       - my-girok-network
 
+  # Mail Service - Email sending and tracking (gRPC)
+  mail-service:
+    build:
+      context: .
+      dockerfile: services/mail-service/Dockerfile
+    container_name: my-girok-mail-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      # Ports
+      HTTP_PORT: 3000
+      GRPC_PORT: 50054
+      # CORS (for HTTP health endpoints)
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      # Database
+      DATABASE_URL: postgresql://${DB_USER:-your_db_user}:${DB_PASSWORD:-change-this-password}@postgres:5432/${DB_MAIL_NAME:-mail_dev}?schema=public
+      # Kafka (for mail.send queue only)
+      KAFKA_BROKERS: redpanda:9092
+      KAFKA_CLIENT_ID: mail-service
+      KAFKA_TOPIC_PREFIX: ${KAFKA_TOPIC_PREFIX:-}
+      KAFKA_CONSUMER_GROUP: mail-service-consumer
+      # Audit Service (gRPC) - for auth-related compliance tracking
+      # Flow: mail-service → audit-service gRPC → OTEL Collector → Kafka → ClickHouse
+      AUDIT_SERVICE_ENABLED: "true"
+      AUDIT_SERVICE_GRPC_URL: audit-service:50054
+      # AWS SES
+      AWS_REGION: ${AWS_REGION:-ap-northeast-2}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      SES_FROM_EMAIL_DEFAULT: ${SES_FROM_EMAIL_DEFAULT:-noreply@example.com}
+      SES_FROM_EMAIL_SUPPORT: ${SES_FROM_EMAIL_SUPPORT:-support@example.com}
+      SES_CONFIGURATION_SET: ${SES_CONFIGURATION_SET:-mail-tracking}
+      # i18n
+      I18N_DEFAULT_LOCALE: en
+      I18N_FALLBACK_LOCALE: en
+      # OpenTelemetry
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_SERVICE_NAME: mail-service
+    ports:
+      # HTTP health check (internal only in production)
+      - "3054:3000"
+      # gRPC server
+      - "50054:50054"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - my-girok-network
+
+  # Notification Service - Push notifications and SMS (gRPC)
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: my-girok-notification-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      # Ports
+      HTTP_PORT: 3000
+      GRPC_PORT: 50055
+      # CORS (for HTTP health endpoints)
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      # Database
+      DATABASE_URL: postgresql://${DB_USER:-your_db_user}:${DB_PASSWORD:-change-this-password}@postgres:5432/${DB_NOTIFICATION_NAME:-notification_dev}?schema=public
+      # Kafka
+      KAFKA_BROKERS: redpanda:9092
+      KAFKA_CLIENT_ID: notification-service
+      KAFKA_TOPIC_PREFIX: ${KAFKA_TOPIC_PREFIX:-}
+      KAFKA_CONSUMER_GROUP: notification-service-consumer
+      # Firebase Cloud Messaging (FCM)
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
+      # SMS Provider (Twilio)
+      SMS_PROVIDER: ${SMS_PROVIDER:-twilio}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
+      # AWS (for SNS SMS - alternative)
+      AWS_REGION: ${AWS_REGION:-ap-northeast-2}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      # Audit Service
+      AUDIT_SERVICE_ENABLED: "true"
+      AUDIT_SERVICE_GRPC_URL: audit-service:50053
+      # OpenTelemetry
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_SERVICE_NAME: notification-service
+    ports:
+      # HTTP health check (internal only in production)
+      - "3055:3000"
+      # gRPC server
+      - "50055:50055"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - my-girok-network
+
   # Storybook - Design System Documentation
   storybook:
     build:
@@ -328,6 +470,8 @@ volumes:
   redis_data:
     driver: local
   clickhouse_data:
+    driver: local
+  redpanda_data:
     driver: local
 
 # Network

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>계정 잠금</title>
+</head>
+<body>
+  <h1>계정 보안 알림</h1>
+  <p>안녕하세요 {{userName}}님,</p>
+  <p>{{lockReason}}으로 인해 계정이 잠겼습니다.</p>
+  {{#if unlockTime}}
+  <p>계정은 {{unlockTime}}에 자동으로 잠금 해제됩니다.</p>
+  {{else}}
+  <p>계정 잠금을 해제하려면 고객 지원팀에 문의하세요.</p>
+  {{/if}}
+  <h3>발생한 상황</h3>
+  <ul>
+    {{#if failedAttempts}}
+    <li>실패한 로그인 시도: {{failedAttempts}}회</li>
+    {{/if}}
+    {{#if lastAttemptTime}}
+    <li>마지막 시도: {{lastAttemptTime}}</li>
+    {{/if}}
+    {{#if lastAttemptIp}}
+    <li>IP 주소: {{lastAttemptIp}}</li>
+    {{/if}}
+  </ul>
+  <p>본인이 아니라면 계정 잠금이 해제된 후 즉시 비밀번호를 재설정하세요.</p>
+  <p>
+    <a href="{{supportLink}}">고객 지원 문의</a>
+  </p>
+</body>
+</html>
