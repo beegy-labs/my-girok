@@ -4,6 +4,7 @@ import { MailService } from './mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TemplateService } from '../templates/template.service';
 import { KafkaProducerService } from '../kafka/kafka-producer.service';
+import { SesService } from '../ses/ses.service';
 import { EmailTemplate, EmailStatus } from './mail.interface';
 
 // Type for mocked Prisma service
@@ -27,7 +28,7 @@ type MockPrismaInbox = {
 
 describe('MailService', () => {
   let service: MailService;
-  let prisma: { emailLog: MockPrismaEmailLog; inbox: MockPrismaInbox };
+  let prisma: { emailLog: MockPrismaEmailLog; inbox: MockPrismaInbox; $transaction: Mock };
   let templateService: {
     templateEnumToName: Mock;
     render: Mock;
@@ -71,11 +72,14 @@ describe('MailService', () => {
   };
 
   beforeEach(async () => {
+    const mockEmailLogCreate = vi.fn();
+    const mockInboxCreate = vi.fn();
+
     const mockPrisma = {
       emailLog: {
         findUnique: vi.fn(),
         findMany: vi.fn(),
-        create: vi.fn(),
+        create: mockEmailLogCreate,
         update: vi.fn(),
         updateMany: vi.fn(),
         count: vi.fn(),
@@ -83,11 +87,19 @@ describe('MailService', () => {
       inbox: {
         findUnique: vi.fn(),
         findMany: vi.fn(),
-        create: vi.fn(),
+        create: mockInboxCreate,
         update: vi.fn(),
         updateMany: vi.fn(),
         count: vi.fn(),
       },
+      // Mock $transaction - execute callback with transaction context
+      $transaction: vi.fn().mockImplementation(async (callback: unknown) => {
+        const tx = {
+          emailLog: { create: mockEmailLogCreate },
+          inbox: { create: mockInboxCreate },
+        };
+        return (callback as (tx: typeof tx) => Promise<unknown>)(tx);
+      }),
     };
 
     const mockTemplateService = {
@@ -103,12 +115,17 @@ describe('MailService', () => {
       publishMailSend: vi.fn().mockResolvedValue('message-id-123'),
     };
 
+    const mockSesService = {
+      sendEmail: vi.fn().mockResolvedValue({ success: true, messageId: 'ses-msg-123' }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MailService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: TemplateService, useValue: mockTemplateService },
         { provide: KafkaProducerService, useValue: mockKafkaProducer },
+        { provide: SesService, useValue: mockSesService },
       ],
     }).compile();
 

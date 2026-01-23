@@ -86,11 +86,7 @@ describe('DeviceTokenService', () => {
       expect(prisma.deviceToken.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            tenantId_accountId_deviceId: {
-              tenantId: 'tenant-1',
-              accountId: 'account-1',
-              deviceId: 'device-uuid-123',
-            },
+            token: 'new-fcm-token',
           },
         }),
       );
@@ -359,13 +355,15 @@ describe('DeviceTokenService', () => {
 
       expect(prisma.deviceToken.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
+          where: {
+            token: 'new-token',
+          },
           create: expect.objectContaining({
             tenantId: 'tenant-1',
             accountId: 'account-1',
             token: 'new-token',
           }),
           update: expect.objectContaining({
-            token: 'new-token',
             lastUsedAt: expect.any(Date),
           }),
         }),
