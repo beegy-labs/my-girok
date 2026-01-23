@@ -26,26 +26,24 @@ export class DeviceTokenService {
     const { tenantId, accountId, token, platform, deviceId, deviceInfo } = request;
 
     try {
-      // Upsert to handle re-registration of same device
+      // Upsert to handle re-registration of same token
       const deviceToken = await this.prisma.deviceToken.upsert({
         where: {
-          tenantId_accountId_deviceId: {
-            tenantId,
-            accountId,
-            deviceId,
-          },
+          token, // Token is unique globally
         },
         create: {
           tenantId,
           accountId,
           token,
           platform: this.platformToString(platform),
-          deviceId,
+          deviceId: deviceId || null,
           deviceInfo: deviceInfo || {},
         },
         update: {
-          token,
+          tenantId,
+          accountId,
           platform: this.platformToString(platform),
+          deviceId: deviceId || null,
           deviceInfo: deviceInfo || {},
           lastUsedAt: new Date(),
         },
@@ -130,7 +128,7 @@ export class DeviceTokenService {
         id: t.id,
         token: t.token,
         platform: this.stringToPlatform(t.platform),
-        deviceId: t.deviceId,
+        deviceId: t.deviceId || undefined,
         lastUsedAt: t.lastUsedAt
           ? { seconds: Math.floor(t.lastUsedAt.getTime() / 1000), nanos: 0 }
           : undefined,

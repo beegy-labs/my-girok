@@ -240,7 +240,7 @@ export interface DeviceTokenItem {
   id: string;
   token: string;
   platform: Platform;
-  deviceId: string;
+  deviceId?: string;
   lastUsedAt?: { seconds: number; nanos: number };
   createdAt: { seconds: number; nanos: number };
 }

@@ -20,11 +20,9 @@ export class SmsService implements OnModuleInit {
   private provider: 'twilio' | 'aws-sns' = 'twilio';
   private isConfigured = false;
 
-  // Twilio client placeholder
-  private twilioClient: unknown = null;
-
-  // AWS SNS client placeholder
-  private snsClient: unknown = null;
+  // TODO: P1 - Add client instances when implementing actual SMS sending
+  // private twilioClient: TwilioClient;
+  // private snsClient: SNSClient;
 
   constructor(private readonly configService: ConfigService) {}
 
