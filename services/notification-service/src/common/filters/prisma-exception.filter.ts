@@ -41,7 +41,7 @@ export class PrismaClientExceptionFilter implements ExceptionFilter {
           error: 'Not Found',
         };
 
-      case 'P2002':
+      case 'P2002': {
         // Unique constraint violation
         const target = meta?.target as string[] | undefined;
         return {
@@ -49,6 +49,7 @@ export class PrismaClientExceptionFilter implements ExceptionFilter {
           message: `A record with this ${target?.join(', ') ?? 'value'} already exists`,
           error: 'Conflict',
         };
+      }
 
       case 'P2003':
         // Foreign key constraint violation
