@@ -1,0 +1,18 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "git-submodules": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["git-submodules"],
+      "matchPackageNames": ["agentic-dev-protocol"],
+      "automerge": true,
+      "automergeType": "branch",
+      "schedule": ["at any time"],
+      "commitMessagePrefix": "chore(policy):",
+      "commitMessageTopic": "agentic-dev-protocol"
+    }
+  ]
+}
