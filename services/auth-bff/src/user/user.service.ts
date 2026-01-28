@@ -1,5 +1,8 @@
 import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
 import { Request, Response } from 'express';
+import { firstValueFrom } from 'rxjs';
 import {
   IdentityGrpcClient,
   AuditGrpcClient,
@@ -54,6 +57,8 @@ export class UserService {
     private readonly identityClient: IdentityGrpcClient,
     private readonly auditClient: AuditGrpcClient,
     private readonly sessionService: SessionService,
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
   ) {}
 
   async register(
@@ -62,6 +67,9 @@ export class UserService {
     dto: UserRegisterDto,
   ): Promise<{ success: boolean; user: UserInfoDto; message: string }> {
     try {
+      // Verify service and domain (X-Service-Id + optional domain validation)
+      await this.verifyServiceDomain(req);
+
       // Check if account already exists
       const existingAccount = await this.identityClient.getAccountByEmail(dto.email);
       if (existingAccount) {
@@ -129,6 +137,9 @@ export class UserService {
     const userAgent = req.headers['user-agent'] || 'unknown';
 
     try {
+      // Verify service and domain (X-Service-Id + optional domain validation)
+      await this.verifyServiceDomain(req);
+
       // Get account
       const account = await this.identityClient.getAccountByEmail(dto.email);
       if (!account) {
@@ -528,5 +539,69 @@ export class UserService {
       return Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0].trim();
     }
     return req.socket.remoteAddress || 'unknown';
+  }
+
+  /**
+   * Verify service with X-Service-Id header and optional domain validation
+   * Implements 2-tier authentication:
+   * - Tier 1 (ALWAYS): X-Service-Id (UUID from services.id)
+   * - Tier 2 (OPTIONAL): Domain validation (controlled by service_configs.domain_validation)
+   *
+   * @param req - Express request object
+   * @throws UnauthorizedException if verification fails
+   */
+  private async verifyServiceDomain(req: Request): Promise<void> {
+    // STEP 1: Extract X-Service-Id header (required)
+    const serviceId = req.headers['x-service-id'] as string;
+    if (!serviceId) {
+      this.logger.warn('Missing X-Service-Id header');
+      throw new UnauthorizedException('Missing required header: X-Service-Id');
+    }
+
+    // STEP 2: Extract Referer/Origin for domain validation (optional)
+    const referer = req.headers.referer || req.headers.origin;
+    let domain: string | undefined;
+    if (referer) {
+      try {
+        const url = new URL(referer as string);
+        domain = url.host;
+      } catch (error) {
+        this.logger.warn(`Invalid referer URL: ${referer}`);
+      }
+    }
+
+    // STEP 3: Call auth-service verify-domain endpoint
+    try {
+      const authServiceUrl = this.configService.get<string>(
+        'auth.service.url',
+        'http://auth-service:3000',
+      );
+      const response = await firstValueFrom(
+        this.httpService.post(`${authServiceUrl}/v1/services/verify-domain`, {
+          serviceId,
+          domain,
+        }),
+      );
+
+      const result = response.data;
+
+      if (!result.valid) {
+        this.logger.warn(`Service verification failed: ${result.reason}`, {
+          serviceId,
+          domain,
+        });
+        throw new UnauthorizedException(result.reason || 'Invalid service or domain');
+      }
+
+      this.logger.log(
+        `Service verified: ${result.service?.slug} (domain validation: ${result.service?.domainValidation})`,
+      );
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      this.logger.error('Service verification request failed', error);
+      throw new UnauthorizedException('Service verification failed');
+    }
   }
 }

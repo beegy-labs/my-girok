@@ -63,6 +63,16 @@ interface UserConsentRow {
   withdrawnAt: Date | null;
 }
 
+interface ServiceConfigRow {
+  id: string;
+  slug: string;
+  name: string;
+  domains: string[];
+  domainValidation: boolean;
+  jwtValidation: boolean;
+  rateLimitEnabled: boolean;
+}
+
 /**
  * Services Service for user service join and consent management
  * Issue: #356
@@ -113,6 +123,93 @@ export class ServicesService {
   async invalidateServiceCache(slug: string): Promise<void> {
     const cacheKey = CacheKey.make('auth', 'service', slug);
     await this.cache.del(cacheKey);
+  }
+
+  /**
+   * Invalidate service config cache by service ID
+   * Should be called when service_configs is updated via web-admin
+   * Cache key: {env}:auth:service:config:{serviceId}
+   */
+  async invalidateServiceConfigCache(serviceId: string): Promise<void> {
+    const cacheKey = CacheKey.make('auth', 'service', 'config', serviceId);
+    await this.cache.del(cacheKey);
+    this.logger.log(`Service config cache invalidated: ${serviceId}`);
+  }
+
+  /**
+   * Verify service domain with X-Service-Id header
+   * Implements 2-tier authentication:
+   * - Tier 1 (ALWAYS): X-Service-Id (UUID from services.id)
+   * - Tier 2 (OPTIONAL): Domain validation (controlled by service_configs.domain_validation)
+   *
+   * Performance optimization: Uses Valkey caching with 1-hour TTL
+   * - Cache hit: ~2ms
+   * - Cache miss: ~50ms (DB query)
+   *
+   * @param serviceId - UUID from services.id (required)
+   * @param domain - Domain from Referer/Origin header (optional)
+   * @returns Verification result with service config if valid
+   */
+  async verifyServiceDomain(
+    serviceId: string,
+    domain?: string,
+  ): Promise<{ valid: boolean; service?: ServiceConfigRow; reason?: string }> {
+    // STEP 1: Validate UUID format (prevent SQL injection)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(serviceId)) {
+      return { valid: false, reason: 'Invalid service ID format' };
+    }
+
+    // STEP 2: Check Valkey cache
+    const cacheKey = CacheKey.make('auth', 'service', 'config', serviceId);
+    let serviceConfig = await this.cache.get<ServiceConfigRow>(cacheKey);
+
+    if (!serviceConfig) {
+      // STEP 3: Cache miss - Query DB with JOIN
+      const results = await this.prisma.$queryRaw<ServiceConfigRow[]>`
+        SELECT
+          s.id, s.slug, s.name, s.domains,
+          COALESCE(sc.domain_validation, true) as "domainValidation",
+          COALESCE(sc.jwt_validation, true) as "jwtValidation",
+          COALESCE(sc.rate_limit_enabled, true) as "rateLimitEnabled"
+        FROM services s
+        LEFT JOIN service_configs sc ON s.id = sc.service_id
+        WHERE s.id = ${serviceId}::uuid AND s.is_active = true
+        LIMIT 1
+      `;
+
+      if (!results.length) {
+        return { valid: false, reason: 'Service not found' };
+      }
+
+      serviceConfig = results[0];
+      // Cache for 1 hour (3600 seconds)
+      await this.cache.set(cacheKey, serviceConfig, 3600);
+      this.logger.log(`Service config cached: ${serviceId}`);
+    }
+
+    // STEP 4: Check domain_validation flag
+    if (!serviceConfig.domainValidation) {
+      // Domain validation disabled - only service ID required
+      return { valid: true, service: serviceConfig };
+    }
+
+    // STEP 5: domain_validation = true → Validate domain
+    if (!domain) {
+      return { valid: false, reason: 'Missing domain (domain validation enabled)' };
+    }
+
+    // Normalize domain (remove protocol, trailing slash)
+    const normalizedDomain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const domainWithoutPort = normalizedDomain.replace(/:\d+$/, '');
+
+    const domainMatch =
+      serviceConfig.domains.includes(normalizedDomain) ||
+      serviceConfig.domains.includes(domainWithoutPort);
+
+    return domainMatch
+      ? { valid: true, service: serviceConfig }
+      : { valid: false, reason: `Domain ${normalizedDomain} not allowed for this service` };
   }
 
   /**

@@ -108,3 +108,24 @@ export interface UpdateConsentResponse {
   accessToken?: string;
   refreshToken?: string;
 }
+
+// Verify Service Domain DTOs
+export class VerifyServiceDomainDto {
+  @IsString()
+  serviceId!: string;
+
+  @IsOptional()
+  @IsString()
+  domain?: string;
+}
+
+export interface VerifyServiceDomainResponse {
+  valid: boolean;
+  service?: {
+    id: string;
+    slug: string;
+    name: string;
+    domainValidation: boolean;
+  };
+  reason?: string;
+}
