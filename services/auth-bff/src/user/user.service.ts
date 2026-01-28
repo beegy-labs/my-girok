@@ -565,7 +565,7 @@ export class UserService {
       try {
         const url = new URL(referer as string);
         domain = url.host;
-      } catch (error) {
+      } catch {
         this.logger.warn(`Invalid referer URL: ${referer}`);
       }
     }
