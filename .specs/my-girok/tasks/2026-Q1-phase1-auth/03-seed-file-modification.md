@@ -266,9 +266,9 @@ Seed file now populates:
 
 1. `services` - Main service entry
 2. `service_configs` - JWT, domain validation, rate limits
-3. `service_supported_countries` - KR, US, JP
-4. `service_supported_locales` - ko, en, ja
-5. `service_consent_requirements` - 9 entries (3 countries × 3 types)
+3. `service_supported_countries` - KR, US, JP, IN, IN
+4. `service_supported_locales` - ko, en, ja, hi, hi
+5. `service_consent_requirements` - 9 entries (4 countries × 3 types)
 
 ## Next Steps
 

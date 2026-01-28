@@ -224,7 +224,7 @@ kubectl exec -it ${POD} -- psql ${DATABASE_URL} -c \
    WHERE s.slug='my-girok'
    ORDER BY scr.country_code, scr.consent_type;"
 
-# Expected: 9 rows (3 countries × 3 consent types)
+# Expected: 9 rows (4 countries × 3 consent types)
 ```
 
 ### 3. Test Service Lookup
@@ -255,9 +255,9 @@ pkill -f "port-forward.*auth-service"
 - [ ] Seed scripts executed without errors
 - [ ] my-girok service exists in services table
 - [ ] Service config created (jwt_validation: true)
-- [ ] 3 countries added (KR, US, JP)
-- [ ] 3 locales added (ko, en, ja)
-- [ ] 9 consent requirements added
+- [ ] 4 countries added (KR, US, JP, IN, IN)
+- [ ] 4 locales added (ko, en, ja, hi, hi)
+- [ ] 12 consent requirements added
 - [ ] Domain lookup endpoint works
 
 ## Troubleshooting

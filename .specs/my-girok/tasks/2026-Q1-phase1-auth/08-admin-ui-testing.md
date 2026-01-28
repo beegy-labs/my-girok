@@ -101,7 +101,7 @@ Actions:
 Tab: Countries
 
 Expected:
-✅ List shows 3 countries:
+✅ List shows 4 countries:
    - KR (South Korea) - Active
    - US (United States) - Active
    - JP (Japan) - Active
@@ -122,7 +122,7 @@ Actions:
 Tab: Locales
 
 Expected:
-✅ List shows 3 locales:
+✅ List shows 4 locales:
    - ko (Korean) - Active
    - en (English) - Active
    - ja (Japanese) - Active
@@ -223,7 +223,7 @@ Response: 200 OK
 
 ### Countries Tab
 
-- [ ] All 3 countries display (KR, US, JP)
+- [ ] All 4 countries display (KR, US, JP, IN, IN)
 - [ ] Add country works
 - [ ] Toggle status works
 - [ ] Remove country works
@@ -231,7 +231,7 @@ Response: 200 OK
 
 ### Locales Tab
 
-- [ ] All 3 locales display (ko, en, ja)
+- [ ] All 4 locales display (ko, en, ja, hi, hi)
 - [ ] Add locale works
 - [ ] Toggle status works
 - [ ] Remove locale works

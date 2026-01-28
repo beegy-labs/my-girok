@@ -44,8 +44,8 @@ const services = [
       maintenanceMode: false,
       auditLevel: 'STANDARD',
     },
-    countries: ['KR', 'US', 'JP'],
-    locales: ['ko', 'en', 'ja'],
+    countries: ['KR', 'US', 'JP', 'IN'],
+    locales: ['ko', 'en', 'ja', 'hi'],
     consentRequirements: [
       // KR
       { countryCode: 'KR', consentType: 'TERMS_OF_SERVICE', isRequired: true },
@@ -59,6 +59,10 @@ const services = [
       { countryCode: 'JP', consentType: 'TERMS_OF_SERVICE', isRequired: true },
       { countryCode: 'JP', consentType: 'PRIVACY_POLICY', isRequired: true },
       { countryCode: 'JP', consentType: 'MARKETING_EMAIL', isRequired: false },
+      // IN (India)
+      { countryCode: 'IN', consentType: 'TERMS_OF_SERVICE', isRequired: true },
+      { countryCode: 'IN', consentType: 'PRIVACY_POLICY', isRequired: true },
+      { countryCode: 'IN', consentType: 'MARKETING_EMAIL', isRequired: false },
     ],
   },
 ];

@@ -108,8 +108,8 @@ open https://admin.dev.girok.dev/services
 
 - **Service slug**: `my-girok`
 - **Domains**: `my-girok.com`, `dev.girok.dev`, `localhost:5173`, `localhost:4002`
-- **Countries**: KR, US, JP
-- **Locales**: ko, en, ja
+- **Countries**: KR, US, JP, IN, IN
+- **Locales**: ko, en, ja, hi, hi
 - **Required consents**: TERMS_OF_SERVICE, PRIVACY_POLICY
 - **GitOps file**: `clusters/home/values/platform-auth-service-dev.yaml`
 

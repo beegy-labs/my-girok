@@ -52,8 +52,8 @@ Update success criteria:
 
 - [x] my-girok 서비스가 auth_db에 등록됨
 - [x] Service config 설정 완료 (JWT, domain validation, rate limits)
-- [x] Countries 설정 (KR, US, JP)
-- [x] Locales 설정 (ko, en, ja)
+- [x] Countries 설정 (KR, US, JP, IN, IN)
+- [x] Locales 설정 (ko, en, ja, hi, hi)
 - [x] Consent requirements 설정 (TERMS, PRIVACY, MARKETING_EMAIL)
 
 ### User Registration & Login (Must Have)
@@ -122,8 +122,8 @@ Create new file:
 
 - [x] my-girok service registered in auth_db
 - [x] Service configuration completed (JWT, domains, rate limits)
-- [x] Multi-country support (KR, US, JP)
-- [x] Multi-locale support (ko, en, ja)
+- [x] Multi-country support (KR, US, JP, IN, IN)
+- [x] Multi-locale support (ko, en, ja, hi, hi)
 - [x] Consent management system configured
 
 ### Authentication System ✅
@@ -181,13 +181,13 @@ SELECT COUNT(*) FROM service_configs WHERE service_id = (SELECT id FROM services
 -- Result: 1
 
 SELECT COUNT(*) FROM service_supported_countries WHERE service_id = (SELECT id FROM services WHERE slug='my-girok');
--- Result: 3 (KR, US, JP)
+-- Result: 3 (KR, US, JP, IN, IN)
 
 SELECT COUNT(*) FROM service_supported_locales WHERE service_id = (SELECT id FROM services WHERE slug='my-girok');
--- Result: 3 (ko, en, ja)
+-- Result: 3 (ko, en, ja, hi, hi)
 
 SELECT COUNT(*) FROM service_consent_requirements WHERE service_id = (SELECT id FROM services WHERE slug='my-girok');
--- Result: 9 (3 countries × 3 types)
+-- Result: 9 (4 countries × 3 types)
 ```
 ````
 
