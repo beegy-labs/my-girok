@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException, ConflictException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
 import { vi, describe, it, expect, beforeEach, type MockInstance } from 'vitest';
+import { of } from 'rxjs';
 import { UserService } from '../../src/user/user.service';
 import { IdentityGrpcClient, AuditGrpcClient } from '../../src/grpc-clients';
 import { SessionService } from '../../src/session/session.service';
@@ -73,6 +76,7 @@ describe('UserService', () => {
     headers: {
       'user-agent': 'test-agent',
       'x-forwarded-for': '192.168.1.1',
+      'x-service-id': 'service-123',
     },
     socket: { remoteAddress: '127.0.0.1' },
     cookies: {},
@@ -125,6 +129,30 @@ describe('UserService', () => {
             destroySession: vi.fn(),
             extractMetadata: vi.fn().mockReturnValue({ userAgent: 'test', ipAddress: '127.0.0.1' }),
             getDeviceFingerprint: vi.fn().mockReturnValue('fingerprint-123'),
+          },
+        },
+        {
+          provide: HttpService,
+          useValue: {
+            post: vi.fn().mockReturnValue(
+              of({
+                data: {
+                  valid: true,
+                  service: {
+                    id: 'service-123',
+                    slug: 'my-girok',
+                    name: 'My Girok',
+                    domainValidation: false,
+                  },
+                },
+              }),
+            ),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: vi.fn().mockReturnValue('http://auth-service:3000'),
           },
         },
       ],
@@ -599,6 +627,215 @@ describe('UserService', () => {
 
       await expect(service.revokeAllOtherSessions(mockSession)).rejects.toThrow(
         UnauthorizedException,
+      );
+    });
+  });
+
+  describe('login - service domain verification', () => {
+    let httpService: { post: MockInstance };
+
+    beforeEach(async () => {
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          UserService,
+          { provide: IdentityGrpcClient, useValue: identityClient },
+          { provide: AuditGrpcClient, useValue: auditClient },
+          { provide: SessionService, useValue: sessionService },
+          {
+            provide: HttpService,
+            useValue: {
+              post: vi.fn(),
+            },
+          },
+          {
+            provide: ConfigService,
+            useValue: {
+              get: vi.fn().mockReturnValue('http://auth-service:3000'),
+            },
+          },
+        ],
+      }).compile();
+
+      service = module.get<UserService>(UserService);
+      httpService = module.get(HttpService);
+
+      // Setup default successful scenario
+      identityClient.getAccountByEmail.mockResolvedValue(mockAccount);
+      identityClient.validatePassword.mockResolvedValue({ valid: true });
+      identityClient.createSession.mockResolvedValue({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+      });
+      identityClient.recordLoginAttempt.mockResolvedValue(undefined);
+      sessionService.createSession.mockResolvedValue(mockSession);
+      auditClient.logLoginSuccess.mockResolvedValue(undefined);
+
+      // Setup default service verification success
+      httpService.post.mockReturnValue(
+        of({
+          data: {
+            valid: true,
+            service: {
+              id: 'service-123',
+              slug: 'my-girok',
+              name: 'My Girok',
+              domainValidation: true,
+            },
+          },
+        }),
+      );
+    });
+
+    it('should reject login when X-Service-Id header is missing', async () => {
+      const requestWithoutHeader = {
+        ...mockRequest,
+        headers: {
+          ...mockRequest.headers,
+          'x-service-id': undefined,
+        },
+      } as unknown as Request;
+
+      await expect(
+        service.login(requestWithoutHeader, mockResponse, {
+          email: 'user@example.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should reject login when service verification fails', async () => {
+      httpService.post.mockReturnValueOnce(
+        of({
+          data: {
+            valid: false,
+            reason: 'Service not found',
+          },
+        }),
+      );
+
+      await expect(
+        service.login(mockRequest, mockResponse, {
+          email: 'user@example.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should reject login when domain validation fails', async () => {
+      httpService.post.mockReturnValueOnce(
+        of({
+          data: {
+            valid: false,
+            reason: 'Domain evil.com not allowed',
+          },
+        }),
+      );
+
+      await expect(
+        service.login(mockRequest, mockResponse, {
+          email: 'user@example.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should reject login when auth-service is unreachable', async () => {
+      httpService.post.mockImplementationOnce(() => {
+        throw new Error('Network error');
+      });
+
+      await expect(
+        service.login(mockRequest, mockResponse, {
+          email: 'user@example.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should allow login when service verification succeeds', async () => {
+      // httpService.post mock is already set in beforeEach with successful response
+
+      const result = await service.login(mockRequest, mockResponse, {
+        email: 'user@example.com',
+        password: 'password123',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.user).toBeDefined();
+    });
+
+    it('should extract domain from referer header', async () => {
+      const requestWithReferer = {
+        ...mockRequest,
+        headers: {
+          ...mockRequest.headers,
+          referer: 'https://my-girok.com/login',
+        },
+      } as unknown as Request;
+
+      // httpService.post mock is already set in beforeEach
+
+      await service.login(requestWithReferer, mockResponse, {
+        email: 'user@example.com',
+        password: 'password123',
+      });
+
+      expect(httpService.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          serviceId: 'service-123',
+          domain: 'my-girok.com',
+        }),
+      );
+    });
+
+    it('should extract domain from origin header', async () => {
+      const requestWithOrigin = {
+        ...mockRequest,
+        headers: {
+          ...mockRequest.headers,
+          origin: 'https://my-girok.com',
+        },
+      } as unknown as Request;
+
+      // httpService.post mock is already set in beforeEach
+
+      await service.login(requestWithOrigin, mockResponse, {
+        email: 'user@example.com',
+        password: 'password123',
+      });
+
+      expect(httpService.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          serviceId: 'service-123',
+          domain: 'my-girok.com',
+        }),
+      );
+    });
+
+    it('should handle invalid referer URL gracefully', async () => {
+      const requestWithInvalidReferer = {
+        ...mockRequest,
+        headers: {
+          ...mockRequest.headers,
+          referer: 'not-a-valid-url',
+        },
+      } as unknown as Request;
+
+      // httpService.post mock is already set in beforeEach
+
+      await service.login(requestWithInvalidReferer, mockResponse, {
+        email: 'user@example.com',
+        password: 'password123',
+      });
+
+      expect(httpService.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          serviceId: 'service-123',
+          domain: undefined,
+        }),
       );
     });
   });

@@ -23,6 +23,8 @@ import {
   AddCountryConsentResponse,
   UserConsentResponse,
   UpdateConsentResponse,
+  VerifyServiceDomainDto,
+  VerifyServiceDomainResponse,
 } from './dto';
 import { AuthenticatedUser, isAuthenticatedUser } from '@my-girok/types';
 
@@ -33,6 +35,62 @@ import { AuthenticatedUser, isAuthenticatedUser } from '@my-girok/types';
 @Controller('services')
 export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
+
+  /**
+   * Get service by domain
+   * GET /v1/services/domain/:domain
+   * Public endpoint - no auth required
+   * Used for domain-based service detection
+   * Returns service ID for X-Service-Id header
+   */
+  @Get('domain/:domain')
+  @Public()
+  async getServiceByDomain(@Param('domain') domain: string) {
+    const service = await this.servicesService.getServiceFromDomain(decodeURIComponent(domain));
+
+    if (!service) {
+      return null; // Return null instead of 404 for soft failure
+    }
+
+    return {
+      id: service.id, // Frontend uses this for X-Service-Id header
+      slug: service.slug,
+      name: service.name,
+    };
+  }
+
+  /**
+   * Verify service with X-Service-Id and optional domain
+   * POST /v1/services/verify-domain
+   * Public endpoint - used by auth-bff during login/register
+   *
+   * Authentication flow:
+   * 1. X-Service-Id (UUID) - ALWAYS required
+   * 2. Domain validation - OPTIONAL (controlled by service_configs.domain_validation)
+   *
+   * Performance: Uses Valkey caching (~2ms with cache hit)
+   */
+  @Post('verify-domain')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async verifyServiceDomain(
+    @Body() dto: VerifyServiceDomainDto,
+  ): Promise<VerifyServiceDomainResponse> {
+    const result = await this.servicesService.verifyServiceDomain(dto.serviceId, dto.domain);
+
+    return {
+      valid: result.valid,
+      service: result.service
+        ? {
+            id: result.service.id,
+            slug: result.service.slug,
+            name: result.service.name,
+            domainValidation: result.service.domainValidation,
+          }
+        : undefined,
+      reason: result.reason,
+    };
+  }
 
   /**
    * Get consent requirements for a service and country

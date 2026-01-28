@@ -9,6 +9,7 @@
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
 import { vi, describe, it, expect, beforeEach, afterEach, type MockInstance } from 'vitest';
 import { of, throwError } from 'rxjs';
 import {
@@ -53,6 +54,7 @@ describe('Auth-BFF <-> Audit-Service gRPC Integration', () => {
       'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
       'x-forwarded-for': '192.168.1.100',
       'accept-language': 'en-US',
+      'x-service-id': 'service-123',
     },
     socket: { remoteAddress: '127.0.0.1' },
     cookies: { girok_session: 'test-session-id' },
@@ -139,6 +141,24 @@ describe('Auth-BFF <-> Audit-Service gRPC Integration', () => {
         {
           provide: SessionService,
           useValue: mockSessionService,
+        },
+        {
+          provide: HttpService,
+          useValue: {
+            post: vi.fn().mockReturnValue(
+              of({
+                data: {
+                  valid: true,
+                  service: {
+                    id: 'service-123',
+                    slug: 'my-girok',
+                    name: 'My Girok',
+                    domainValidation: false,
+                  },
+                },
+              }),
+            ),
+          },
         },
       ],
     }).compile();

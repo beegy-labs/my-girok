@@ -1,18 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Loader2,
-  AlertCircle,
-  Save,
-  Plus,
-  X,
-  Shield,
-  Gauge,
-  Wrench,
-  Activity,
-  Globe,
-} from 'lucide-react';
-import { servicesApi, ServiceConfig, DomainResponse, AuditLevel } from '../../api/services';
+import { Loader2, AlertCircle, Save, X, Shield, Gauge, Wrench, Activity } from 'lucide-react';
+import { servicesApi, ServiceConfig, AuditLevel } from '../../api/services';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
@@ -34,11 +23,9 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
 
   // Config state
   const [config, setConfig] = useState<ServiceConfig | null>(null);
-  const [domains, setDomains] = useState<DomainResponse | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<Partial<ServiceConfig>>({});
-  const [newDomain, setNewDomain] = useState('');
   const [reason, setReason] = useState('');
 
   const {
@@ -62,41 +49,14 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
     context: 'UpdateServiceConfig',
   });
 
-  const addDomainMutation = useApiMutation({
-    mutationFn: (domain: string) => servicesApi.addServiceDomain(serviceId, domain),
-    successToast: 'Domain added successfully',
-    onSuccess: async () => {
-      setNewDomain('');
-      const domainsResult = await servicesApi.getServiceDomains(serviceId);
-      setDomains(domainsResult);
-    },
-    context: 'AddServiceDomain',
-  });
-
-  const removeDomainMutation = useApiMutation({
-    mutationFn: (domain: string) => servicesApi.removeServiceDomain(serviceId, domain),
-    successToast: 'Domain removed successfully',
-    onSuccess: (result) => setDomains(result),
-    context: 'RemoveServiceDomain',
-  });
-
-  const saving =
-    updateConfigMutation.isLoading || addDomainMutation.isLoading || removeDomainMutation.isLoading;
-  const addingDomain = addDomainMutation.isLoading;
+  const saving = updateConfigMutation.isLoading;
 
   const fetchData = useCallback(async () => {
-    const result = await executeWithErrorHandling(async () => {
-      const [configResult, domainsResult] = await Promise.all([
-        servicesApi.getServiceConfig(serviceId),
-        servicesApi.getServiceDomains(serviceId),
-      ]);
-      return { configResult, domainsResult };
-    });
+    const result = await executeWithErrorHandling(() => servicesApi.getServiceConfig(serviceId));
 
     if (result) {
-      setConfig(result.configResult);
-      setDomains(result.domainsResult);
-      setFormData(result.configResult);
+      setConfig(result);
+      setFormData(result);
     }
   }, [serviceId, executeWithErrorHandling]);
 
@@ -124,15 +84,6 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
     });
 
     trackFormSubmit('ServiceConfigForm', 'update', !updateConfigMutation.isError);
-  };
-
-  const handleAddDomain = async () => {
-    if (!newDomain.trim()) return;
-    await addDomainMutation.mutate(newDomain.trim());
-  };
-
-  const handleRemoveDomain = async (domain: string) => {
-    await removeDomainMutation.mutate(domain);
   };
 
   const updateFormData = (key: keyof ServiceConfig, value: unknown) => {
@@ -169,55 +120,6 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
           </button>
         </div>
       )}
-
-      {/* Domains Section */}
-      <Card>
-        <div className="flex items-center gap-2 mb-4">
-          <Globe size={20} className="text-theme-primary" />
-          <h3 className="text-lg font-semibold text-theme-text-primary">{t('services.domains')}</h3>
-        </div>
-
-        <div className="space-y-3">
-          {domains?.domains.map((domain) => (
-            <div
-              key={domain}
-              className="flex items-center justify-between px-3 py-2 bg-theme-bg-secondary rounded-lg"
-            >
-              <span className="text-theme-text-primary">{domain}</span>
-              <div className="flex items-center gap-2">
-                {domain === domains.primaryDomain && (
-                  <span className="px-2 py-0.5 text-xs bg-theme-primary/10 text-theme-primary rounded">
-                    {t('services.primary')}
-                  </span>
-                )}
-                {canEdit && (
-                  <button
-                    onClick={() => handleRemoveDomain(domain)}
-                    className="p-1 text-theme-status-error-text hover:bg-theme-status-error-bg rounded"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {canEdit && (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newDomain}
-                onChange={(e) => setNewDomain(e.target.value)}
-                placeholder="example.com"
-                className="flex-1 px-3 py-2 border border-theme-border-default rounded-lg bg-theme-bg-primary text-theme-text-primary"
-              />
-              <Button onClick={handleAddDomain} loading={addingDomain} icon={Plus} size="sm">
-                {t('common.add')}
-              </Button>
-            </div>
-          )}
-        </div>
-      </Card>
 
       {/* Security Section */}
       <Card>

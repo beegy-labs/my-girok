@@ -16,6 +16,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
+import { of } from 'rxjs';
 import { UserService } from '../../src/user/user.service';
 import { SessionService } from '../../src/session/session.service';
 import { SessionStore } from '../../src/session/session.store';
@@ -553,6 +555,30 @@ describe('OWASP A04:2021 - Session Fixation Prevention', () => {
           { provide: IdentityGrpcClient, useValue: identityClient },
           { provide: AuditGrpcClient, useValue: auditClient },
           { provide: SessionService, useValue: sessionService },
+          {
+            provide: HttpService,
+            useValue: {
+              post: vi.fn().mockReturnValue(
+                of({
+                  data: {
+                    valid: true,
+                    service: {
+                      id: 'service-123',
+                      slug: 'my-girok',
+                      name: 'My Girok',
+                      domainValidation: false,
+                    },
+                  },
+                }),
+              ),
+            },
+          },
+          {
+            provide: ConfigService,
+            useValue: {
+              get: vi.fn().mockReturnValue('http://auth-service:3000'),
+            },
+          },
         ],
       }).compile();
 
@@ -810,6 +836,30 @@ describe('OWASP A07:2021 - Authentication Failures', () => {
           { provide: IdentityGrpcClient, useValue: identityClient },
           { provide: AuditGrpcClient, useValue: auditClient },
           { provide: SessionService, useValue: sessionService },
+          {
+            provide: HttpService,
+            useValue: {
+              post: vi.fn().mockReturnValue(
+                of({
+                  data: {
+                    valid: true,
+                    service: {
+                      id: 'service-123',
+                      slug: 'my-girok',
+                      name: 'My Girok',
+                      domainValidation: false,
+                    },
+                  },
+                }),
+              ),
+            },
+          },
+          {
+            provide: ConfigService,
+            useValue: {
+              get: vi.fn().mockReturnValue('http://auth-service:3000'),
+            },
+          },
         ],
       }).compile();
 
@@ -943,6 +993,30 @@ describe('OWASP A07:2021 - Authentication Failures', () => {
           { provide: IdentityGrpcClient, useValue: identityClient },
           { provide: AuditGrpcClient, useValue: auditClient },
           { provide: SessionService, useValue: sessionService },
+          {
+            provide: HttpService,
+            useValue: {
+              post: vi.fn().mockReturnValue(
+                of({
+                  data: {
+                    valid: true,
+                    service: {
+                      id: 'service-123',
+                      slug: 'my-girok',
+                      name: 'My Girok',
+                      domainValidation: false,
+                    },
+                  },
+                }),
+              ),
+            },
+          },
+          {
+            provide: ConfigService,
+            useValue: {
+              get: vi.fn().mockReturnValue('http://auth-service:3000'),
+            },
+          },
         ],
       }).compile();
 
@@ -1059,6 +1133,30 @@ describe('Error Handling Security', () => {
           { provide: IdentityGrpcClient, useValue: identityClient },
           { provide: AuditGrpcClient, useValue: auditClient },
           { provide: SessionService, useValue: sessionService },
+          {
+            provide: HttpService,
+            useValue: {
+              post: vi.fn().mockReturnValue(
+                of({
+                  data: {
+                    valid: true,
+                    service: {
+                      id: 'service-123',
+                      slug: 'my-girok',
+                      name: 'My Girok',
+                      domainValidation: false,
+                    },
+                  },
+                }),
+              ),
+            },
+          },
+          {
+            provide: ConfigService,
+            useValue: {
+              get: vi.fn().mockReturnValue('http://auth-service:3000'),
+            },
+          },
         ],
       }).compile();
 

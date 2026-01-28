@@ -76,6 +76,7 @@ export function createMockRequest(options: MockRequestOptions = {}): Request {
       'user-agent': 'Mozilla/5.0',
       'accept-language': 'en-US',
       'accept-encoding': 'gzip',
+      'x-service-id': 'service-123', // Required for service domain verification
       ...options.headers,
     },
     socket: { remoteAddress: options.socket?.remoteAddress ?? '127.0.0.1' },

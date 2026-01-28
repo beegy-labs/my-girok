@@ -51,21 +51,14 @@
     "remove": "हटाएं"
   },
   "menu": {
-    "dashboard": "डैशबोर्ड",
     "services": "सेवाएं",
     "servicesList": "सभी सेवाएं",
-    "compliance": "अनुपालन",
-    "documents": "कानूनी दस्तावेज़",
-    "consentHistory": "सहमति इतिहास",
-    "analytics": "विश्लेषण",
-    "regionalRules": "क्षेत्रीय नियम",
-    "organization": "संगठन प्रबंधन",
-    "partners": "साझेदार",
-    "system": "सिस्टम",
-    "supportedCountries": "समर्थित देश",
-    "supportedLocales": "समर्थित भाषाएं",
-    "auditLogs": "ऑडिट लॉग",
-    "settings": "सेटिंग्स"
+    "serviceOverview": "अवलोकन",
+    "serviceConfig": "कॉन्फ़िगरेशन",
+    "serviceDomains": "डोमेन",
+    "serviceCountries": "देश",
+    "serviceLocales": "भाषाएं",
+    "serviceConsents": "सहमति"
   },
   "auth": {
     "title": "Girok व्यवस्थापक",
