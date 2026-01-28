@@ -6,6 +6,7 @@
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
 import { vi, describe, it, expect, beforeEach, afterEach, type MockInstance } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { IdentityGrpcClient } from '../../src/grpc-clients';
@@ -41,6 +42,7 @@ describe('Auth-BFF <-> Identity-Service gRPC Integration', () => {
       'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)',
       'x-forwarded-for': '203.0.113.50',
       'accept-language': 'ko-KR',
+      'x-service-id': 'service-123',
     },
     socket: { remoteAddress: '127.0.0.1' },
     cookies: { girok_session: 'test-session-id' },
@@ -118,6 +120,24 @@ describe('Auth-BFF <-> Identity-Service gRPC Integration', () => {
         {
           provide: AuditGrpcClient,
           useValue: mockAuditClient,
+        },
+        {
+          provide: HttpService,
+          useValue: {
+            post: vi.fn().mockReturnValue(
+              of({
+                data: {
+                  valid: true,
+                  service: {
+                    id: 'service-123',
+                    slug: 'my-girok',
+                    name: 'My Girok',
+                    domainValidation: false,
+                  },
+                },
+              }),
+            ),
+          },
         },
       ],
     }).compile();
