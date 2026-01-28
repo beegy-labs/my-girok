@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2, AlertCircle, Save, Plus, X, Shield, Gauge, Wrench, Activity } from 'lucide-react';
+import { Loader2, AlertCircle, Save, X, Shield, Gauge, Wrench, Activity } from 'lucide-react';
 import { servicesApi, ServiceConfig, AuditLevel } from '../../api/services';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import { Button } from '../../components/atoms/Button';

@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Layers, Info, Cog, Globe, Languages, ClipboardCheck } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 export interface MenuItem {
   id: string;

@@ -110,21 +110,27 @@ export default function ServiceOverviewTab({ serviceId }: ServiceOverviewTabProp
                 <label className="block text-sm font-medium text-theme-text-secondary mb-1">
                   Version
                 </label>
-                <div className="text-theme-text-primary">{service.settings.version || 'N/A'}</div>
+                <div className="text-theme-text-primary">
+                  {String(service.settings.version || 'N/A')}
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-theme-text-secondary mb-1">
                   Type
                 </label>
-                <div className="text-theme-text-primary">{service.settings.type || 'N/A'}</div>
+                <div className="text-theme-text-primary">
+                  {String(service.settings.type || 'N/A')}
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-theme-text-secondary mb-1">
                   Category
                 </label>
-                <div className="text-theme-text-primary">{service.settings.category || 'N/A'}</div>
+                <div className="text-theme-text-primary">
+                  {String(service.settings.category || 'N/A')}
+                </div>
               </div>
             </>
           )}
