@@ -786,10 +786,11 @@ describe('ServicesService', () => {
         mockCache.get.mockResolvedValue(mockServiceConfig);
 
         // Act
-        const result = await service.verifyServiceDomain(uppercaseId);
+        const result = await service.verifyServiceDomain(uppercaseId, 'my-girok.com');
 
         // Assert
         expect(mockCache.get).toHaveBeenCalled();
+        expect(result.valid).toBe(true);
       });
     });
   });
