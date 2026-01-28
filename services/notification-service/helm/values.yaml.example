@@ -1,0 +1,284 @@
+# My-Girok Notification Service Helm Values Example
+#
+# USAGE:
+#   1. Copy this file: cp values.yaml.example values.yaml
+#   2. Edit values.yaml with your settings
+#   3. Install: helm install my-girok-notification . -f values.yaml
+#
+# IMPORTANT:
+#   - values.yaml is gitignored - never commit your actual configuration
+#   - Customize for your environment (development, staging, production)
+#   - Use Sealed Secrets for sensitive data in production
+
+# Number of replicas
+# Development: 1, Staging: 2, Production: 3+
+replicaCount: 1
+
+image:
+  repository: your-registry.io/my-girok/notification-service
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+
+# ============================================================================
+# Service Configuration (HTTP Health + gRPC)
+# ============================================================================
+
+service:
+  type: ClusterIP
+  # HTTP Health endpoint
+  httpPort: 3000
+  httpTargetPort: 3000
+  # gRPC Server
+  grpcPort: 50055
+  grpcTargetPort: 50055
+
+# No HTTP ingress needed (gRPC only service)
+ingress:
+  enabled: false
+
+# gRPC Ingress (optional - for external gRPC access)
+grpcIngress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: notification-grpc.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: notification-grpc-tls
+      hosts:
+        - notification-grpc.example.com
+
+# Resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# Auto-scaling
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - notification-service
+          topologyKey: kubernetes.io/hostname
+
+# ============================================================================
+# Database Migration (goose)
+# ============================================================================
+
+migration:
+  enabled: true
+
+# ============================================================================
+# Application Configuration
+# ============================================================================
+
+app:
+  nodeEnv: production
+  httpPort: 3000
+  grpcPort: 50055
+
+  # CORS Origins (comma-separated)
+  corsOrigins: "https://example.com,https://admin.example.com"
+
+  # ============================================================================
+  # Database Configuration
+  # ============================================================================
+  database:
+    host: postgres
+    port: 5432
+    name: notification_db
+    user: notification_user
+    # password from secret
+
+  # ============================================================================
+  # FCM (Firebase Cloud Messaging) Configuration
+  # ============================================================================
+  fcm:
+    enabled: true
+    projectId: ""
+    # credentials from secret (FCM_SERVICE_ACCOUNT_JSON)
+
+  # ============================================================================
+  # SMS Provider Configuration
+  # ============================================================================
+  sms:
+    enabled: false
+    provider: twilio  # or aws_sns
+    # Twilio settings
+    twilio:
+      accountSid: ""
+      fromNumber: ""
+      # authToken from secret
+    # AWS SNS settings
+    sns:
+      region: "ap-northeast-2"
+
+  # ============================================================================
+  # Mail Service (gRPC) - for email orchestration
+  # ============================================================================
+  mailService:
+    enabled: true
+    grpcUrl: "mail-service.services.svc.cluster.local:50054"
+
+  # ============================================================================
+  # Audit Service (gRPC) - for compliance tracking
+  # Flow: notification-service -> audit-service gRPC -> OTEL Collector -> Kafka -> ClickHouse
+  # ============================================================================
+  auditService:
+    enabled: true
+    grpcUrl: "audit-service.services.svc.cluster.local:50054"
+
+  # ============================================================================
+  # Kafka (Redpanda) Configuration
+  # ============================================================================
+  kafka:
+    brokers: "kafka.default.svc.cluster.local:9092"
+    clientId: "notification-service"
+    consumerGroup: "notification-service-consumer"
+    # Environment topic prefix: dev., release., "" (prod)
+    topicPrefix: ""
+    topics:
+      notify: "notification.notify"
+      status: "notification.status"
+      dlq: "notification.dlq"
+    sasl:
+      enabled: false
+      mechanism: "scram-sha-512"
+
+  # ============================================================================
+  # Retry Configuration
+  # ============================================================================
+  retry:
+    maxAttempts: 3
+    backoffMs: 1000
+    backoffMultiplier: 2
+
+  # ============================================================================
+  # OpenTelemetry Configuration
+  # ============================================================================
+  otel:
+    enabled: true
+    endpoint: "http://otel-collector.observability.svc.cluster.local:4318"
+    serviceName: "notification-service"
+
+# ============================================================================
+# Sealed Secrets Configuration
+# ============================================================================
+# Use kubeseal to encrypt secrets before committing
+#
+# Example:
+#   kubectl create secret generic my-girok-notification-service-secret \
+#     --from-literal=database-url="postgresql://user:pass@host:5432/notification_db" \
+#     --from-literal=fcm-service-account-json='{"type":"service_account",...}' \
+#     --from-literal=twilio-auth-token="..." \
+#     --from-literal=kafka-sasl-username="..." \
+#     --from-literal=kafka-sasl-password="..." \
+#     --dry-run=client -o yaml | \
+#   kubeseal --format yaml > sealed-secret.yaml
+
+sealedSecrets:
+  enabled: true
+  annotations:
+    sealedsecrets.bitnami.com/managed: "true"
+
+# Health checks (HTTP for health endpoint)
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# gRPC health checks (for gRPC clients)
+grpcHealthCheck:
+  enabled: true
+  service: ""  # empty means check all services
+
+# ============================================================================
+# ENVIRONMENT-SPECIFIC CONFIGURATIONS
+# ============================================================================
+#
+# DEVELOPMENT:
+#   replicaCount: 1
+#   image.tag: "dev"
+#   autoscaling.enabled: false
+#   app.nodeEnv: development
+#   app.kafka.topicPrefix: "dev."
+#   app.fcm.enabled: false
+#   app.sms.enabled: false
+#
+# STAGING:
+#   replicaCount: 2
+#   image.tag: "staging"
+#   autoscaling.enabled: true
+#   app.nodeEnv: staging
+#   app.kafka.topicPrefix: "release."
+#
+# PRODUCTION:
+#   replicaCount: 3
+#   image.tag: "latest" or "v1.0.0"
+#   autoscaling.enabled: true
+#   app.nodeEnv: production
+#   app.kafka.topicPrefix: ""
+#
+# ============================================================================

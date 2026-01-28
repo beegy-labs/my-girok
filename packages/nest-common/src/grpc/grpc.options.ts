@@ -161,6 +161,9 @@ export const GRPC_PORTS = {
   IDENTITY: 50051,
   AUTH: 50052,
   LEGAL: 50053,
+  AUDIT: 50054,
+  NOTIFICATION: 50055,
+  MAIL: 50056,
 } as const;
 
 /**
@@ -170,6 +173,9 @@ export const GRPC_SERVICES = {
   IDENTITY: 'IDENTITY_GRPC_SERVICE',
   AUTH: 'AUTH_GRPC_SERVICE',
   LEGAL: 'LEGAL_GRPC_SERVICE',
+  AUDIT: 'AUDIT_GRPC_SERVICE',
+  MAIL: 'MAIL_GRPC_SERVICE',
+  NOTIFICATION: 'NOTIFICATION_GRPC_SERVICE',
 } as const;
 
 /**
@@ -179,6 +185,9 @@ export const GRPC_PACKAGES = {
   IDENTITY: 'identity.v1',
   AUTH: 'auth.v1',
   LEGAL: 'legal.v1',
+  AUDIT: 'audit.v1',
+  MAIL: 'mail.v1',
+  NOTIFICATION: 'notification.v1',
 } as const;
 
 /**
@@ -315,6 +324,99 @@ export function createLegalGrpcOptions(config?: GrpcClientConfig): ClientOptions
 }
 
 /**
+ * Create Audit service gRPC client options
+ */
+export function createAuditGrpcOptions(config?: GrpcClientConfig): ClientOptions {
+  const host = config?.host ?? process.env.AUDIT_GRPC_HOST ?? 'localhost';
+  const port =
+    config?.port ?? (parseInt(process.env.AUDIT_GRPC_PORT ?? '', 10) || GRPC_PORTS.AUDIT);
+  const protoPath = config?.protoPath ?? getDefaultProtoPath('audit/v1/audit.proto');
+  const channelOptions =
+    config?.channelOptions ??
+    (config?.useProductionOptions ? DEFAULT_CHANNEL_OPTIONS : getChannelOptionsForEnv());
+
+  return {
+    transport: Transport.GRPC,
+    options: {
+      package: GRPC_PACKAGES.AUDIT,
+      protoPath,
+      url: `${host}:${port}`,
+      channelOptions,
+      loader: {
+        keepCase: true,
+        longs: String,
+        enums: Number,
+        defaults: true,
+        oneofs: true,
+        includeDirs: getProtoIncludeDirs(),
+      },
+    },
+  };
+}
+
+/**
+ * Create Mail service gRPC client options
+ */
+export function createMailGrpcOptions(config?: GrpcClientConfig): ClientOptions {
+  const host = config?.host ?? process.env.MAIL_GRPC_HOST ?? 'localhost';
+  const port = config?.port ?? (parseInt(process.env.MAIL_GRPC_PORT ?? '', 10) || GRPC_PORTS.MAIL);
+  const protoPath = config?.protoPath ?? getDefaultProtoPath('mail/v1/mail.proto');
+  const channelOptions =
+    config?.channelOptions ??
+    (config?.useProductionOptions ? DEFAULT_CHANNEL_OPTIONS : getChannelOptionsForEnv());
+
+  return {
+    transport: Transport.GRPC,
+    options: {
+      package: GRPC_PACKAGES.MAIL,
+      protoPath,
+      url: `${host}:${port}`,
+      channelOptions,
+      loader: {
+        keepCase: true,
+        longs: String,
+        enums: Number,
+        defaults: true,
+        oneofs: true,
+        includeDirs: getProtoIncludeDirs(),
+      },
+    },
+  };
+}
+
+/**
+ * Create Notification service gRPC client options
+ */
+export function createNotificationGrpcOptions(config?: GrpcClientConfig): ClientOptions {
+  const host = config?.host ?? process.env.NOTIFICATION_GRPC_HOST ?? 'localhost';
+  const port =
+    config?.port ??
+    (parseInt(process.env.NOTIFICATION_GRPC_PORT ?? '', 10) || GRPC_PORTS.NOTIFICATION);
+  const protoPath = config?.protoPath ?? getDefaultProtoPath('notification/v1/notification.proto');
+  const channelOptions =
+    config?.channelOptions ??
+    (config?.useProductionOptions ? DEFAULT_CHANNEL_OPTIONS : getChannelOptionsForEnv());
+
+  return {
+    transport: Transport.GRPC,
+    options: {
+      package: GRPC_PACKAGES.NOTIFICATION,
+      protoPath,
+      url: `${host}:${port}`,
+      channelOptions,
+      loader: {
+        keepCase: true,
+        longs: String,
+        enums: Number,
+        defaults: true,
+        oneofs: true,
+        includeDirs: getProtoIncludeDirs(),
+      },
+    },
+  };
+}
+
+/**
  * Get default proto file path
  * Assumes standard monorepo structure: packages/proto/<path>
  */
@@ -348,6 +450,12 @@ export interface GrpcEnvironmentConfig {
   authPort?: number;
   legalHost?: string;
   legalPort?: number;
+  auditHost?: string;
+  auditPort?: number;
+  mailHost?: string;
+  mailPort?: number;
+  notificationHost?: string;
+  notificationPort?: number;
   protoBasePath?: string;
 }
 
@@ -364,6 +472,14 @@ export function loadGrpcConfigFromEnv(): GrpcEnvironmentConfig {
     authPort: process.env.AUTH_GRPC_PORT ? parseInt(process.env.AUTH_GRPC_PORT, 10) : undefined,
     legalHost: process.env.LEGAL_GRPC_HOST,
     legalPort: process.env.LEGAL_GRPC_PORT ? parseInt(process.env.LEGAL_GRPC_PORT, 10) : undefined,
+    auditHost: process.env.AUDIT_GRPC_HOST,
+    auditPort: process.env.AUDIT_GRPC_PORT ? parseInt(process.env.AUDIT_GRPC_PORT, 10) : undefined,
+    mailHost: process.env.MAIL_GRPC_HOST,
+    mailPort: process.env.MAIL_GRPC_PORT ? parseInt(process.env.MAIL_GRPC_PORT, 10) : undefined,
+    notificationHost: process.env.NOTIFICATION_GRPC_HOST,
+    notificationPort: process.env.NOTIFICATION_GRPC_PORT
+      ? parseInt(process.env.NOTIFICATION_GRPC_PORT, 10)
+      : undefined,
     protoBasePath: process.env.GRPC_PROTO_PATH,
   };
 }

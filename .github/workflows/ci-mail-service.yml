@@ -1,0 +1,38 @@
+name: CI - Mail Service
+
+on:
+  push:
+    branches: [develop, release, main]
+    paths:
+      - 'services/mail-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    branches: [develop, release, main]
+    paths:
+      - 'services/mail-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force rebuild even if image exists'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_service-ci.yml
+    with:
+      service_name: mail-service
+      service_path: services/mail-service
+      image_name: beegy-labs/mail-service
+      gitops_file_prefix: my-girok-mail-service
+      needs_prisma: true
+      pnpm_filter: '@my-girok/mail-service'
+      force_build: ${{ github.event.inputs.force_build == 'true' }}
+    secrets:
+      GITEA_USERNAME: ${{ secrets.GITEA_USERNAME }}
+      GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+      GITOPS_PAT: ${{ secrets.GITOPS_PAT }}

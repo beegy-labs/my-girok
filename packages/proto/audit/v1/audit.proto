@@ -70,6 +70,17 @@ enum AuthEventType {
   AUTH_EVENT_TYPE_OPERATOR_REVOKED = 23;
   AUTH_EVENT_TYPE_OPERATOR_LOGIN = 24;
   AUTH_EVENT_TYPE_OPERATOR_LOGOUT = 25;
+
+  // Email events (for compliance tracking)
+  AUTH_EVENT_TYPE_EMAIL_VERIFICATION_SENT = 26;
+  AUTH_EVENT_TYPE_EMAIL_VERIFICATION_CLICKED = 27;
+  AUTH_EVENT_TYPE_PASSWORD_RESET_EMAIL_SENT = 28;
+  AUTH_EVENT_TYPE_PASSWORD_RESET_EMAIL_CLICKED = 29;
+  AUTH_EVENT_TYPE_MFA_CODE_EMAIL_SENT = 30;
+  AUTH_EVENT_TYPE_ACCOUNT_LOCKED_EMAIL_SENT = 31;
+  AUTH_EVENT_TYPE_ACCOUNT_UNLOCKED_EMAIL_SENT = 32;
+  AUTH_EVENT_TYPE_ADMIN_INVITE_EMAIL_SENT = 33;
+  AUTH_EVENT_TYPE_PARTNER_INVITE_EMAIL_SENT = 34;
 }
 
 // AccountType identifies the type of account
@@ -115,17 +126,19 @@ message AuthEvent {
 
 // LogAuthEvent
 message LogAuthEventRequest {
-  AuthEventType event_type = 1;
-  AccountType account_type = 2;
-  string account_id = 3;
-  string session_id = 4;
-  string ip_address = 5;
-  string user_agent = 6;
-  string device_fingerprint = 7;
-  string country_code = 8;
-  AuthEventResult result = 9;
-  string failure_reason = 10;
-  map<string, string> metadata = 11;
+  string tenant_id = 1;              // Multi-tenant support
+  AuthEventType event_type = 2;
+  AccountType account_type = 3;
+  string account_id = 4;
+  string session_id = 5;
+  string ip_address = 6;
+  string user_agent = 7;
+  string device_fingerprint = 8;
+  string country_code = 9;
+  AuthEventResult result = 10;
+  string failure_reason = 11;
+  map<string, string> metadata = 12;
+  string source_service = 13;        // Origin solution: my-girok, auth
 }
 
 message LogAuthEventResponse {
@@ -155,6 +168,9 @@ message GetAuthEventsRequest {
   // Sorting
   string order_by = 11;  // "timestamp", "event_type", etc.
   bool descending = 12;
+
+  // Multi-tenant support
+  string tenant_id = 15;
 }
 
 message GetAuthEventsResponse {
@@ -195,6 +211,12 @@ enum SecurityEventType {
   // Data access
   SECURITY_EVENT_TYPE_SENSITIVE_DATA_ACCESS = 13;
   SECURITY_EVENT_TYPE_BULK_DATA_EXPORT = 14;
+
+  // Email delivery issues (for security monitoring)
+  SECURITY_EVENT_TYPE_EMAIL_HARD_BOUNCE = 15;
+  SECURITY_EVENT_TYPE_EMAIL_SOFT_BOUNCE = 16;
+  SECURITY_EVENT_TYPE_EMAIL_COMPLAINT = 17;
+  SECURITY_EVENT_TYPE_EMAIL_DELIVERY_FAILED = 18;
 }
 
 // SecurityEventSeverity indicates the severity level
@@ -236,17 +258,19 @@ message SecurityEvent {
 
 // LogSecurityEvent
 message LogSecurityEventRequest {
-  SecurityEventType event_type = 1;
-  SecurityEventSeverity severity = 2;
-  string subject_id = 3;
-  AccountType subject_type = 4;
-  string ip_address = 5;
-  string user_agent = 6;
-  string country_code = 7;
-  string description = 8;
-  map<string, string> metadata = 9;
-  bool action_taken = 10;
-  string action_description = 11;
+  string tenant_id = 1;              // Multi-tenant support
+  SecurityEventType event_type = 2;
+  SecurityEventSeverity severity = 3;
+  string subject_id = 4;
+  AccountType subject_type = 5;
+  string ip_address = 6;
+  string user_agent = 7;
+  string country_code = 8;
+  string description = 9;
+  map<string, string> metadata = 10;
+  bool action_taken = 11;
+  string action_description = 12;
+  string source_service = 13;        // Origin solution: my-girok, auth
 }
 
 message LogSecurityEventResponse {

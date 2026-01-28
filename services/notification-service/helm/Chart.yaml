@@ -1,0 +1,21 @@
+apiVersion: v2
+name: notification-service
+description: Notification Hub service for my-girok (Push, SMS, Orchestration)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - notification
+  - push
+  - sms
+  - fcm
+  - grpc
+
+maintainers:
+  - name: My-Girok Team
+    email: your-team@example.com
+
+home: https://github.com/your-org/my-girok
+sources:
+  - https://github.com/your-org/my-girok

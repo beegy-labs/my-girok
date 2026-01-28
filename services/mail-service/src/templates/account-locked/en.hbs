@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Account Locked</title>
+</head>
+<body>
+  <h1>Account Security Alert</h1>
+  <p>Hello {{userName}},</p>
+  <p>Your account has been locked due to {{lockReason}}.</p>
+  {{#if unlockTime}}
+  <p>Your account will be automatically unlocked at: {{unlockTime}}</p>
+  {{else}}
+  <p>Please contact support to unlock your account.</p>
+  {{/if}}
+  <h3>What happened?</h3>
+  <ul>
+    {{#if failedAttempts}}
+    <li>Failed login attempts: {{failedAttempts}}</li>
+    {{/if}}
+    {{#if lastAttemptTime}}
+    <li>Last attempt: {{lastAttemptTime}}</li>
+    {{/if}}
+    {{#if lastAttemptIp}}
+    <li>IP Address: {{lastAttemptIp}}</li>
+    {{/if}}
+  </ul>
+  <p>If this was not you, please reset your password immediately after your account is unlocked.</p>
+  <p>
+    <a href="{{supportLink}}">Contact Support</a>
+  </p>
+</body>
+</html>

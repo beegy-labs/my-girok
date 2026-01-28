@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Account Unlocked</title>
+</head>
+<body>
+  <h1>Your Account Has Been Unlocked</h1>
+  <p>Hello {{userName}},</p>
+  <p>Good news! Your account has been unlocked and you can now log in.</p>
+  {{#if unlockedBy}}
+  <p>Your account was unlocked by: {{unlockedBy}}</p>
+  {{/if}}
+  <p>
+    <a href="{{loginLink}}">Login to Your Account</a>
+  </p>
+  <h3>Security Recommendations</h3>
+  <ul>
+    <li>If you forgot your password, consider resetting it</li>
+    <li>Enable two-factor authentication for added security</li>
+    <li>Review your recent account activity</li>
+  </ul>
+  <p>If you did not request this unlock, please contact support immediately.</p>
+</body>
+</html>

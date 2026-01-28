@@ -5,6 +5,9 @@
  * - IdentityGrpcClient - Account, Session, Device, Profile operations
  * - AuthGrpcClient - Permission, Role, Operator, Sanction operations
  * - LegalGrpcClient - Consent, Document, Law Registry, DSR operations
+ * - AuditGrpcClient - Auth events, Security events logging
+ * - MailGrpcClient - Email sending, inbox management
+ * - NotificationGrpcClient - Push, SMS, in-app notifications
  *
  * @example
  * ```typescript
@@ -36,12 +39,62 @@ export {
   IdentityGrpcClientModule,
   AuthGrpcClientModule,
   LegalGrpcClientModule,
+  AuditGrpcClientModule,
+  MailGrpcClientModule,
+  NotificationGrpcClientModule,
 } from './grpc-clients.module';
 
 // Clients
 export { IdentityGrpcClient } from './identity-grpc.client';
 export { AuthGrpcClient, AUTH_GRPC_CACHE_CONFIG } from './auth-grpc.client';
 export { LegalGrpcClient } from './legal-grpc.client';
+export { AuditGrpcClient } from './audit-grpc.client';
+export { MailGrpcClient } from './mail-grpc.client';
+export { NotificationGrpcClient } from './notification-grpc.client';
+
+// Audit Client Types
+export {
+  AuthEventType,
+  AccountType as AuditAccountType,
+  AuthEventResult,
+  SecurityEventType,
+  SecurityEventSeverity,
+  LogAuthEventRequest,
+  LogAuthEventResponse,
+  LogSecurityEventRequest,
+  LogSecurityEventResponse,
+} from './audit-grpc.client';
+
+// Mail Client Types
+export {
+  EmailTemplate,
+  EmailStatus,
+  SendEmailRequest,
+  SendEmailResponse,
+  SendBulkEmailRequest,
+  SendBulkEmailResponse,
+  GetEmailStatusRequest,
+  GetEmailStatusResponse,
+  GetInboxRequest,
+  GetInboxResponse,
+} from './mail-grpc.client';
+
+// Notification Client Types
+export {
+  NotificationChannel,
+  NotificationType,
+  NotificationStatus,
+  Priority,
+  Platform,
+  SendNotificationRequest,
+  SendNotificationResponse,
+  GetNotificationsRequest,
+  GetNotificationsResponse,
+  RegisterDeviceTokenRequest,
+  RegisterDeviceTokenResponse,
+  GetQuietHoursRequest,
+  GetQuietHoursResponse,
+} from './notification-grpc.client';
 
 // Timestamp Utilities
 export {
@@ -216,6 +269,9 @@ export {
   createIdentityGrpcOptions,
   createAuthGrpcOptions,
   createLegalGrpcOptions,
+  createAuditGrpcOptions,
+  createMailGrpcOptions,
+  createNotificationGrpcOptions,
   loadGrpcConfigFromEnv,
   // Channel Options
   DEFAULT_CHANNEL_OPTIONS,

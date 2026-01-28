@@ -1,0 +1,343 @@
+syntax = "proto3";
+
+package notification.v1;
+
+option go_package = "github.com/beegy-labs/my-girok/gen/notification/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// NotificationService provides unified notification hub operations
+service NotificationService {
+  // Core Notification APIs
+  rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse);
+  rpc SendBulkNotification(SendBulkNotificationRequest) returns (SendBulkNotificationResponse);
+  rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
+  rpc MarkAsRead(MarkAsReadRequest) returns (MarkAsReadResponse);
+  rpc GetNotificationStatus(GetNotificationStatusRequest) returns (GetNotificationStatusResponse);
+
+  // User Preferences
+  rpc GetPreferences(GetPreferencesRequest) returns (GetPreferencesResponse);
+  rpc UpdatePreferences(UpdatePreferencesRequest) returns (UpdatePreferencesResponse);
+
+  // Device Token Management (for Push)
+  rpc RegisterDeviceToken(RegisterDeviceTokenRequest) returns (RegisterDeviceTokenResponse);
+  rpc UnregisterDeviceToken(UnregisterDeviceTokenRequest) returns (UnregisterDeviceTokenResponse);
+  rpc GetDeviceTokens(GetDeviceTokensRequest) returns (GetDeviceTokensResponse);
+
+  // Quiet Hours / DND
+  rpc GetQuietHours(GetQuietHoursRequest) returns (GetQuietHoursResponse);
+  rpc UpdateQuietHours(UpdateQuietHoursRequest) returns (UpdateQuietHoursResponse);
+}
+
+// ============================================================
+// Enums
+// ============================================================
+
+// NotificationChannel represents delivery channels
+enum NotificationChannel {
+  NOTIFICATION_CHANNEL_UNSPECIFIED = 0;
+  NOTIFICATION_CHANNEL_IN_APP = 1;
+  NOTIFICATION_CHANNEL_PUSH = 2;
+  NOTIFICATION_CHANNEL_SMS = 3;
+  NOTIFICATION_CHANNEL_EMAIL = 4;
+}
+
+// NotificationType categorizes notifications
+enum NotificationType {
+  NOTIFICATION_TYPE_UNSPECIFIED = 0;
+  NOTIFICATION_TYPE_SYSTEM = 1;
+  NOTIFICATION_TYPE_ADMIN_INVITE = 2;
+  NOTIFICATION_TYPE_PARTNER_INVITE = 3;
+  NOTIFICATION_TYPE_PASSWORD_RESET = 4;
+  NOTIFICATION_TYPE_SECURITY_ALERT = 5;
+  NOTIFICATION_TYPE_MFA_CODE = 6;
+  NOTIFICATION_TYPE_ACCOUNT_LOCKED = 7;
+  NOTIFICATION_TYPE_LOGIN_ALERT = 8;
+  NOTIFICATION_TYPE_MARKETING = 9;
+}
+
+// NotificationStatus represents delivery status
+enum NotificationStatus {
+  NOTIFICATION_STATUS_UNSPECIFIED = 0;
+  NOTIFICATION_STATUS_PENDING = 1;
+  NOTIFICATION_STATUS_SENT = 2;
+  NOTIFICATION_STATUS_DELIVERED = 3;
+  NOTIFICATION_STATUS_FAILED = 4;
+  NOTIFICATION_STATUS_READ = 5;
+}
+
+// Priority levels for notifications
+enum Priority {
+  PRIORITY_UNSPECIFIED = 0;
+  PRIORITY_LOW = 1;
+  PRIORITY_NORMAL = 2;
+  PRIORITY_HIGH = 3;
+  PRIORITY_URGENT = 4;  // Bypasses Quiet Hours
+}
+
+// Platform for device tokens
+enum Platform {
+  PLATFORM_UNSPECIFIED = 0;
+  PLATFORM_IOS = 1;
+  PLATFORM_ANDROID = 2;
+  PLATFORM_WEB = 3;
+}
+
+// ============================================================
+// Core Notification Messages
+// ============================================================
+
+// SendNotificationRequest for sending a single notification
+message SendNotificationRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+  NotificationType type = 3;
+  repeated NotificationChannel channels = 4;
+  string title = 5;
+  string body = 6;
+  string locale = 7;
+  map<string, string> data = 8;
+  string source_service = 9;       // Origin: my-girok, auth
+  Priority priority = 10;
+  string idempotency_key = 11;     // Duplicate prevention
+  google.protobuf.Timestamp expires_at = 12;  // TTL
+}
+
+// SendNotificationResponse
+message SendNotificationResponse {
+  bool success = 1;
+  string notification_id = 2;
+  string message = 3;
+}
+
+// SendBulkNotificationRequest for sending multiple notifications
+message SendBulkNotificationRequest {
+  string tenant_id = 1;
+  repeated BulkNotificationItem notifications = 2;
+  string source_service = 3;
+}
+
+// BulkNotificationItem represents a single notification in bulk send
+message BulkNotificationItem {
+  string account_id = 1;
+  NotificationType type = 2;
+  repeated NotificationChannel channels = 3;
+  string title = 4;
+  string body = 5;
+  string locale = 6;
+  map<string, string> data = 7;
+  Priority priority = 8;
+  string idempotency_key = 9;
+}
+
+// SendBulkNotificationResponse
+message SendBulkNotificationResponse {
+  bool success = 1;
+  int32 total_count = 2;
+  int32 sent_count = 3;
+  int32 failed_count = 4;
+  repeated BulkNotificationResult results = 5;
+}
+
+// BulkNotificationResult for individual notification in bulk send
+message BulkNotificationResult {
+  string account_id = 1;
+  bool success = 2;
+  string notification_id = 3;
+  string error = 4;
+}
+
+// GetNotificationsRequest
+message GetNotificationsRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+  optional NotificationChannel channel = 3;
+  optional bool unread_only = 4;
+  int32 page = 5;
+  int32 page_size = 6;
+}
+
+// GetNotificationsResponse
+message GetNotificationsResponse {
+  repeated NotificationItem notifications = 1;
+  int32 total_count = 2;
+  int32 unread_count = 3;
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+// NotificationItem represents a notification record
+message NotificationItem {
+  string id = 1;
+  NotificationType type = 2;
+  NotificationChannel channel = 3;
+  string title = 4;
+  string body = 5;
+  map<string, string> data = 6;
+  NotificationStatus status = 7;
+  string source_service = 8;
+  Priority priority = 9;
+  google.protobuf.Timestamp read_at = 10;
+  google.protobuf.Timestamp created_at = 11;
+}
+
+// MarkAsReadRequest
+message MarkAsReadRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+  repeated string notification_ids = 3;
+}
+
+// MarkAsReadResponse
+message MarkAsReadResponse {
+  bool success = 1;
+  int32 updated_count = 2;
+}
+
+// GetNotificationStatusRequest
+message GetNotificationStatusRequest {
+  string notification_id = 1;
+}
+
+// GetNotificationStatusResponse
+message GetNotificationStatusResponse {
+  string notification_id = 1;
+  NotificationStatus status = 2;
+  string channel = 3;
+  string external_id = 4;  // FCM message ID, SMS ID, etc.
+  google.protobuf.Timestamp sent_at = 5;
+  google.protobuf.Timestamp delivered_at = 6;
+  string error = 7;
+  int32 retry_count = 8;
+}
+
+// ============================================================
+// Preferences Messages
+// ============================================================
+
+// GetPreferencesRequest
+message GetPreferencesRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+}
+
+// GetPreferencesResponse
+message GetPreferencesResponse {
+  repeated ChannelPreference channel_preferences = 1;
+  repeated TypePreference type_preferences = 2;
+}
+
+// ChannelPreference for channel-level settings
+message ChannelPreference {
+  NotificationChannel channel = 1;
+  bool enabled = 2;
+}
+
+// TypePreference for notification type settings
+message TypePreference {
+  NotificationType type = 1;
+  repeated NotificationChannel enabled_channels = 2;
+}
+
+// UpdatePreferencesRequest
+message UpdatePreferencesRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+  repeated ChannelPreference channel_preferences = 3;
+  repeated TypePreference type_preferences = 4;
+}
+
+// UpdatePreferencesResponse
+message UpdatePreferencesResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================================
+// Device Token Messages
+// ============================================================
+
+// RegisterDeviceTokenRequest
+message RegisterDeviceTokenRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+  string token = 3;
+  Platform platform = 4;
+  string device_id = 5;
+  map<string, string> device_info = 6;  // app_version, os_version, etc.
+}
+
+// RegisterDeviceTokenResponse
+message RegisterDeviceTokenResponse {
+  bool success = 1;
+  string device_token_id = 2;
+  string message = 3;
+}
+
+// UnregisterDeviceTokenRequest
+message UnregisterDeviceTokenRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+  string token = 3;
+}
+
+// UnregisterDeviceTokenResponse
+message UnregisterDeviceTokenResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// GetDeviceTokensRequest
+message GetDeviceTokensRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+}
+
+// GetDeviceTokensResponse
+message GetDeviceTokensResponse {
+  repeated DeviceTokenItem tokens = 1;
+}
+
+// DeviceTokenItem represents a registered device
+message DeviceTokenItem {
+  string id = 1;
+  string token = 2;
+  Platform platform = 3;
+  string device_id = 4;
+  google.protobuf.Timestamp last_used_at = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+// ============================================================
+// Quiet Hours Messages
+// ============================================================
+
+// GetQuietHoursRequest
+message GetQuietHoursRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+}
+
+// GetQuietHoursResponse
+message GetQuietHoursResponse {
+  bool enabled = 1;
+  string start_time = 2;   // "22:00"
+  string end_time = 3;     // "08:00"
+  string timezone = 4;     // "Asia/Seoul"
+}
+
+// UpdateQuietHoursRequest
+message UpdateQuietHoursRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+  bool enabled = 3;
+  string start_time = 4;
+  string end_time = 5;
+  string timezone = 6;
+}
+
+// UpdateQuietHoursResponse
+message UpdateQuietHoursResponse {
+  bool success = 1;
+  string message = 2;
+}
