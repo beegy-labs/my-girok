@@ -1,25 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import {
-  LayoutDashboard,
-  FileText,
-  Users,
-  BarChart3,
-  Globe,
-  Building2,
-  ClipboardList,
-  Layers,
-  Shield,
-  ShieldCheck,
-  Settings2,
-  Grid3X3,
-  ClipboardCheck,
-  Cog,
-  Languages,
-  History,
-  Video,
-  UserCircle,
-  Key,
-} from 'lucide-react';
+import { Layers, Info, Cog, Globe, Languages, ClipboardCheck } from 'lucide-react';
 
 export interface MenuItem {
   id: string;
@@ -36,235 +16,77 @@ export interface MenuItem {
 }
 
 /**
- * SSOT Menu Configuration - 2025 Best Practices
+ * Recovery Menu Configuration - my-girok Phase 1-A
  *
- * Structure:
- * - Dashboard: Overview and quick access
- * - Services: Service management (N services, countries, consents)
- * - Compliance: Legal documents, consent history, analytics, regional rules
- * - Organization: Partners (tenants), operators (future)
- * - System: Audit logs, settings, menu config (future)
+ * Minimal menu structure for service recovery:
+ * - Services: Complete service management (metadata, config, domains, countries, locales, consents)
  *
- * Supports up to 5 depth levels with permission-based filtering
- * Designed for future dynamic menu configuration from admin settings
+ * All other menus removed for focused recovery workflow.
+ * Service detail pages include:
+ * 1. Overview: Service metadata (slug, name, description, status)
+ * 2. Config: JWT validation, Domain validation toggle, Rate limiting, Maintenance mode, Audit level
+ * 3. Domains: Add/remove allowed domains
+ * 4. Countries: Add/remove supported countries (active/inactive toggle)
+ * 5. Locales: Add/remove supported locales (active/inactive toggle)
+ * 6. Consents: Consent requirements matrix per country (required/optional toggle)
  */
 export const MENU_CONFIG: MenuItem[] = [
-  {
-    id: 'dashboard',
-    path: '/',
-    icon: LayoutDashboard,
-    labelKey: 'menu.dashboard',
-    order: 0,
-    parentId: null,
-  },
   {
     id: 'services',
     icon: Layers,
     labelKey: 'menu.services',
     permission: 'service:read',
-    order: 1,
+    order: 0,
     parentId: null,
     children: [
       {
         id: 'services-list',
         path: '/services',
-        icon: Grid3X3,
+        icon: Layers,
         labelKey: 'menu.servicesList',
         order: 0,
       },
-    ],
-  },
-  {
-    id: 'compliance',
-    icon: Shield,
-    labelKey: 'menu.compliance',
-    permission: 'legal:read',
-    order: 2,
-    parentId: null,
-    children: [
       {
-        id: 'compliance-documents',
-        path: '/compliance/documents',
-        icon: FileText,
-        labelKey: 'menu.documents',
-        order: 0,
-      },
-      {
-        id: 'compliance-consents',
-        path: '/compliance/consents',
-        icon: ClipboardCheck,
-        labelKey: 'menu.consentHistory',
+        id: 'services-overview',
+        path: '/services/:id',
+        icon: Info,
+        labelKey: 'menu.serviceOverview',
         order: 1,
       },
       {
-        id: 'compliance-analytics',
-        path: '/compliance/analytics',
-        icon: BarChart3,
-        labelKey: 'menu.analytics',
-        order: 2,
-      },
-      {
-        id: 'compliance-regions',
-        path: '/compliance/regions',
-        icon: Globe,
-        labelKey: 'menu.regionalRules',
-        order: 3,
-      },
-    ],
-  },
-  {
-    id: 'organization',
-    icon: Building2,
-    labelKey: 'menu.organization',
-    permission: 'tenant:read',
-    order: 3,
-    parentId: null,
-    children: [
-      {
-        id: 'organization-partners',
-        path: '/organization/partners',
-        icon: Users,
-        labelKey: 'menu.partners',
-        order: 0,
-      },
-    ],
-  },
-  {
-    id: 'users',
-    icon: UserCircle,
-    labelKey: 'menu.users',
-    permission: 'audit:read',
-    order: 4,
-    parentId: null,
-    children: [
-      {
-        id: 'users-overview',
-        path: '/users',
-        icon: Users,
-        labelKey: 'menu.usersOverview',
-        order: 0,
-      },
-    ],
-  },
-  {
-    id: 'authorization',
-    path: '/authorization',
-    icon: Key,
-    labelKey: 'menu.authorization',
-    permission: 'authorization:manage',
-    order: 5,
-    parentId: null,
-  },
-  {
-    id: 'system',
-    icon: Settings2,
-    labelKey: 'menu.system',
-    order: 6,
-    parentId: null,
-    children: [
-      {
-        id: 'system-admins',
-        path: '/system/admins',
-        icon: ShieldCheck,
-        labelKey: 'menu.adminAccounts',
-        permission: 'system_admin:read',
-        order: 0,
-      },
-      // Phase 4 incomplete - removed until fully implemented
-      // {
-      //   id: 'system-permissions',
-      //   path: '/system/permissions',
-      //   icon: Shield,
-      //   labelKey: 'menu.permissions',
-      //   permission: 'permissions:read',
-      //   order: 1,
-      // },
-      // {
-      //   id: 'system-departments',
-      //   path: '/system/departments',
-      //   icon: Building2,
-      //   labelKey: 'menu.departments',
-      //   permission: 'department:read',
-      //   order: 2,
-      // },
-      {
-        id: 'system-countries',
-        path: '/system/countries',
-        icon: Globe,
-        labelKey: 'menu.supportedCountries',
-        permission: 'settings:read',
-        order: 1,
-      },
-      {
-        id: 'system-locales',
-        path: '/system/locales',
-        icon: Languages,
-        labelKey: 'menu.supportedLocales',
-        permission: 'settings:read',
-        order: 2,
-      },
-      {
-        id: 'system-service-config',
-        path: '/system/service-config',
+        id: 'services-config',
+        path: '/services/:id/config',
         icon: Cog,
         labelKey: 'menu.serviceConfig',
-        permission: 'service:read',
+        order: 2,
+      },
+      {
+        id: 'services-domains',
+        path: '/services/:id/domains',
+        icon: Globe,
+        labelKey: 'menu.serviceDomains',
         order: 3,
       },
       {
-        id: 'system-features',
-        path: '/system/features',
-        icon: Grid3X3,
-        labelKey: 'menu.serviceFeatures',
-        permission: 'service:read',
+        id: 'services-countries',
+        path: '/services/:id/countries',
+        icon: Globe,
+        labelKey: 'menu.serviceCountries',
         order: 4,
       },
       {
-        id: 'system-country-config',
-        path: '/system/country-config',
-        icon: Globe,
-        labelKey: 'menu.countryConfig',
-        permission: 'settings:read',
+        id: 'services-locales',
+        path: '/services/:id/locales',
+        icon: Languages,
+        labelKey: 'menu.serviceLocales',
         order: 5,
       },
       {
-        id: 'system-oauth',
-        path: '/system/oauth',
-        icon: Key,
-        labelKey: 'menu.oauthSettings',
-        permission: 'settings:read',
+        id: 'services-consents',
+        path: '/services/:id/consents',
+        icon: ClipboardCheck,
+        labelKey: 'menu.serviceConsents',
         order: 6,
-      },
-      {
-        id: 'system-audit',
-        path: '/system/audit-logs',
-        icon: ClipboardList,
-        labelKey: 'menu.auditLogs',
-        permission: 'audit:read',
-        order: 7,
-      },
-      {
-        id: 'system-login-history',
-        path: '/system/login-history',
-        icon: History,
-        labelKey: 'menu.loginHistory',
-        permission: 'audit:read',
-        order: 8,
-      },
-      {
-        id: 'system-session-recordings',
-        path: '/system/session-recordings',
-        icon: Video,
-        labelKey: 'menu.sessionRecordings',
-        permission: 'audit:read',
-        order: 9,
-      },
-      {
-        id: 'system-settings',
-        path: '/system/settings',
-        icon: Settings2,
-        labelKey: 'menu.settings',
-        order: 10,
       },
     ],
   },

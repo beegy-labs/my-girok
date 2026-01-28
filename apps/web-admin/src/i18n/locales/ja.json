@@ -51,21 +51,14 @@
     "remove": "削除"
   },
   "menu": {
-    "dashboard": "ダッシュボード",
     "services": "サービス",
     "servicesList": "すべてのサービス",
-    "compliance": "コンプライアンス",
-    "documents": "法的文書",
-    "consentHistory": "同意履歴",
-    "analytics": "分析",
-    "regionalRules": "地域別規則",
-    "organization": "組織管理",
-    "partners": "パートナー",
-    "system": "システム",
-    "supportedCountries": "対応国",
-    "supportedLocales": "対応言語",
-    "auditLogs": "監査ログ",
-    "settings": "設定"
+    "serviceOverview": "概要",
+    "serviceConfig": "設定",
+    "serviceDomains": "ドメイン",
+    "serviceCountries": "国",
+    "serviceLocales": "言語",
+    "serviceConsents": "同意"
   },
   "auth": {
     "title": "Girok 管理者",
