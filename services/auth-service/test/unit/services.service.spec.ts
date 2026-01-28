@@ -559,4 +559,238 @@ describe('ServicesService', () => {
       expect(mockCache.del).toHaveBeenCalled();
     });
   });
+
+  describe('verifyServiceDomain', () => {
+    const validServiceId = '00000000-0000-7000-0000-000000000003';
+    const mockServiceConfig = {
+      id: validServiceId,
+      slug: 'my-girok',
+      name: 'My Girok',
+      domains: ['my-girok.com', 'localhost:3000'],
+      domainValidation: true,
+      jwtValidation: true,
+      rateLimitEnabled: true,
+    };
+
+    describe('UUID validation', () => {
+      it('should reject invalid UUID format', async () => {
+        // Arrange
+        const invalidId = 'not-a-valid-uuid';
+
+        // Act
+        const result = await service.verifyServiceDomain(invalidId);
+
+        // Assert
+        expect(result.valid).toBe(false);
+        expect(result.reason).toBe('Invalid service ID format');
+        expect(mockCache.get).not.toHaveBeenCalled();
+        expect(mockPrisma.$queryRaw).not.toHaveBeenCalled();
+      });
+
+      it('should accept valid UUID format', async () => {
+        // Arrange
+        mockCache.get.mockResolvedValue(mockServiceConfig);
+
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId);
+
+        // Assert
+        expect(mockCache.get).toHaveBeenCalled();
+        expect(result.valid).toBe(true);
+      });
+    });
+
+    describe('cache behavior', () => {
+      it('should return cached config when available', async () => {
+        // Arrange
+        mockCache.get.mockResolvedValue(mockServiceConfig);
+
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId, 'my-girok.com');
+
+        // Assert
+        expect(mockCache.get).toHaveBeenCalledTimes(1);
+        expect(mockPrisma.$queryRaw).not.toHaveBeenCalled();
+        expect(result.valid).toBe(true);
+        expect(result.service?.slug).toBe('my-girok');
+      });
+
+      it('should query DB and cache result on cache miss', async () => {
+        // Arrange
+        mockCache.get.mockResolvedValue(undefined);
+        mockPrisma.$queryRaw.mockResolvedValue([mockServiceConfig]);
+
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId, 'my-girok.com');
+
+        // Assert
+        expect(mockCache.get).toHaveBeenCalled();
+        expect(mockPrisma.$queryRaw).toHaveBeenCalled();
+        expect(mockCache.set).toHaveBeenCalledWith(
+          expect.stringContaining(validServiceId),
+          mockServiceConfig,
+          3600,
+        );
+        expect(result.valid).toBe(true);
+      });
+
+      it('should return failure when service not found in DB', async () => {
+        // Arrange
+        mockCache.get.mockResolvedValue(undefined);
+        mockPrisma.$queryRaw.mockResolvedValue([]);
+
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId);
+
+        // Assert
+        expect(result.valid).toBe(false);
+        expect(result.reason).toBe('Service not found');
+        expect(mockCache.set).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('domain validation disabled', () => {
+      it('should allow any domain when domainValidation is false', async () => {
+        // Arrange
+        const configWithoutDomainValidation = {
+          ...mockServiceConfig,
+          domainValidation: false,
+        };
+        mockCache.get.mockResolvedValue(configWithoutDomainValidation);
+
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId, 'any-domain.com');
+
+        // Assert
+        expect(result.valid).toBe(true);
+        expect(result.service?.domainValidation).toBe(false);
+      });
+
+      it('should succeed without domain when domainValidation is false', async () => {
+        // Arrange
+        const configWithoutDomainValidation = {
+          ...mockServiceConfig,
+          domainValidation: false,
+        };
+        mockCache.get.mockResolvedValue(configWithoutDomainValidation);
+
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId);
+
+        // Assert
+        expect(result.valid).toBe(true);
+      });
+    });
+
+    describe('domain validation enabled', () => {
+      beforeEach(() => {
+        mockCache.get.mockResolvedValue(mockServiceConfig);
+      });
+
+      it('should reject when domain is missing', async () => {
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId);
+
+        // Assert
+        expect(result.valid).toBe(false);
+        expect(result.reason).toBe('Missing domain (domain validation enabled)');
+      });
+
+      it('should accept exact domain match', async () => {
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId, 'my-girok.com');
+
+        // Assert
+        expect(result.valid).toBe(true);
+        expect(result.service).toBeDefined();
+      });
+
+      it('should accept domain with port match', async () => {
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId, 'localhost:3000');
+
+        // Assert
+        expect(result.valid).toBe(true);
+      });
+
+      it('should strip https:// prefix and match', async () => {
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId, 'https://my-girok.com');
+
+        // Assert
+        expect(result.valid).toBe(true);
+      });
+
+      it('should strip http:// prefix and match', async () => {
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId, 'http://my-girok.com');
+
+        // Assert
+        expect(result.valid).toBe(true);
+      });
+
+      it('should strip trailing slash and match', async () => {
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId, 'my-girok.com/');
+
+        // Assert
+        expect(result.valid).toBe(true);
+      });
+
+      it('should match domain without port when allowed domain has no port', async () => {
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId, 'my-girok.com:443');
+
+        // Assert
+        expect(result.valid).toBe(true);
+      });
+
+      it('should reject non-whitelisted domain', async () => {
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId, 'evil.com');
+
+        // Assert
+        expect(result.valid).toBe(false);
+        expect(result.reason).toContain('not allowed');
+      });
+
+      it('should reject subdomain when not in whitelist', async () => {
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId, 'sub.my-girok.com');
+
+        // Assert
+        expect(result.valid).toBe(false);
+        expect(result.reason).toContain('not allowed');
+      });
+    });
+
+    describe('edge cases', () => {
+      it('should handle empty domains array', async () => {
+        // Arrange
+        const configWithNoDomains = {
+          ...mockServiceConfig,
+          domains: [],
+        };
+        mockCache.get.mockResolvedValue(configWithNoDomains);
+
+        // Act
+        const result = await service.verifyServiceDomain(validServiceId, 'my-girok.com');
+
+        // Assert
+        expect(result.valid).toBe(false);
+      });
+
+      it('should handle uppercase UUID', async () => {
+        // Arrange
+        const uppercaseId = validServiceId.toUpperCase();
+        mockCache.get.mockResolvedValue(mockServiceConfig);
+
+        // Act
+        const result = await service.verifyServiceDomain(uppercaseId);
+
+        // Assert
+        expect(mockCache.get).toHaveBeenCalled();
+      });
+    });
+  });
 });

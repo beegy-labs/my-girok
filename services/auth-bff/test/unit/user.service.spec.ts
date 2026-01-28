@@ -630,4 +630,246 @@ describe('UserService', () => {
       );
     });
   });
+
+  describe('login - service domain verification', () => {
+    let httpService: { post: MockInstance };
+
+    beforeEach(async () => {
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          UserService,
+          { provide: IdentityGrpcClient, useValue: identityClient },
+          { provide: AuditGrpcClient, useValue: auditClient },
+          { provide: SessionService, useValue: sessionService },
+          {
+            provide: HttpService,
+            useValue: {
+              post: vi.fn(),
+            },
+          },
+          {
+            provide: ConfigService,
+            useValue: {
+              get: vi.fn().mockReturnValue('http://auth-service:3000'),
+            },
+          },
+        ],
+      }).compile();
+
+      service = module.get<UserService>(UserService);
+      httpService = module.get(HttpService);
+
+      // Setup default successful scenario
+      identityClient.getAccountByEmail.mockResolvedValue(mockAccount);
+      identityClient.validatePassword.mockResolvedValue(true);
+      identityClient.createSession.mockResolvedValue({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+      });
+      identityClient.recordLoginAttempt.mockResolvedValue(undefined);
+      sessionService.createSession.mockResolvedValue(mockSession);
+      auditClient.logLoginSuccess.mockResolvedValue(undefined);
+    });
+
+    it('should reject login when X-Service-Id header is missing', async () => {
+      const requestWithoutHeader = {
+        ...mockRequest,
+        headers: {
+          ...mockRequest.headers,
+          'x-service-id': undefined,
+        },
+      } as unknown as Request;
+
+      await expect(
+        service.login(requestWithoutHeader, mockResponse, {
+          email: 'user@example.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should reject login when service verification fails', async () => {
+      httpService.post.mockReturnValueOnce(
+        of({
+          data: {
+            valid: false,
+            reason: 'Service not found',
+          },
+        }),
+      );
+
+      await expect(
+        service.login(mockRequest, mockResponse, {
+          email: 'user@example.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should reject login when domain validation fails', async () => {
+      httpService.post.mockReturnValueOnce(
+        of({
+          data: {
+            valid: false,
+            reason: 'Domain evil.com not allowed',
+          },
+        }),
+      );
+
+      await expect(
+        service.login(mockRequest, mockResponse, {
+          email: 'user@example.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should reject login when auth-service is unreachable', async () => {
+      httpService.post.mockImplementationOnce(() => {
+        throw new Error('Network error');
+      });
+
+      await expect(
+        service.login(mockRequest, mockResponse, {
+          email: 'user@example.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should allow login when service verification succeeds', async () => {
+      httpService.post.mockReturnValueOnce(
+        of({
+          data: {
+            valid: true,
+            service: {
+              id: 'service-123',
+              slug: 'my-girok',
+              name: 'My Girok',
+              domainValidation: true,
+            },
+          },
+        }),
+      );
+
+      const result = await service.login(mockRequest, mockResponse, {
+        email: 'user@example.com',
+        password: 'password123',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.user).toBeDefined();
+    });
+
+    it('should extract domain from referer header', async () => {
+      const requestWithReferer = {
+        ...mockRequest,
+        headers: {
+          ...mockRequest.headers,
+          referer: 'https://my-girok.com/login',
+        },
+      } as unknown as Request;
+
+      httpService.post.mockReturnValueOnce(
+        of({
+          data: {
+            valid: true,
+            service: {
+              id: 'service-123',
+              slug: 'my-girok',
+              name: 'My Girok',
+              domainValidation: true,
+            },
+          },
+        }),
+      );
+
+      await service.login(requestWithReferer, mockResponse, {
+        email: 'user@example.com',
+        password: 'password123',
+      });
+
+      expect(httpService.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          serviceId: 'service-123',
+          domain: 'my-girok.com',
+        }),
+      );
+    });
+
+    it('should extract domain from origin header', async () => {
+      const requestWithOrigin = {
+        ...mockRequest,
+        headers: {
+          ...mockRequest.headers,
+          origin: 'https://my-girok.com',
+        },
+      } as unknown as Request;
+
+      httpService.post.mockReturnValueOnce(
+        of({
+          data: {
+            valid: true,
+            service: {
+              id: 'service-123',
+              slug: 'my-girok',
+              name: 'My Girok',
+              domainValidation: true,
+            },
+          },
+        }),
+      );
+
+      await service.login(requestWithOrigin, mockResponse, {
+        email: 'user@example.com',
+        password: 'password123',
+      });
+
+      expect(httpService.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          serviceId: 'service-123',
+          domain: 'my-girok.com',
+        }),
+      );
+    });
+
+    it('should handle invalid referer URL gracefully', async () => {
+      const requestWithInvalidReferer = {
+        ...mockRequest,
+        headers: {
+          ...mockRequest.headers,
+          referer: 'not-a-valid-url',
+        },
+      } as unknown as Request;
+
+      httpService.post.mockReturnValueOnce(
+        of({
+          data: {
+            valid: true,
+            service: {
+              id: 'service-123',
+              slug: 'my-girok',
+              name: 'My Girok',
+              domainValidation: false,
+            },
+          },
+        }),
+      );
+
+      await service.login(requestWithInvalidReferer, mockResponse, {
+        email: 'user@example.com',
+        password: 'password123',
+      });
+
+      expect(httpService.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          serviceId: 'service-123',
+          domain: undefined,
+        }),
+      );
+    });
+  });
 });
