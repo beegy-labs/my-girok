@@ -35,6 +35,27 @@ export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
 
   /**
+   * Get service by domain
+   * GET /v1/services/domain/:domain
+   * Public endpoint - no auth required
+   * Used for domain-based service detection
+   */
+  @Get('domain/:domain')
+  @Public()
+  async getServiceByDomain(@Param('domain') domain: string) {
+    const service = await this.servicesService.getServiceFromDomain(decodeURIComponent(domain));
+
+    if (!service) {
+      return null; // Return null instead of 404 for soft failure
+    }
+
+    return {
+      slug: service.slug,
+      name: service.name,
+    };
+  }
+
+  /**
    * Get consent requirements for a service and country
    * GET /v1/services/:slug/consent-requirements
    * Public endpoint - no auth required

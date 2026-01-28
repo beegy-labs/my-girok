@@ -116,6 +116,37 @@ export class ServicesService {
   }
 
   /**
+   * Get service by domain
+   * Supports exact match and partial matching (removes protocol and port)
+   * Returns null if service not found
+   */
+  async getServiceFromDomain(domain: string): Promise<ServiceRow | null> {
+    if (!domain) {
+      return null;
+    }
+
+    // Normalize domain (remove protocol, trailing slash)
+    let normalizedDomain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+    // Also try without port for matching
+    const domainWithoutPort = normalizedDomain.replace(/:\d+$/, '');
+
+    // Find service with matching domain
+    const services = await this.prisma.$queryRaw<ServiceRow[]>`
+      SELECT id, slug, name, required_consents as "requiredConsents"
+      FROM services
+      WHERE is_active = true
+        AND (
+          ${normalizedDomain} = ANY(domains)
+          OR ${domainWithoutPort} = ANY(domains)
+        )
+      LIMIT 1
+    `;
+
+    return services.length > 0 ? services[0] : null;
+  }
+
+  /**
    * Get consent requirements for a service and country
    */
   async getConsentRequirements(
