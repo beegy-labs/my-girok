@@ -592,7 +592,7 @@ describe('ServicesService', () => {
         mockCache.get.mockResolvedValue(mockServiceConfig);
 
         // Act
-        const result = await service.verifyServiceDomain(validServiceId);
+        const result = await service.verifyServiceDomain(validServiceId, 'my-girok.com');
 
         // Assert
         expect(mockCache.get).toHaveBeenCalled();
