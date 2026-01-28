@@ -661,7 +661,7 @@ describe('UserService', () => {
 
       // Setup default successful scenario
       identityClient.getAccountByEmail.mockResolvedValue(mockAccount);
-      identityClient.validatePassword.mockResolvedValue(true);
+      identityClient.validatePassword.mockResolvedValue({ valid: true });
       identityClient.createSession.mockResolvedValue({
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
@@ -753,19 +753,7 @@ describe('UserService', () => {
     });
 
     it('should allow login when service verification succeeds', async () => {
-      httpService.post.mockReturnValueOnce(
-        of({
-          data: {
-            valid: true,
-            service: {
-              id: 'service-123',
-              slug: 'my-girok',
-              name: 'My Girok',
-              domainValidation: true,
-            },
-          },
-        }),
-      );
+      // httpService.post mock is already set in beforeEach with successful response
 
       const result = await service.login(mockRequest, mockResponse, {
         email: 'user@example.com',
@@ -785,19 +773,7 @@ describe('UserService', () => {
         },
       } as unknown as Request;
 
-      httpService.post.mockReturnValueOnce(
-        of({
-          data: {
-            valid: true,
-            service: {
-              id: 'service-123',
-              slug: 'my-girok',
-              name: 'My Girok',
-              domainValidation: true,
-            },
-          },
-        }),
-      );
+      // httpService.post mock is already set in beforeEach
 
       await service.login(requestWithReferer, mockResponse, {
         email: 'user@example.com',
@@ -822,19 +798,7 @@ describe('UserService', () => {
         },
       } as unknown as Request;
 
-      httpService.post.mockReturnValueOnce(
-        of({
-          data: {
-            valid: true,
-            service: {
-              id: 'service-123',
-              slug: 'my-girok',
-              name: 'My Girok',
-              domainValidation: true,
-            },
-          },
-        }),
-      );
+      // httpService.post mock is already set in beforeEach
 
       await service.login(requestWithOrigin, mockResponse, {
         email: 'user@example.com',
@@ -859,19 +823,7 @@ describe('UserService', () => {
         },
       } as unknown as Request;
 
-      httpService.post.mockReturnValueOnce(
-        of({
-          data: {
-            valid: true,
-            service: {
-              id: 'service-123',
-              slug: 'my-girok',
-              name: 'My Girok',
-              domainValidation: false,
-            },
-          },
-        }),
-      );
+      // httpService.post mock is already set in beforeEach
 
       await service.login(requestWithInvalidReferer, mockResponse, {
         email: 'user@example.com',
