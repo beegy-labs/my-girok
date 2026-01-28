@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException, ConflictException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
 import { vi, describe, it, expect, beforeEach, type MockInstance } from 'vitest';
+import { of } from 'rxjs';
 import { UserService } from '../../src/user/user.service';
 import { IdentityGrpcClient, AuditGrpcClient } from '../../src/grpc-clients';
 import { SessionService } from '../../src/session/session.service';
@@ -73,6 +76,7 @@ describe('UserService', () => {
     headers: {
       'user-agent': 'test-agent',
       'x-forwarded-for': '192.168.1.1',
+      'x-service-id': 'service-123',
     },
     socket: { remoteAddress: '127.0.0.1' },
     cookies: {},
@@ -125,6 +129,30 @@ describe('UserService', () => {
             destroySession: vi.fn(),
             extractMetadata: vi.fn().mockReturnValue({ userAgent: 'test', ipAddress: '127.0.0.1' }),
             getDeviceFingerprint: vi.fn().mockReturnValue('fingerprint-123'),
+          },
+        },
+        {
+          provide: HttpService,
+          useValue: {
+            post: vi.fn().mockReturnValue(
+              of({
+                data: {
+                  valid: true,
+                  service: {
+                    id: 'service-123',
+                    slug: 'my-girok',
+                    name: 'My Girok',
+                    domainValidation: false,
+                  },
+                },
+              }),
+            ),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: vi.fn().mockReturnValue('http://auth-service:3000'),
           },
         },
       ],
