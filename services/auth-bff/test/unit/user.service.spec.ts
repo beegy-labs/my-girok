@@ -669,6 +669,21 @@ describe('UserService', () => {
       identityClient.recordLoginAttempt.mockResolvedValue(undefined);
       sessionService.createSession.mockResolvedValue(mockSession);
       auditClient.logLoginSuccess.mockResolvedValue(undefined);
+
+      // Setup default service verification success
+      httpService.post.mockReturnValue(
+        of({
+          data: {
+            valid: true,
+            service: {
+              id: 'service-123',
+              slug: 'my-girok',
+              name: 'My Girok',
+              domainValidation: true,
+            },
+          },
+        }),
+      );
     });
 
     it('should reject login when X-Service-Id header is missing', async () => {
